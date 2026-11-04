@@ -21,22 +21,6 @@
 - 생활비 체납 시 누적 피해. 무자본 무한 생존 방지.
 - v0.4 및 v0.4.1 로컬/JSON 세이브 이전 지원.
 
-## GitHub Pages: 최초 한 번만 설정
-
-> 배포 저장소: https://github.com/yomhojoon/life_with_taboo · 공개 사이트: https://yomhojoon.github.io/life_with_taboo/ · 최초 설정은 완료되었습니다.
-
-1. GitHub에서 **새 공개 저장소**를 생성합니다. 권장 이름: `yeonmyeong-gangryeong`.
-2. 이 프로젝트의 **배포 파일**을 저장소 최상위에 업로드합니다: `index.html`, `app.js`, `data.js`, `expansion.js`, `engine.js`, `pixel.js`, `style.css`, `style_v5.css`, `.nojekyll`, `assets/` 폴더. ZIP 그 자체를 올리면 사이트가 되지 않습니다.
-3. 저장소의 **Settings → Pages → Build and deployment → Source: Deploy from a branch → main / (root) → Save**.
-4. 이후 `main`에 수정 파일을 커밋·푸시하면 Pages가 다시 배포합니다. 설정 페이지의 **Visit site** 링크로 실제 주소를 확인하세요.
-5. 다음 대화에서 제가 직접 커밋·업데이트하려면 새 저장소가 ChatGPT GitHub 연결에 허용되어 있어야 합니다. GitHub App의 저장소 접근 범위를 새 저장소까지 지정하고, 저장소 주소를 알려 주세요.
-
-Windows + Git for Windows가 있으면 배포 파일들을 직접 업로드하는 대신 아래 명령으로 한 번에 푸시할 수 있습니다:
-
-```powershell
-.\deploy_git.ps1 -RepoUrl "https://github.com/USER/yeonmyeong-gangryeong.git"
-```
-
 GitHub Pages는 정적 사이트로서 코드가 공개됩니다. `.env`, 토큰, 개인정보, 개인 세이브 파일을 저장소에 올리지 마세요.
 
 ## 주요 파일
