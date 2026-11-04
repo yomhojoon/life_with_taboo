@@ -302,7 +302,7 @@ const CONTENT = {
       "id": "meow",
       "name": "야옹야옹",
       "grade": 3,
-      "desc": "재물운 +100, 정신력 100 회복. 매일 정신력 -20, 행운 -1, 신기 +1.",
+      "desc": "야옹야옹",
       "gain": {
         "wealth": 100,
         "mental": 100
@@ -1661,3 +1661,4 @@ if(typeof module!=="undefined" && module.exports) module.exports=CONTENT;
 ];
   if(root.YG_CONTENT) root.YG_CONTENT.encounters.push(...extraEncounters);
 })(typeof window !== "undefined" ? window : globalThis);
+

@@ -26,7 +26,7 @@
       return {
         version:5, rng: 246813579, day:1, hour:0, phase:'planning', death_reason:'',
         money:200000, health:100, mental:100, mental_max:100, spirit:0,
-        luck:0, wealth:0, bond:0, omen:0, clues:0, meal_index:1,
+        luck:0, wealth:0, bond:0, omen:0, clues:0, meal_index:1, food_last:null, food_streak:0, food_eaten_today:0, food_last_day:0, food_today_index:null, meal_history:[],
         schedule: Array(24).fill(null), owned_skills:[], ghosts:[], relics:[], quest_items:[], delayed:[], unpaid_days:0,
         wish_spent:[], logs:['01일 00시 · 새벽. 오늘을 위한 24시간의 빈 일정 큐를 열었다.'],
         pending:null, sleep_today:0, day_start:{money:200000, health:100, mental:100, spirit:0},
@@ -165,13 +165,25 @@
         case 'sleep':s.sleep_today++;this.apply({health:4+(b.sleep_extra||0),mental:s.sleep_today>=12?-4:2});break;
         case 'rest':this.apply({mental:7+(b.rest_extra||0),spirit:-1});break;
         case 'work':{
-          const base=12000+(b.job_extra||0),pay=Math.max(1000,Math.round(base*(1+bounded(s.wealth*.007,-.30,.60))));
+          const base=5600+Math.min(4400,Math.max(-2000,(b.job_extra||0)*.22)),pay=Math.max(1800,Math.round(base*(1+bounded(s.wealth*.005,-.20,.28))));
           this.apply(this.rand()<.5?{money:pay,health:-4}:{money:pay,mental:-5});
           this.log(`아르바이트. 자금 +${moneyText(pay)}원.`);break;
         }
         case 'meal':{
           const food=C.meals[s.meal_index];
-          if(s.money>=food.price){this.apply({money:-food.price,health:food.health+(b.meal_health||0),mental:food.mental+(b.meal_mental||0),spirit:food.spirit});this.log(`${food.name} 주문. −${moneyText(food.price)}원.`);}
+          if(s.money>=food.price){
+            if(s.food_today_index===null){
+              if(s.food_last===s.meal_index&&s.food_last_day===s.day-1)s.food_streak=(s.food_streak||0)+1;
+              else s.food_streak=1;
+              s.food_last=s.meal_index;s.food_last_day=s.day;s.food_today_index=s.meal_index;
+            }
+            s.food_eaten_today=(s.food_eaten_today||0)+1;
+            const factor=s.food_streak<=1?1:Math.max(.3,Math.pow(.8,s.food_streak-1));
+            const health=Math.round((food.health+(b.meal_health||0))*factor);
+            const mental=Math.round((food.mental+(b.meal_mental||0))*factor);
+            this.apply({money:-food.price,health,mental,spirit:food.spirit});
+            this.log(`${food.name} 주문. −${moneyText(food.price)}원.${factor<1?' 연속 섭취로 회복 효율 '+Math.round(factor*100)+'%.':''}`);
+          }
           else{this.apply({health:-4,mental:-3});this.log('잔액 부족. 식사를 거른다.');}
           break;
         }
@@ -220,7 +232,7 @@
         if(!available.length){this.apply({spirit:6});s.pending={kind:'notice',title:'텅 빈 강령진',body:'이미 모든 유령을 받아들였다. 더는 응답하는 목소리가 없다.'};}
         else{const g=this.takeRandom(available);s.ghosts.push({id:g.id,state:'active'});this.apply({spirit:10});if(s.phase==='dead')return;
           this.log(`강령 성공 · ${g.name}이(가) 깃들었다.`);
-          s.scene.action='ghost';s.scene.tone='ghost';s.scene.title=`강령 성공 · ${g.name}`;s.scene.body=g.story;s.pending={kind:'notice',title:`강령 성공 · ${g.name}`,body:`${g.story}\n\n${g.desc}`};}
+          s.scene.action='ghost';s.scene.tone='ghost';s.scene.ghost_id=g.id;s.scene.title=`강령 성공 · ${g.name}`;s.scene.body=g.story;s.pending={kind:'notice',title:`강령 성공 · ${g.name}`,body:`${g.story}\n\n${g.desc}`};}
       }else{
         this.apply({mental:-6,spirit:6});if(s.phase==='dead')return;
         this.log(`강령 실패 · 성공 확률 ${Math.round(chance*100)}%.`);
@@ -422,6 +434,7 @@
     openShop() {const s=this.s;if(s.phase!=='night'||s.pending?.kind!=='report')return false;const ids=this.drawSkills(this.randInt(2,4));s.pending=null;s.scene={title:'경계의 상점',body:'모니터가 꺼지지 않는다. 판매 목록은 창을 닫으면 다시 열리지 않는다.',action:'monitor',hour:0,day:s.day};if(ids.length)s.pending={kind:'skills',source:'shop',ids};else this.nextDay();this.save();return true;}
     nextDay() {
       const s=this.s;if(s.phase!=='night')return false;
+      s.food_eaten_today=0; s.food_today_index=null;
       s.day++;s.hour=0;s.sleep_today=0;s.phase='planning';s.pending=null;s.research_found_today=0;s.research_attempts_today=0;s.event_count_day=0;
       s.scene={title:'새로운 아침',body:'24시간이 다시 시작된다. 어제의 선택은 오늘의 생활에 조금씩 남아 있다.',action:'home',hour:6,day:s.day};
       const later=[];
@@ -458,6 +471,11 @@
       for(const k of ['relics','quest_items','event_history','next_events','scene_history'])if(!Array.isArray(migrated[k]))migrated[k]=[];
       for(const k of ['research_found_today','research_attempts_today','release_wards','event_count_day'])if(!Number.isFinite(migrated[k]))migrated[k]=0;
       if(!Number.isInteger(migrated.unpaid_days))migrated.unpaid_days=0;
+      if(!Number.isInteger(migrated.food_streak))migrated.food_streak=0;
+      if(!Number.isInteger(migrated.food_eaten_today))migrated.food_eaten_today=0;
+      if(!Number.isInteger(migrated.food_last))migrated.food_last=null;
+      if(!Number.isInteger(migrated.food_last_day))migrated.food_last_day=0;
+      if(!Number.isInteger(migrated.food_today_index))migrated.food_today_index=null;
       if(!migrated.scene||typeof migrated.scene!=='object')migrated.scene=fresh.scene;
       this.s=migrated;if(persist)this.save();return true;
     }
@@ -465,3 +483,4 @@
   root.YGEngine={Game,CONTENT:C,SAVE_KEY,STAT_LABELS,GRADE_PRICES,moneyText};
   if(typeof module!=='undefined'&&module.exports)module.exports=root.YGEngine;
 })(typeof window!=='undefined'?window:globalThis);
+
