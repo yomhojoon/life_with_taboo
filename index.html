@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#050505">
+  <meta name="description" content="연명 강령 — 24시간을 나누어 살아남는 강령 생존 시뮬레이터. 웹 테스트 버전.">
+  <title>연명 강령 | 밤의 기록 v0.5</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style_v5.css">
+</head>
+<body>
+  <div class="background-engraving" aria-hidden="true"></div>
+  <div class="shell" id="gameApp">
+    <header class="topbar">
+      <div class="brand"><div class="brand-mark" aria-hidden="true">延</div><div class="brand-text"><strong>연명 강령</strong><small>THE HOURS BETWEEN</small></div></div>
+      <div class="topbar-actions">
+        <span class="autosave-tag" id="saveIndicator"><span class="led"></span>로컬 저장</span>
+        <button class="button ghost tiny" type="button" data-cmd="export">저장 내보내기</button>
+        <button class="button ghost tiny" type="button" data-cmd="import">불러오기</button>
+        <button class="button ghost tiny" type="button" data-cmd="debug">⚙ 테스트</button>
+        <button class="button ghost tiny danger-text" type="button" data-cmd="new-game">초기화</button>
+      </div>
+    </header>
+    <section class="hero">
+      <div class="hero-copy"><div class="eyebrow"><span class="line-dot"></span> AN ACCOUNT OF THE HOURS</div><h1>흑백으로 남은 하루</h1></div>
+      <div class="day-indicator"><div class="day-top"><span>생존 기록</span><span id="phaseBadge">일정 편성</span></div><div class="day-number"><small>DAY</small> <span id="dayNumber">01</span></div><div class="day-bottom"><strong id="clockLabel">00:00</strong><span id="dayProgressLabel">0 / 24시간 경과</span></div><div class="day-track"><div id="dayProgress" style="width:0%"></div></div></div>
+    </section>
+    <section class="stats" id="stats" aria-label="생존 상태"></section>
+    <section class="fortune-strip" id="fortuneStrip"></section>
+    <main class="main-grid">
+      <div class="left-stack">
+        <section class="panel planner-panel">
+          <div class="section-title-row"><div><div class="section-kicker">SCHEDULE / 24 HOURS</div><h2>오늘의 일정 <span class="heading-sub">24시간 편성</span></h2></div><div class="preset-set"><button class="chip" data-cmd="preset" data-value="balanced">균형형</button><button class="chip" data-cmd="preset" data-value="safe">생존형</button><button class="chip" data-cmd="preset" data-value="risky">강령형</button></div></div>
+          <div class="instruction"><span aria-hidden="true">◈</span> 행동을 눌러 추가하고, 일정의 해당 칸을 눌러 비웁니다.</div>
+          <div class="brush-grid" id="brushGrid" aria-label="일정 선택 도구"></div>
+          <div class="plan-settings"><label for="mealChoice">식사 선택</label><select id="mealChoice" aria-label="식사 종류"></select></div>
+          <div class="queue-toolbar"><label for="queueFillAction">남은 칸 채우기</label><select id="queueFillAction" aria-label="남은 시간에 넣을 행동"></select><button class="button ghost tiny" data-cmd="fill-remaining" type="button">남은 시간 채우기</button><button class="button ghost tiny queue-clear" data-cmd="clear-queue" type="button">전체 비우기</button></div>
+          <div class="schedule-header"><span>24시간 일정표</span><span id="scheduleEditStatus">0 / 24시간 편성</span></div>
+          <div class="hour-grid" id="hourGrid"></div>
+          <div class="schedule-footer" id="scheduleFooter"></div>
+        </section>
+
+      </div>
+      <div class="center-stack">
+        <section class="panel stage-panel" aria-label="시간별 이야기와 선택 장면">
+          <div class="stage-header"><div><div class="section-kicker">CURRENT SCENE / 장면</div><h2>시간의 풍경</h2></div><span class="stage-pill" id="stageStatus">오늘의 계획</span></div>
+          <div class="pixel-frame">
+            <canvas id="pixelCanvas" width="480" height="270" role="img" aria-label="시간과 일정에 따라 변화하는 저해상도 픽셀 장면"></canvas>
+            <span class="pixel-caption" id="scenePlace">침실</span>
+            <span class="pixel-clock" id="stageClock">DAY 01 · 00:00</span>
+          </div>
+          <div class="stage-narration"><div class="stage-time"><span class="lamp-dot"></span><span id="stagePeriod">밤</span></div><h2 id="sceneTitle">조용한 방</h2><p id="sceneBody">창 너머의 불빛이 천천히 꺼져 간다.</p></div>
+          <section class="stage-interaction" id="storyChoices" aria-label="현재 사건의 선택지" aria-live="polite"></section>
+          <div class="recap-label">RECENT HOURS / 지나온 시간</div><div class="scene-recap" id="sceneRecap"></div>
+        </section>
+        <section class="panel execution-panel"><div class="execution-text"><div class="section-kicker">03 / EXECUTE</div><h2 id="executionHeading">오늘을 시작할 준비</h2></div><div class="execution-buttons"><button class="button secondary" id="stepButton" data-cmd="step">1시간 진행</button><button class="button primary" id="autoButton" data-cmd="auto"><span>▶</span> 하루 자동 진행</button></div></section>
+      </div>
+      <aside class="right-stack">
+        <section class="panel omen-panel"><div class="section-kicker">BAG / 잔존물</div><h2>남겨진 물건</h2><div class="inventory-peek" id="inventoryPeek"></div></section>
+        <section class="panel collection-panel"><div class="section-kicker">ARCHIVE / 관리</div><div class="tabs" id="tabs"><button class="tab active" data-cmd="tab" data-value="skills">문자스킬 <span id="tabSkillNum">0</span></button><button class="tab" data-cmd="tab" data-value="ghosts">유령 <span id="tabGhostNum">0</span></button><button class="tab" data-cmd="tab" data-value="relics">유품 <span id="tabRelicNum">0</span></button><button class="tab" data-cmd="tab" data-value="logs">기록</button></div><div class="collection-content" id="tabContent" aria-live="polite"></div></section>
+      </aside>
+    </main>
+    <footer class="footer"><span>연명 강령</span><span>기록은 이곳에 남는다.</span></footer>
+  </div>
+
+  <div id="modalOverlay" class="modal-overlay" hidden><div class="modal-card" id="modalCard" role="dialog" aria-modal="true" aria-labelledby="modalTitle"></div></div>
+  <aside id="debugDrawer" class="debug-drawer" hidden aria-label="테스트 도구"><div class="debug-head"><div><div class="section-kicker">DEVELOPER / 테스트</div><h2>상태 조정 및 이벤트 검증</h2></div><button class="icon-button" type="button" data-cmd="debug">✕</button></div><p>실행 중인 세이브에 즉시 반영됩니다. 변경 전 파일로 내보내기를 권장합니다.</p><div class="debug-row"><select id="debugStat"></select><button class="button ghost" data-cmd="stat-minus">−10</button><button class="button ghost" data-cmd="stat-plus">+10</button></div><div class="debug-row"><select id="debugSkill"></select><button class="button ghost" data-cmd="grant-skill">문자스킬 지급</button></div><div class="debug-row"><select id="debugGhost"></select><button class="button ghost" data-cmd="grant-ghost">유령 추가</button></div><div class="debug-row"><select id="debugEncounter"></select><button class="button ghost" data-cmd="force-event">사건 발생</button></div><div class="debug-quick"><button class="button ghost" data-cmd="debug-clue">단서 +3</button><button class="button ghost" data-cmd="debug-money">자금 +10만</button><button class="button ghost" data-cmd="debug-spirit">신기 +20</button><button class="button ghost" data-cmd="copy-json">상태 JSON 복사</button></div><div class="debug-note" id="debugInfo"></div></aside>
+  <input id="importFile" type="file" accept=".json,application/json" hidden>
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+  <script src="data.js"></script>
+  <script src="expansion.js"></script>
+  <script src="engine.js"></script>
+  <script src="pixel.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

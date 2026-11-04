@@ -1,1 +1,69 @@
-# life_with_taboo
+# 연명 강령 — 흑백 웹게임 v0.5
+
+24시간 편성형 생활·강령 생존 시뮬레이터. 브라우저에서 오프라인으로 실행되는 HTML/CSS/JavaScript 프로젝트입니다.
+
+## 빠른 실행
+
+- **`PLAY.html`을 열면 오프라인 실행** (배경 이미지와 코드까지 하나의 파일에 포함).
+- `index.html`은 **GitHub Pages 배포용**입니다. 옆의 `.js`, `.css`, `assets/` 폴더를 함께 배포합니다.
+- Chromium/Edge 기반 최신 브라우저 권장.
+
+## v0.5 콘텐츠
+
+- 문자스킬 **77종** (기존 21 + 56)
+- 유령 **36종** (기존 9 + 27)
+- 선택형 사건 **145종** (기존 35 + 110), 일정별 사건 및 다단계 후속 사건
+- 식사 **26종** (기존 4 + 22)
+- 해방 보상: 지속 유품 **8종** / 별도 퀘스트 아이템 **8종**
+- 빙의·지박 이후의 퇴마사·무당·상담인·익명 업자 사건 (큰 비용, 성공 확률 차등)
+- 480×270 고대비 흑백 컷신. 별도 이미지 자산이므로 장면만 교체할 수 있습니다.
+- 수면 12시간 이상 시 정신력 감소. 수면만 하는 일정에는 일일 횡재 판정이 적용되지 않음.
+- 생활비 체납 시 누적 피해. 무자본 무한 생존 방지.
+- v0.4 및 v0.4.1 로컬/JSON 세이브 이전 지원.
+
+## GitHub Pages: 최초 한 번만 설정
+
+> 현재 이 프로젝트 전용 GitHub 저장소와 ChatGPT GitHub App 접근 권한이 없어 여기에서 실제 공개 URL은 확정하지 못했습니다. 다른 용도의 기존 저장소를 덮어쓰지 않았습니다.
+
+1. GitHub에서 **새 공개 저장소**를 생성합니다. 권장 이름: `yeonmyeong-gangryeong`.
+2. 이 프로젝트의 **배포 파일**을 저장소 최상위에 업로드합니다: `index.html`, `app.js`, `data.js`, `expansion.js`, `engine.js`, `pixel.js`, `style.css`, `style_v5.css`, `.nojekyll`, `assets/` 폴더. ZIP 그 자체를 올리면 사이트가 되지 않습니다.
+3. 저장소의 **Settings → Pages → Build and deployment → Source: Deploy from a branch → main / (root) → Save**.
+4. 이후 `main`에 수정 파일을 커밋·푸시하면 Pages가 다시 배포합니다. 설정 페이지의 **Visit site** 링크로 실제 주소를 확인하세요.
+5. 다음 대화에서 제가 직접 커밋·업데이트하려면 새 저장소가 ChatGPT GitHub 연결에 허용되어 있어야 합니다. GitHub App의 저장소 접근 범위를 새 저장소까지 지정하고, 저장소 주소를 알려 주세요.
+
+Windows + Git for Windows가 있으면 배포 파일들을 직접 업로드하는 대신 아래 명령으로 한 번에 푸시할 수 있습니다:
+
+```powershell
+.\deploy_git.ps1 -RepoUrl "https://github.com/USER/yeonmyeong-gangryeong.git"
+```
+
+GitHub Pages는 정적 사이트로서 코드가 공개됩니다. `.env`, 토큰, 개인정보, 개인 세이브 파일을 저장소에 올리지 마세요.
+
+## 주요 파일
+
+| 파일 | 내용 |
+|---|---|
+| `index.html` | UI 구조 / GitHub Pages 진입점 |
+| `style_v5.css` | 고대비 흑백 시각 리디자인 (`style.css` 기반) |
+| `data.js` / `expansion.js` | 원본 및 확장 콘텐츠 |
+| `engine.js` | 난수, 일정, 조사, 영혼, 유품, 퇴마, 세이브 |
+| `pixel.js`, `assets/` | 480×270 흑백 컷신 이미지와 연출 |
+| `app.js` | 일정 편집·선택지·UI 표시·디버그 |
+| `PLAY.html` | 오프라인 실행 가능한 단일 HTML |
+| `tests/game_v05.test.js` | 게임 로직 테스트 13개 |
+| `tests/browser_v05.py` | 브라우저 화면/조작 테스트 |
+
+## 테스트 명령
+
+```bash
+node tests/game_v05.test.js
+python tests/browser_v05.py
+```
+
+브라우저 테스트는 `playwright` 및 Chromium 실행 파일(`/usr/bin/chromium`)이 필요합니다. 검사 환경에 따라 해당 경로를 변경할 수 있습니다.
+
+## 세이브
+
+일반 브라우저에서는 같은 사이트 주소의 로컬 저장소를 사용합니다. **오프라인 파일과 GitHub Pages는 서로 다른 저장 공간**을 사용하므로 이사할 때는 먼저 `저장 내보내기`로 JSON을 백업하고, 새 사이트의 `불러오기`로 복원하세요.
+
+추가 기능은 공개 서버 없이 브라우저 내부에서만 계산합니다. 인터넷 조사 역시 게임 내 가상 조사이며 실제 웹 요청은 하지 않습니다.
