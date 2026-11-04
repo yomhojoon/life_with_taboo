@@ -23,7 +23,7 @@
 
 ## GitHub Pages: 최초 한 번만 설정
 
-> 현재 이 프로젝트 전용 GitHub 저장소와 ChatGPT GitHub App 접근 권한이 없어 여기에서 실제 공개 URL은 확정하지 못했습니다. 다른 용도의 기존 저장소를 덮어쓰지 않았습니다.
+> 배포 저장소: https://github.com/yomhojoon/life_with_taboo · 공개 사이트: https://yomhojoon.github.io/life_with_taboo/ · 최초 설정은 완료되었습니다.
 
 1. GitHub에서 **새 공개 저장소**를 생성합니다. 권장 이름: `yeonmyeong-gangryeong`.
 2. 이 프로젝트의 **배포 파일**을 저장소 최상위에 업로드합니다: `index.html`, `app.js`, `data.js`, `expansion.js`, `engine.js`, `pixel.js`, `style.css`, `style_v5.css`, `.nojekyll`, `assets/` 폴더. ZIP 그 자체를 올리면 사이트가 되지 않습니다.
