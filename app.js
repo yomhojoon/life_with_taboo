@@ -5,6 +5,7 @@ const game=new Game();
 const $=id=>document.getElementById(id);
 const esc=v=>String(v??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#39;');
 const pct=x=>Math.round(x*100);
+const whole=x=>Math.round(Number(x)||0).toLocaleString('ko-KR');
 const actionIcons={sleep:'▤',rest:'□',work:'▣',meal:'◯',research:'⌕',ritual:'✳',walk:'↟',purify:'◇'};
 const phaseName={planning:'일정 편성',running:'하루 진행',night:'심야 상점',dead:'사망'};
 const statCfg=[
@@ -44,8 +45,8 @@ function clickHandler(e){const b=e.target.closest('[data-cmd]');if(!b||b.disable
     case 'auto':if(autoMode){haltAuto();render();return;}if(s.phase==='planning'&&!game.start()){toast('24시간을 모두 편성해야 진행할 수 있습니다.');return;}autoMode=true;runAuto();return;
     case 'pause':haltAuto();render();return;
     case 'tab':tab=v;renderTabs();return;
-    case 'release':game.requestRelease(v);break;
-    case 'remove-skill':game.requestRemoveSkill(v);break;
+    case 'release':if(game.requestRelease(v))haltAuto();else toast('지금은 해방할 수 없습니다.');break;
+    case 'remove-skill':if(game.requestRemoveSkill(v))haltAuto();else toast('지금은 문자를 해제할 수 없습니다.');break;
     case 'confirm-remove-skill':game.confirmRemoveSkill(v==='yes');break;
     case 'wish':game.requestWish();break;
     case 'event-choice':game.chooseEncounter(Number(v));break;
@@ -97,12 +98,12 @@ function render(){
 }
 function renderStats(){const s=game.s;const html=statCfg.map(([key,name,icon,unit,color])=>{
   let val=s[key],critical=(key==='health'&&val<=20)||(key==='mental'&&val<=20)||(key==='spirit'&&val>=80);
-  const amount=key==='money'?moneyText(val):val;
+  const amount=key==='money'?moneyText(val):whole(val);
   const upper=key==='mental'?s.mental_max:key==='money'?350000:key==='health'||key==='spirit'?100:key==='luck'?30:8;
   const percentage=Math.round(Math.max(0,Math.min(100,val/upper*100)));
-  return `<article class="stat-card ${critical?'critical':''}"><div class="stat-head"><span>${esc(name)}</span><span class="stat-icon">${esc(icon)}</span></div><div class="stat-value">${esc(amount)}<span class="stat-suffix">${unit}</span>${key==='mental'?`<span class="stat-suffix">/ ${s.mental_max}</span>`:''}</div><div class="stat-track"><div style="width:${percentage}%;background:${color}"></div></div></article>`;}).join('');$('stats').innerHTML=html;}
+  return `<article class="stat-card ${critical?'critical':''}"><div class="stat-head"><span>${esc(name)}</span><span class="stat-icon">${esc(icon)}</span></div><div class="stat-value">${esc(amount)}<span class="stat-suffix">${unit}</span>${key==='mental'?`<span class="stat-suffix">/ ${whole(s.mental_max)}</span>`:''}</div><div class="stat-track"><div style="width:${percentage}%;background:${color}"></div></div></article>`;}).join('');$('stats').innerHTML=html;}
 function renderFortunes(){const s=game.s;const fortune=[['재물운',s.wealth],['인연운',s.bond],['영감운',s.omen]];
- $('fortuneStrip').innerHTML=`<div class="fortune-left"><span class="fortune-title">운세</span>${fortune.map(([name,value])=>`<div class="fortune-stat">${name} <strong class="${value<0?'minus':''}">${value>0?'+':''}${value}</strong></div>`).join('')}</div>`;}
+ $('fortuneStrip').innerHTML=`<div class="fortune-left"><span class="fortune-title">운세</span>${fortune.map(([name,value])=>`<div class="fortune-stat">${name} <strong class="${value<0?'minus':''}">${value>0?'+':''}${whole(value)}</strong></div>`).join('')}</div>`;}
 function renderBrushes(){const edit=game.canEditSchedule(),full=game.filledSlots()>=24;
  $('brushGrid').innerHTML=C.actions.map((a,i)=>`<button type="button" class="brush" data-cmd="queue-add" data-value="${a.id}" style="--action-color:${a.color}" title="1시간 추가" ${!edit||full?'disabled':''}><span class="brush-emoji">${actionIcons[a.id]}</span><span class="brush-info"><strong>${esc(a.short)}</strong></span><span class="brush-add" aria-hidden="true">＋</span></button>`).join('');
 }
@@ -125,20 +126,66 @@ function renderCounts(){const s=game.s;const totals=game.countSchedule().filter(
 function renderRisk(){const s=game.s,r=pct(game.ritualChance()),q=pct(game.releaseRisk());
  $('inventoryPeek').innerHTML=`<div>${(s.relics||[]).length}개의 유품</div><div>${(s.quest_items||[]).length}개의 남겨진 단서</div><div>${s.ghosts.filter(g=>g.state!=='active').length}개의 묶인 목소리</div>`;
  $('tabSkillNum').textContent=s.owned_skills.length;$('tabGhostNum').textContent=s.ghosts.length;$('tabRelicNum').textContent=(s.relics||[]).length+(s.quest_items||[]).length;}
+function effectStats(fx){
+ const labels={money:'자금',health:'건강',mental:'정신력',spirit:'신기',luck:'행운',wealth:'재물운',bond:'인연운',omen:'영감운',clues:'강령 단서',max_mental:'정신력 최대치'};
+ return Object.entries(fx||{}).filter(([,v])=>v!==0).map(([k,v])=>k==='doom'?(v>0?'불길한 운명 증가':'불길한 운명 약화'):`${labels[k]||k} ${v>=0?'+':'−'}${whole(Math.abs(v))}${k==='money'?'원':''}`).join(' · ');
+}
+const bonusLabels={job_extra:'알바 급여 계산치',sleep_extra:'수면 시 건강',rest_extra:'휴식 시 정신력',study_extra:'조사 발견 보정',ritual_bonus:'강령 성공률',purify_extra:'정화 시 신기 감소',meal_health:'식사 시 건강',meal_mental:'식사 시 정신력'};
+function effectBonus(bonus){return Object.entries(bonus||{}).filter(([,v])=>v!==0).map(([k,v])=>`${bonusLabels[k]||k} ${v>=0?'+':'−'}${whole(Math.abs(v))}${k==='job_extra'?'원':k==='ritual_bonus'?'%p':''}`).join(' · ');}
+function passiveDetails(x){
+ // An intentionally hidden skill stays hidden in all player-facing descriptions.
+ if(x.id==='meow')return ['야옹야옹'];
+ const out=[];
+ if(x.daily&&Object.keys(x.daily).length)out.push('매일 '+effectStats(x.daily));
+ if(x.bonus&&Object.keys(x.bonus).length)out.push('지속 '+effectBonus(x.bonus));
+ const sp=x.special||{};
+ if(sp.remove_bonus)out.push(`문자 해제 성공률 +${pct(sp.remove_bonus)}%p`);
+ if(sp.remove_scale_money)out.push(`문자 해제 성공 시 자금 보상(성공 누적에 비례)`);
+ for(const key of ['on_work','on_meal','on_research_failure','on_other_removed']){
+   const title={on_work:'알바 시',on_meal:'식사 시',on_research_failure:'조사 실패 시',on_other_removed:'다른 문자 해제 성공 시'}[key];
+   if(sp[key])out.push(`${title} ${effectStats(sp[key])}`);
+ }
+ for(const rule of sp.conditional_daily||[])out.push(`조건부 · ${rule.text||effectStats(rule.fx)}`);
+ return out.length?out:['일일·지속 효과 없음'];
+}
+function renderActiveEffects(s){
+ const owned=[
+  ['문자스킬',s.owned_skills.map(id=>C.skills.find(x=>x.id===id)).filter(Boolean)],
+  ['유령',s.ghosts.map(g=>({item:C.ghosts.find(x=>x.id===g.id),state:g.state})).filter(x=>x.item)],
+  ['유품',(s.relics||[]).map(id=>C.relics.find(x=>x.id===id)).filter(Boolean)]
+ ];
+ const daily={};
+ for(const [title,items] of owned){for(const entry of items){const x=entry.item||entry;if(x.id==='meow')continue;for(const [key,val] of Object.entries(x.daily||{}))daily[key]=(daily[key]||0)+val;
+ if(title==='유령'&&entry.state==='possessed'){daily.mental=(daily.mental||0)-2;daily.spirit=(daily.spirit||0)+1;}
+ }}
+ const summary=effectStats(daily)||'기본 일일 효과 없음';
+ let html=`<div class="effect-overview"><div class="effect-headline">현재 적용 효과</div><p>매일 정산 · ${esc(summary)}</p><small>일정 결과와 조건부 효과는 별도입니다. 알바 계산치는 22% 반영하며 상한이 있습니다.${s.owned_skills.includes('meow')?' 일부 효과는 알 수 없습니다.':''}</small></div>`;
+ for(const [title,entries] of owned){
+  html+=`<section class="effect-section"><h3>${title} <span>${entries.length}</span></h3>`;
+  if(!entries.length)html+='<p class="effect-muted">적용 중인 항목 없음</p>';
+  for(const entry of entries){const x=entry.item||entry;const details=passiveDetails(x);
+   if(title==='유령'&&entry.state==='possessed')details.push('빙의 · 매일 정신력 −2, 신기 +1');
+   html+=`<article class="effect-line"><strong>${esc(x.name)}</strong>${title==='유령'?`<small>${entry.state==='active'?'활성':entry.state==='bound'?'지박':'빙의'}</small>`:''}<p>${esc(details.join(' / '))}</p></article>`;
+  }
+  html+='</section>';
+ }
+ if((s.quest_items||[]).length)html+=`<div class="effect-quests">보유 단서 · ${esc(s.quest_items.join(', '))}</div>`;
+ return html;
+}
 function renderTabs(){document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active',b.dataset.value===tab));
  const s=game.s,empty=(glyph,title,desc)=>`<div class="empty-state"><span class="empty-symbol">${glyph}</span><strong>${title}</strong><p>${desc}</p></div>`;
  let html='';
- if(tab==='skills'){
-   html=s.owned_skills.length?s.owned_skills.map(id=>{const x=C.skills.find(x=>x.id===id);if(!x)return '';return `<article class="archive-item"><div class="archive-top"><strong>${esc(x.name)}</strong><span class="grade-badge grade-${x.grade}">${x.grade}등급</span></div><p>${esc(x.desc)}</p><div class="archive-bottom">${x.wish?`<small>소원 ${s.wish_spent.includes('clown')?'0':'1'} / 1</small>`:''}<div style="display:flex;gap:6px">${x.wish?`<button class="button tiny secondary" data-cmd="wish" ${s.phase!=='planning'||s.pending||s.wish_spent.includes('clown')?'disabled':''}>소원 빌기</button>`:''}<button class="button ghost tiny" data-cmd="remove-skill" data-value="${id}" ${s.phase!=='planning'||s.pending||s.remove_attempts_today>=3||x.locked?'disabled':''}>${x.locked?'해제 불가':'해제' }</button></div></div></article>`;}).join(''):empty('✦','아직 배운 문자가 없습니다.','');
+ if(tab==='effects'){html=renderActiveEffects(s);}
+ else if(tab==='skills'){
+   html=s.owned_skills.length?s.owned_skills.map(id=>{const x=C.skills.find(x=>x.id===id);if(!x)return '';return `<article class="archive-item"><div class="archive-top"><strong>${esc(x.name)}</strong><span class="grade-badge grade-${x.grade}">${x.grade}등급</span></div><p>${esc(x.desc)}</p><div class="archive-bottom">${x.wish?`<small>소원 ${s.wish_spent.includes('clown')?'0':'1'} / 1</small>`:''}<div style="display:flex;gap:6px">${x.wish?`<button class="button tiny secondary" data-cmd="wish" ${s.phase!=='planning'||s.pending||s.wish_spent.includes('clown')?'disabled':''}>소원 빌기</button>`:''}<button class="button ghost tiny" data-cmd="remove-skill" data-value="${id}" ${!['planning','running'].includes(s.phase)||s.management_backup||s.remove_attempts_today>=3||x.locked?'disabled':''}>${x.locked?'해제 불가':'해제' }</button></div></div></article>`;}).join(''):empty('✦','아직 배운 문자가 없습니다.','');
  }else if(tab==='ghosts'){
-   html=s.ghosts.length?s.ghosts.map(g=>{const x=C.ghosts.find(x=>x.id===g.id);if(!x)return '';const state=g.state==='active'?'해방 가능':g.state==='bound'?'지박':'빙의';return `<article class="archive-item ghost-entry"><img class="ghost-portrait" src="${(window.YG_ART_DATA&&window.YG_ART_DATA.ghost)||'assets/ghost.png'}" alt="${esc(x.name)} 초상화" loading="lazy"><div class="ghost-entry-body"><div class="archive-top"><strong>${esc(x.name)}</strong><span class="ghost-state ${g.state!=='active'?'locked':''}">${state}</span></div><p class="archive-story">${esc(x.story)}</p><p>${esc(x.desc)}</p><div class="archive-bottom">${g.state==='possessed'?'<small>매일 정신력 −2, 신기 +1</small>':''}<button class="button ghost tiny" data-cmd="release" data-value="${g.id}" ${g.state!=='active'||s.phase!=='planning'||s.pending?'disabled':''}>해방 시도</button></div></div></article>`;}).join(''):empty('☽','아직 받아들인 귀신이 없습니다.','');
+   html=s.ghosts.length?s.ghosts.map(g=>{const x=C.ghosts.find(x=>x.id===g.id);if(!x)return '';const state=g.state==='active'?'해방 가능':g.state==='bound'?'지박':'빙의';return `<article class="archive-item ghost-entry"><img class="ghost-portrait" src="${(window.YG_ART_DATA&&window.YG_ART_DATA.ghost)||'assets/ghost.png'}" alt="${esc(x.name)} 초상화" loading="lazy"><div class="ghost-entry-body"><div class="archive-top"><strong>${esc(x.name)}</strong><span class="ghost-state ${g.state!=='active'?'locked':''}">${state}</span></div><p class="archive-story">${esc(x.story)}</p><p>${esc(x.desc)}</p><div class="archive-bottom">${g.state==='possessed'?'<small>매일 정신력 −2, 신기 +1</small>':''}<button class="button ghost tiny" data-cmd="release" data-value="${g.id}" ${g.state!=='active'||!['planning','running'].includes(s.phase)||s.management_backup?'disabled':''}>해방 시도</button></div></div></article>`;}).join(''):empty('☽','아직 받아들인 귀신이 없습니다.','');
  }else if(tab==='relics'){
    html=(s.relics||[]).map(id=>{const r=(C.relics||[]).find(x=>x.id===id);return r?`<article class="archive-item"><div class="archive-top"><strong>${esc(r.name)}</strong><span class="grade-badge">유품</span></div><p>${esc(r.desc)}</p></article>`:'';}).join('')+(s.quest_items||[]).map(name=>`<article class="archive-item"><div class="archive-top"><strong>${esc(name)}</strong><span class="grade-badge">단서</span></div></article>`).join('');
    if(!html)html=empty('□','남겨진 물건이 없습니다.','');
  }else if(tab==='logs'){
    html=(s.logs.length?s.logs:[]).map(x=>`<div class="log-item">${esc(x)}</div>`).join('')||empty('☷','아직 기록이 없습니다.','일정을 진행하면 기록이 쌓입니다.');
- }else if(tab==='guide'){
-   html=`<div class="guide"><h3>생존 조건</h3><p>건강 또는 정신력이 0이 되면 사망하며, 신기가 100에 도달해도 사망합니다. 불길한 운명에 의한 즉사도 발생할 수 있습니다. 우선 7일 생존을 목표로 합니다.</p><h3>24시간 일정</h3><p>행동을 누르면 가장 앞의 빈 시간에 배치됩니다. 비어 있는 시간을 먼저 누르면 특정 시각에 직접 넣을 수 있습니다. 항목을 삭제해도 뒤의 시간이 이동하지 않습니다. 24칸을 모두 채워야 하루를 시작할 수 있습니다. 수면이 4시간 이하이면 하루 종료 시 큰 피해와 신기 증가가 발생합니다. 5~6시간 역시 피로가 누적됩니다.</p><h3>문자스킬</h3><p>발견·구매 시 1~4개 중 최대 1개만 얻습니다. 건너뛸 수 있습니다. 문자스킬은 지속적으로 적용됩니다. 제거 시도는 하루 3회이며 등급이 높을수록 성공률이 낮습니다. 야옹야옹은 제거할 수 없습니다.</p><h3>문자 해제</h3><p>일정 편성 중 문자스킬의 해제 버튼을 누르면 제거를 시도할 수 있습니다. 제거 실패 시에도 일일 시도 횟수가 소모됩니다. 이미 받은 즉시 효과는 남습니다. 정신력 최대치 증가는 해제와 함께 취소됩니다.</p><h3>인터넷 조사</h3><p>기본 문자 발견률은 1시간당 약 19%이며 하루 최대 한 번만 후보가 나타납니다. 나머지는 해방 정보, 단서, 조사 실패로 나뉩니다. 해방 자료를 찾으면 신기 감소 또는 다음 해방의 위험 감소를 선택할 수 있습니다.</p><h3>강령과 해방</h3><p>성공률: 기본 24% + 신기×0.55%p + 단서×5%p + 영감운×1.8%p + 패시브 (최소 5%, 최대 91%). 해방 실패 확률: 기본 7% + 신기×0.7%p (최대 82%).</p><h3>새벽의 정산</h3><p>수면 부족 → 보유 문자·유령 일일 효과 → 생활비 18,000원 → 운세 사건 → 심야 상점 순서로 진행됩니다.</p><h3>테스트 / 세이브</h3><p>상단 <code>⚙ 테스트</code>를 누르면 수치를 조정하고 스킬·유령·사건을 임의 발생시킬 수 있습니다. 자동 저장이 켜져 있으며 JSON 파일로 복구할 수 있습니다.</p></div>`;
+
  }
  $('tabContent').innerHTML=html;
 }
@@ -169,7 +216,7 @@ function modalFrame(kicker,title,intro,inner,bottom=''){
  return `<div class="modal-kicker">${esc(kicker)}</div>${title?`<h2 id="modalTitle">${esc(title)}</h2>`:''}${intro?`<p class="modal-intro">${esc(intro)}</p>`:''}${inner||''}${bottom?`<div class="modal-bottom">${bottom}</div>`:''}`;
 }
 function renderModal(){const s=game.s,p=s.pending,overlay=$('modalOverlay');overlay.hidden=true;
- const target=$('storyChoices');if(!p&&s.phase!=='dead'){lastModalKey='';target.innerHTML='';return;}
+ const management=Boolean(s.management_backup);overlay.hidden=!management;const target=management?$('modalCard'):$('storyChoices');if(!p&&s.phase!=='dead'){lastModalKey='';target.innerHTML='';return;}
  let html='',kind=s.phase==='dead'?'dead':p.kind;
  if(kind==='dead'){
    html=modalFrame('END OF LIFE · '+s.day+'일차','연명에 실패했다',s.death_reason,`<div class="modal-end">당신은 ${s.day}일차 ${s.hour}시까지 살아남았다.\n어떤 목소리들은 여전히 방 안에 남아 있다.</div>`,`<span class="modal-hint">다음 시도에서 일정을 바꾸거나 실험해 보세요.</span><button class="button danger" data-cmd="restart">새 삶 시작하기</button>`);
@@ -181,7 +228,7 @@ function renderModal(){const s=game.s,p=s.pending,overlay=$('modalOverlay');over
    const shop=p.source==='shop';const options=p.ids.map((id,i)=>{const x=C.skills.find(x=>x.id===id);if(!x)return '';const price=skillPrice(x),afford=!shop||s.money>=price;return `<button class="choice-card" data-cmd="skill-choice" data-value="${i}" ${afford?'':'disabled'}><div class="choice-head"><strong>${esc(x.name)}</strong><span class="grade-badge grade-${x.grade}">${x.grade}등급</span></div><div class="choice-description">${esc(x.desc)}</div><div class="choice-cost">${shop?moneyText(price)+'원'+(afford?'':' · 잔액 부족'):'무료로 습득'}</div></button>`;});
    html=modalFrame(shop?'MIDNIGHT SHOP / 하루 사이의 상점':'ARCHIVED FORMULA / 발견한 문자',shop?'경계의 상점':'잊힌 글귀를 발견했다',shop?'새벽과 아침 사이에만 열리는 상점. 판매자는 끝내 얼굴을 보여주지 않는다.':'검색 기록에 알 수 없는 글귀가 남았다. 기억할 수 있는 문자는 단 하나뿐이다.',modalChoices(options),`<button class="button secondary" data-cmd="skill-choice" data-value="-1">선택하지 않고 지나가기</button>`);
  }else if(kind==='lore'){
-   const opts=[['정화 문장을 따라 적는다','정신력 −5, 자금 −3,000원, 신기 −7'],['해방 매듭법을 기록한다','정신력 −4, 다음 해방 시 실패 위험 13%p 감소'],['강령 단서로 활용한다','강령 단서 +1, 신기 +2'],['조사를 종료한다','추가 효과 없음']];
+   const opts=[['정화 문장을 따라 적는다','정신력 −5, 자금 −3,000원, 신기 −7'],['해방을 돕는 부적 제작법을 기록한다','정신력 −4, 다음 해방 시 실패 위험 13%p 감소'],['강령 단서로 활용한다','강령 단서 +1, 신기 +2'],['조사를 종료한다','추가 효과 없음']];
    html=modalFrame('RESEARCH / 해방과 제령','해방에 관한 기록','검증되지 않은 게시글 속에서 실제 의식의 순서를 찾아냈다. 어떤 부분을 기록할 것인가?',modalChoices(opts.map(([name,desc],i)=>`<button class="choice-card" data-cmd="lore-choice" data-value="${i}"><div class="choice-head"><strong>${name}</strong><span class="choice-title">선택 ${i+1}</span></div><div class="choice-description">${desc}</div></button>`)));
  }else if(kind==='notice'){
    html=modalFrame('SEANCE LOG / 결과',p.title,p.body,'',`<button class="button primary" data-cmd="close-notice">계속하기</button>`);

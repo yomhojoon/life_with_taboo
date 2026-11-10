@@ -10,7 +10,7 @@
   const DOOM_FACTOR = .01; // 1 hidden fate = 1% death chance at the end of each day
   const byId = (items, id) => items.find(x => x.id === id);
   const bounded = (n, lo, hi) => Math.max(lo, Math.min(hi, n));
-  const moneyText = n => Math.round(n).toLocaleString('ko-KR');
+  const moneyText = n => Math.round(Number(n)||0).toLocaleString('ko-KR');
   const copy = obj => JSON.parse(JSON.stringify(obj));
 
   function safeStorage() {
@@ -31,7 +31,7 @@
         luck:0, wealth:0, bond:0, omen:0, clues:0, meal_index:0, food_last:null, food_streak:0, food_eaten_today:0, food_last_day:0, food_today_index:null, meal_history:[],
         schedule: Array(24).fill(null), owned_skills:[], ghosts:[], relics:[], quest_items:[], delayed:[], unpaid_days:0,
         wish_spent:[], remove_attempts_today:0, removed_skills_success:0, logs:['01일 00시 · 새벽. 오늘을 위한 24시간의 빈 일정 큐를 열었다.'],
-        pending:null, sleep_today:0, day_start:{money:200000, health:100, mental:100, spirit:0},
+        pending:null, management_backup:null, sleep_today:0, day_start:{money:200000, health:100, mental:100, spirit:0},
         last_encounter:'', milestones:[], event_history:[], event_count_day:0, next_events:[],
         research_found_today:0, research_attempts_today:0, release_wards:0, release_rewards:0,
         scene:{title:'불 꺼진 방',body:'아직 오늘의 첫 시간을 시작하지 않았다. 벽 너머로 평범한 하루의 소리가 들린다.',action:'rest',hour:0,day:1},
@@ -86,7 +86,7 @@
     randInt(a,b) { return a+Math.floor(this.rand()*(b-a+1)); }
     takeRandom(a) { return a[this.randInt(0,a.length-1)]; }
     log(t) { this.s.logs.unshift(`${String(this.s.day).padStart(2,'0')}일 ${String(Math.min(this.s.hour,24)).padStart(2,'0')}시 · ${t}`);if(this.s.logs.length>160)this.s.logs.length=160; }
-    effectsText(o) { const es=Object.entries(o||{}).filter(([,v])=>v!==0).map(([k,v])=>k==='doom'?(v>0?'불길한 운명 증가':'불길한 운명 약화'):`${STAT_LABELS[k]||k} ${v>=0?'+':'−'}${k==='money'?moneyText(Math.abs(v))+'원':Math.abs(v)}`);return es.length?es.join(' / '):'변화 없음'; }
+    effectsText(o) { const es=Object.entries(o||{}).filter(([,v])=>v!==0).map(([k,v])=>k==='doom'?(v>0?'불길한 운명 증가':'불길한 운명 약화'):`${STAT_LABELS[k]||k} ${v>=0?'+':'−'}${k==='money'?moneyText(Math.abs(v))+'원':Math.round(Math.abs(v))}`);return es.length?es.join(' / '):'변화 없음'; }
     apply(o) {
       const s=this.s;
       for (const [key, raw] of Object.entries(o||{})) {
@@ -110,7 +110,7 @@
       s.death_reason = s.health<=0?'건강이 0이 되었다. 육체가 더 이상 버티지 못한다.':
         s.mental<=0?'정신력이 0이 되었다. 자신의 목소리를 구분할 수 없다.':
         s.spirit>=100?'신기가 100에 도달했다. 불러들인 것들에게 삼켜졌다.':'';
-      if(s.death_reason){s.phase='dead';s.pending=null;this.log('사망 · '+s.death_reason);this.save();return true;}
+      if(s.death_reason){s.phase='dead';s.pending=null;s.management_backup=null;this.log('사망 · '+s.death_reason);this.save();return true;}
       return false;
     }
     bonuses() {
@@ -146,7 +146,7 @@
     }
     removalChance(skill) {
       if(!skill||skill.locked||skill.id==='meow')return 0;
-      const grades=[.93,.78,.58,.33];
+      const grades=[.90,.75,.55,.30];
       const bonus=this.activePassives().reduce((n,p)=>n+(p.special?.remove_bonus||0),0);
       return bounded(grades[skill.grade]+bonus,.10,.97);
     }
@@ -156,7 +156,7 @@
     start() { if(!this.canEditSchedule()||this.filledSlots()!==24)return false;this.s.phase='running';this.log('일정 실행. 오늘의 운세가 움직이기 시작했다.');this.save();return true; }
     advanceHour() {
       const s=this.s;
-      if(s.phase!=='running'||s.pending)return false;
+      if(s.phase!=='running'||s.pending||s.management_backup)return false;
       if(s.hour>=24){this.finishDay();return true;}
       const h=s.hour, action=s.schedule[h];s.hour++;
       const name=(byId(C.actions,action)||{}).name||'빈 시간';
@@ -356,7 +356,7 @@
       if(op.consume_item){const i=s.quest_items.indexOf(op.consume_item);if(i>=0)s.quest_items.splice(i,1);}
       if(op.relic){const item=(C.relics||[]).find(r=>r.name===op.relic);if(item&&!s.relics.includes(item.id)){s.relics.push(item.id);text+=' '+item.name+'을(를) 얻었다.';}}
       if(op.item&&!s.quest_items.includes(op.item)){s.quest_items.push(op.item);text+=' '+op.item+'을(를) 얻었다.';}
-      if(op.ward){s.release_wards=Math.min(3,s.release_wards+op.ward);text+=' (해방 보호 매듭 +1)';}
+      if(op.ward){s.release_wards=Math.min(3,s.release_wards+op.ward);text+=' (해방 부적 +1)';}
       if(op.follow){
         const hours=(op.follow_days||0)*24+(op.follow_hours||0);
         const due=(s.day-1)*24+s.hour+Math.max(1,hours);
@@ -375,7 +375,7 @@
       const s=this.s;if(s.pending?.kind!=='lore'||!Number.isInteger(i)||i<0||i>3)return false;
       const results=[
         {text:'읽은 정화 문장을 따라 적자 방 안의 기운이 잠잠해진다.',fx:{spirit:-7,mental:-5,money:-3000}},
-        {text:'해방 매듭법을 기록했다. 다음 해방 시도에서 실패 위험을 13%p 낮출 수 있다.',fx:{mental:-4},ward:1},
+        {text:'해방 의식에 쓰는 부적의 제작법을 기록했다. 다음 해방 시도에서 실패 위험이 줄어든다.',fx:{mental:-4},ward:1},
         {text:'해방의 배열을 거꾸로 읽자 강령진의 구조를 이해했다.',fx:{clues:1,spirit:2}},
         {text:'위험한 의식이라고 판단해 창을 닫았다.',fx:{}}
       ];
@@ -400,22 +400,41 @@
       if(s.phase==='night')this.nextDay();else this.checkDeath();
       this.save();return true;
     }
+    // Managing a word or spirit must not destroy a pending encounter or research choice.
+    beginManagement(kind,id) {
+      const s=this.s;
+      if(!['planning','running'].includes(s.phase)||s.management_backup)return false;
+      s.management_backup={pending:copy(s.pending),scene:copy(s.scene)};
+      s.pending={kind,id};this.save();return true;
+    }
+    resumeManagement(){
+      const s=this.s,backup=s.management_backup;
+      if(!backup)return false;
+      s.management_backup=null;
+      if(s.phase==='dead'){s.pending=null;return true;}
+      s.pending=backup.pending||null;
+      if(backup.scene)s.scene=backup.scene;
+      if(s.phase==='running'&&s.hour>=24&&!s.pending)this.finishDay();
+      this.save();return true;
+    }
     requestRemoveSkill(id) {
-      if(this.s.phase!=='planning'||this.s.pending||!this.s.owned_skills.includes(id)||this.s.remove_attempts_today>=3)return false;
+      if(!this.s.owned_skills.includes(id)||this.s.remove_attempts_today>=3)return false;
       const skill=byId(C.skills,id);
       if(!skill||skill.locked||id==='meow')return false;
-      this.s.pending={kind:'remove-skill',id};this.save();return true;
+      return this.beginManagement('remove-skill',id);
     }
     confirmRemoveSkill(yes) {
-      const s=this.s,p=s.pending;
-      if(p?.kind!=='remove-skill')return false;
-      const skill=byId(C.skills,p.id);s.pending=null;
-      if(yes&&skill&&s.owned_skills.includes(p.id)&&s.remove_attempts_today<3&&!skill.locked&&p.id!=='meow') {
+      const s=this.s,p=s.pending;if(p?.kind!=='remove-skill'||!s.management_backup)return false;
+      const skill=byId(C.skills,p.id);
+      if(!yes){this.resumeManagement();return true;}
+      s.pending=null;
+      if(skill&&s.owned_skills.includes(p.id)&&s.remove_attempts_today<3&&!skill.locked&&p.id!=='meow') {
         s.remove_attempts_today++;
         const chance=this.removalChance(skill);
         if(this.rand()<chance){
           s.owned_skills.splice(s.owned_skills.indexOf(p.id),1);
           if(skill.gain?.max_mental)this.apply({max_mental:-skill.gain.max_mental});
+          if(s.phase==='dead'){s.management_backup=null;return true;}
           s.removed_skills_success++;
           this.log(`문자 해제 성공 · ${skill.name}. 오늘 남은 시도 ${3-s.remove_attempts_today}회.`);
           this.specialEffect('on_other_removed',p.id);
@@ -426,24 +445,29 @@
         }else this.log(`문자 해제 실패 · ${skill.name}. 오늘 남은 시도 ${3-s.remove_attempts_today}회.`);
         if(s.phase!=='dead')s.pending={kind:'notice',title:'문자 해제 결과',body:s.logs[0]};
       }
+      if(s.phase==='dead')s.management_backup=null;
+      else if(!s.pending)this.resumeManagement();
       this.save();return true;
     }
     requestRelease(id) {
-      if(this.s.phase!=='planning'||this.s.pending||!this.s.ghosts.some(g=>g.id===id&&g.state==='active'))return false;
-      this.s.pending={kind:'release',id};this.save();return true;
+      if(!this.s.ghosts.some(g=>g.id===id&&g.state==='active'))return false;
+      return this.beginManagement('release',id);
     }
     confirmRelease(yes) {
-      const s=this.s,p=s.pending;if(p?.kind!=='release')return false;
-      const g=s.ghosts.find(g=>g.id===p.id&&g.state==='active');s.pending=null;if(!yes||!g){this.save();return true;}
+      const s=this.s,p=s.pending;if(p?.kind!=='release'||!s.management_backup)return false;
+      const g=s.ghosts.find(g=>g.id===p.id&&g.state==='active');
+      if(!yes||!g){this.resumeManagement();return true;}
+      s.pending=null;
       const name=byId(C.ghosts,g.id).name,risk=this.releaseRisk();
-      if(s.release_wards>0){s.release_wards--;this.log('해방 보호 매듭 1개 사용.');}
-      this.apply({mental:-5});if(s.phase==='dead')return true;
+      if(s.release_wards>0){s.release_wards--;this.log('해방 부적 1개 사용.');}
+      this.apply({mental:-5});if(s.phase==='dead'){s.management_backup=null;return true;}
       if(this.rand()<risk){
         if(this.rand()<.48){g.state='possessed';s.pending={kind:'notice',title:'해방 실패 · 빙의',body:`${name}이(가) 몸 안에 정착했다. 제거 불가.\n\n기존 패널티에 매일 정신력 −2, 신기 +1이 추가된다.`};}
         else {g.state='bound';s.pending={kind:'notice',title:'해방 실패 · 지박',body:`${name}이(가) 이 장소에 묶였다. 생존하는 동안 제거할 수 없다.`};}
         this.log(`해방 실패 · ${name} ${g.state==='possessed'?'빙의':'지박'}.`);
       }else{
         s.ghosts.splice(s.ghosts.indexOf(g),1);this.apply({spirit:-8,mental:4,doom:-1});
+        if(s.phase==='dead'){s.management_backup=null;return true;}
         const reward=this.grantReleaseReward();
         s.scene.action='ghost';s.scene.tone='release';
         s.pending={kind:'notice',title:'해방 성공',body:`${name}을(를) 떠나보냈다.\n신기 −8, 정신력 +4.\n${reward}`};this.log(`해방 성공 · ${name}. ${reward}`);
@@ -505,7 +529,7 @@
       if(s.phase!=='dead')this.log('새로운 하루. 이전 일정이 유지된다. 다시 편성할 수 있다.');
       this.save();return true;
     }
-    closeNotice(){if(this.s.pending?.kind!=='notice')return false;this.s.pending=null;if(this.s.phase==='running'&&this.s.hour>=24)this.finishDay();this.save();return true;}
+    closeNotice(){if(this.s.pending?.kind!=='notice')return false;this.s.pending=null;if(this.s.management_backup)return this.resumeManagement();if(this.s.phase==='running'&&this.s.hour>=24)this.finishDay();this.save();return true;}
     debugChange(key, amount) {if(!Object.hasOwn(STAT_LABELS,key)||this.s.phase==='dead')return false;this.apply({[key]:amount});this.log(`[테스트] ${STAT_LABELS[key]} ${amount>=0?'+':''}${amount}`);this.save();return true;}
     debugSkill(id) {if(this.s.phase==='dead')return false;const ok=this.acquireSkill(id,'research');return ok;}
     debugGhost(id) {if(this.s.phase==='dead'||!byId(C.ghosts,id)||this.s.ghosts.some(g=>g.id===id))return false;this.s.ghosts.push({id,state:'active'});this.log('[테스트] 유령 추가 · '+byId(C.ghosts,id).name);this.save();return true;}
@@ -539,6 +563,7 @@
       migrated.meal_catalog_version=2;
       migrated.doom=Math.max(0,Number(migrated.doom)||0);
       migrated.remove_attempts_today=Math.max(0,Math.min(3,Number(migrated.remove_attempts_today)||0));
+      if(!migrated.management_backup||typeof migrated.management_backup!=='object')migrated.management_backup=null;
       migrated.removed_skills_success=Math.max(0,Number(migrated.removed_skills_success)||0);
       // Older saves had no scene or research/branching counters.
       for(const k of ['relics','quest_items','event_history','next_events','scene_history'])if(!Array.isArray(migrated[k]))migrated[k]=[];
@@ -550,6 +575,7 @@
       if(!Number.isInteger(migrated.food_last_day))migrated.food_last_day=0;
       if(!Number.isInteger(migrated.food_today_index))migrated.food_today_index=null;
       if(!migrated.scene||typeof migrated.scene!=='object')migrated.scene=fresh.scene;
+      if(['remove-skill','release'].includes(migrated.pending?.kind)&&!migrated.management_backup)migrated.pending=null;
       this.s=migrated;if(persist)this.save();return true;
     }
   }

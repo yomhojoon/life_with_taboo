@@ -5309,7 +5309,7 @@
 
 // Unified descriptions are generated from executable data to prevent text/effect drift.
 const statNames={money:'자금',health:'건강',mental:'정신력',spirit:'신기',luck:'행운',wealth:'재물운',bond:'인연운',omen:'영감운',clues:'강령 단서',max_mental:'정신력 최대치'};
-const bonusNames={job_extra:'아르바이트 수입',sleep_extra:'수면 시 건강',rest_extra:'휴식 시 정신력',study_extra:'조사 발견 보정',ritual_bonus:'강령 성공률',purify_extra:'정화 시 신기 감소량',meal_health:'식사 시 건강',meal_mental:'식사 시 정신력'};
+const bonusNames={job_extra:'알바 급여 계산치',sleep_extra:'수면 시 건강',rest_extra:'휴식 시 정신력',study_extra:'조사 발견 보정',ritual_bonus:'강령 성공률',purify_extra:'정화 시 신기 감소량',meal_health:'식사 시 건강',meal_mental:'식사 시 정신력'};
 function displayStats(obj){
  return Object.entries(obj||{}).filter(([,v])=>v!==0).map(([key,val])=>key==='doom'?(val>0?'불길한 운명 증가':'불길한 운명 약화'):`${statNames[key]||key} ${val>0?'+':'−'}${Math.abs(val).toLocaleString('ko-KR')}${key==='money'?'원':''}`).join(', ');
 }
@@ -5337,6 +5337,29 @@ function describe(item){
  if(item.locked)parts.push('제거할 수 없음');
  const spec=specialText(item);if(spec)parts.push(spec);
  return parts.map(s=>s.endsWith('.')?s:s+'.').join(' ');
+}
+// v0.5.6 - retain signature traits; prune redundant minor effect lines.
+const compactChanges={
+ v5_sk_38:{daily:{spirit:2}},
+ v5_sk_39:{special:{on_other_removed:{doom:-1}}},
+ v5_sk_49:{daily:{mental:-15}},
+ v5_sk_50:{special:null},
+ v5_sk_52:{gain:{money:70000}},
+ v5_sk_55:{daily:{mental:-18,spirit:5}},
+ driver:{daily:{mental:-7,spirit:2}},
+ v5_gh_05:{bonus:{job_extra:12000}},
+ v5_gh_12:{daily:{health:-12,spirit:3},bonus:{job_extra:14000}},
+ v5_gh_16:{bonus:{job_extra:10000}},
+ v5_gh_18:{bonus:{study_extra:16}},
+ v5_gh_20:{daily:{mental:-13,spirit:5}},
+ v5_gh_24:{bonus:{purify_extra:14}},
+ v5_gh_26:{bonus:{ritual_bonus:32}},
+ v5_gh_27:{bonus:{rest_extra:13}},
+ r05:{special:null}
+};
+for(const item of [...C.skills,...C.ghosts,...C.relics]){
+ const change=compactChanges[item.id];if(!change)continue;
+ for(const [key,value] of Object.entries(change)){if(value===null)delete item[key];else item[key]=value;}
 }
 for(const item of [...C.skills,...C.ghosts,...C.relics])item.desc=describe(item);
 

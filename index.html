@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#050505">
   <meta name="description" content="연명 강령 — 24시간을 나누어 살아남는 강령 생존 시뮬레이터. 웹 테스트 버전.">
-  <title>연명 강령 | Life with Taboo v0.5.5</title>
+  <title>연명 강령 | Life with Taboo v0.5.6</title>
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="style_v5.css">
   <link rel="stylesheet" href="style_v051.css">
@@ -15,7 +15,7 @@
   <div class="shell" id="gameApp">
     <header class="topbar">
       <div class="brand"><div class="brand-mark" aria-hidden="true">延</div><div class="brand-text"><strong>연명 강령</strong><small>THE HOURS BETWEEN</small></div></div>
-      <nav class="top-navigation" aria-label="메뉴"><a href="#hourGrid">일정</a><a href="#stagePanel">장면</a><a href="#collectionPanel">문자 · 유령</a><a href="gallery.html">도감</a><a href="gallery.html?v=054" id="ygGalleryLink">도감</a><a href="#chroniclePanel">기록</a></nav>
+      <nav class="top-navigation" aria-label="메뉴"><a href="#hourGrid">일정</a><a href="#stagePanel">장면</a><a href="#collectionPanel">문자 · 유령</a><a href="#chroniclePanel">기록</a></nav>
       <div class="day-indicator"><div class="day-top"><span>생존 기록</span><span id="phaseBadge">일정 편성</span></div><div class="day-number"><small>DAY</small> <span id="dayNumber">01</span></div><div class="day-bottom"><strong id="clockLabel">00:00</strong><span id="dayProgressLabel">0 / 24시간 경과</span></div><div class="day-track"><div id="dayProgress" style="width:0%"></div></div></div><div class="topbar-actions">
         <span class="autosave-tag" id="saveIndicator"><span class="led"></span>로컬 저장</span>
         <button class="button ghost tiny" type="button" data-cmd="export">저장 내보내기</button>
@@ -56,7 +56,7 @@
       </div>
       <aside class="right-stack">
         <section class="panel omen-panel"><div class="section-kicker">BAG / 잔존물</div><h2>남겨진 물건</h2><div class="inventory-peek" id="inventoryPeek"></div></section>
-        <section class="panel collection-panel" id="collectionPanel"><div class="section-kicker">ARCHIVE / 관리</div><div class="tabs" id="tabs"><button class="tab active" data-cmd="tab" data-value="skills">문자스킬 <span id="tabSkillNum">0</span></button><button class="tab" data-cmd="tab" data-value="ghosts">유령 <span id="tabGhostNum">0</span></button><button class="tab" data-cmd="tab" data-value="relics">유품 <span id="tabRelicNum">0</span></button><button class="tab" data-cmd="tab" data-value="logs">기록</button></div><div class="collection-content" id="tabContent" aria-live="polite"></div></section>
+        <section class="panel collection-panel" id="collectionPanel"><div class="section-kicker">ARCHIVE / 관리</div><div class="tabs" id="tabs"><button class="tab" data-cmd="tab" data-value="effects">지속 효과</button><button class="tab active" data-cmd="tab" data-value="skills">문자스킬 <span id="tabSkillNum">0</span></button><button class="tab" data-cmd="tab" data-value="ghosts">유령 <span id="tabGhostNum">0</span></button><button class="tab" data-cmd="tab" data-value="relics">유품 <span id="tabRelicNum">0</span></button><button class="tab" data-cmd="tab" data-value="logs">기록</button></div><div class="collection-content" id="tabContent" aria-live="polite"></div></section>
       </aside>
     </main>
     <section class="chronicle-panel" id="chroniclePanel" aria-label="지나온 시간">
@@ -69,13 +69,6 @@
   <div id="modalOverlay" class="modal-overlay" hidden><div class="modal-card" id="modalCard" role="dialog" aria-modal="true" aria-labelledby="modalTitle"></div></div>
   <aside id="debugDrawer" class="debug-drawer" hidden aria-label="테스트 도구"><div class="debug-head"><div><div class="section-kicker">DEVELOPER / 테스트</div><h2>상태 조정 및 이벤트 검증</h2></div><button class="icon-button" type="button" data-cmd="debug">✕</button></div><p>실행 중인 세이브에 즉시 반영됩니다. 변경 전 파일로 내보내기를 권장합니다.</p><div class="debug-row"><select id="debugStat"></select><button class="button ghost" data-cmd="stat-minus">−10</button><button class="button ghost" data-cmd="stat-plus">+10</button></div><div class="debug-row"><select id="debugSkill"></select><button class="button ghost" data-cmd="grant-skill">문자스킬 지급</button></div><div class="debug-row"><select id="debugGhost"></select><button class="button ghost" data-cmd="grant-ghost">유령 추가</button></div><div class="debug-row"><select id="debugEncounter"></select><button class="button ghost" data-cmd="force-event">사건 발생</button></div><div class="debug-quick"><button class="button ghost" data-cmd="debug-clue">단서 +3</button><button class="button ghost" data-cmd="debug-money">자금 +10만</button><button class="button ghost" data-cmd="debug-spirit">신기 +20</button><button class="button ghost" data-cmd="copy-json">상태 JSON 복사</button></div><div class="debug-note" id="debugInfo"></div></aside>
 
-<section id="ygGallery" role="dialog" aria-modal="true" aria-label="유령과 장면 도감" hidden><div class="yg-gallery-shell">
- <header class="yg-gallery-header"><div><h2>이미지 도감</h2><small>흑백으로 남은 장면들</small></div><div style="display:flex;gap:8px;align-items:center"><a href="gallery.html?v=054" target="_blank" rel="noopener">독립 페이지</a><button type="button" id="ygGalleryClose">닫기 ×</button></div></header>
- <div class="yg-gallery-controls"><button type="button" data-gallery-cat="ghost" aria-pressed="true">유령 초상화</button><button type="button" data-gallery-cat="scene" aria-pressed="false">장면 컷신</button><input id="ygGalleryFind" type="search" placeholder="이름 검색" aria-label="이름 검색"></div>
- <div class="yg-gallery-layout"><div id="ygGalleryGrid" class="yg-gallery-grid"></div><aside class="yg-gallery-preview"><img id="ygGalleryPreview" alt="선택한 장면"><h3 id="ygGalleryTitle"></h3><p id="ygGalleryDesc"></p><div style="display:flex;gap:8px"><button id="ygGalleryPrev" type="button">이전</button><button id="ygGalleryNext" type="button">다음</button></div></aside></div>
- <div class="yg-gallery-footer">유령 원본 초상화 1장 · 장면 14종 · 게임 진행 상황과 무관하게 열람할 수 있습니다.</div>
-</div></section>
-
   <input id="importFile" type="file" accept=".json,application/json" hidden>
   <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
   <script src="data.js"></script>
@@ -83,32 +76,6 @@
   <script src="engine.js"></script>
   <script src="pixel.js"></script>
   <script src="app.js"></script>
-  <script>
 
-(function(){'use strict';
-  let tab='ghost', selection='', current=[];
-  const scenes=[['room','침실'],['meal','식사 · 편의점'],['park','고요한 공원'],['alley','골목'],['shrine','외진 사당'],['temple','밤의 사찰'],['window','창가'],['apartment','폐아파트'],['street','비 내린 거리'],['city','도시의 밤'],['ritual','제단'],['monitor','인터넷 조사'],['desk','책상'],['terminal','터미널']];
-  const el=id=>document.getElementById(id);
-  const data=()=>window.YG_ART_DATA||{};
-  const list=()=>tab==='ghost'?[{id:'ghost',name:'유령 원본 초상화',desc:'모든 유령에게 공통으로 사용되는 하나의 초상화.',scene:false}]:scenes.map(([id,name])=>({id,name,desc:'',scene:true}));
-  function draw(){const phrase=(el('ygGalleryFind')?.value||'').trim().toLowerCase();current=list().filter(v=>v.name.toLowerCase().includes(phrase)||v.id.toLowerCase().includes(phrase));
-    if(!current.find(v=>v.id===selection))selection=current[0]?.id||'';
-    el('ygGalleryGrid').replaceChildren();
-    for(const item of current){const btn=document.createElement('button');btn.type='button';btn.className='yg-gallery-card'+(item.scene?' scene':'');btn.setAttribute('aria-pressed',String(item.id===selection));
-      const img=new Image();img.alt='';img.loading='lazy';img.src=data()[item.id]||'';const title=document.createElement('strong');title.textContent=item.name;
-      btn.append(img,title);btn.addEventListener('click',()=>{selection=item.id;draw()});el('ygGalleryGrid').append(btn);}
-    const chosen=current.find(v=>v.id===selection);el('ygGalleryPreview').src=chosen?(data()[chosen.id]||''):'';el('ygGalleryTitle').textContent=chosen?.name||'해당 장면이 없습니다';el('ygGalleryDesc').textContent=chosen?.desc||'';
-    for(const b of document.querySelectorAll('[data-gallery-cat]'))b.setAttribute('aria-pressed',String(b.dataset.galleryCat===tab));}
-  function open(event){event?.preventDefault();el('ygGallery').hidden=false;document.body.style.overflow='hidden';draw();el('ygGalleryClose').focus();}
-  function close(){el('ygGallery').hidden=true;document.body.style.overflow='';}
-  el('ygGalleryLink')?.addEventListener('click',open);el('ygGalleryClose')?.addEventListener('click',close);
-  el('ygGalleryFind')?.addEventListener('input',draw);
-  for(const b of document.querySelectorAll('[data-gallery-cat]'))b.addEventListener('click',()=>{tab=b.dataset.galleryCat;selection='';draw();});
-  function step(delta){if(!current.length)return;let idx=current.findIndex(v=>v.id===selection);idx=(idx+delta+current.length)%current.length;selection=current[idx].id;draw()}
-  el('ygGalleryPrev')?.addEventListener('click',()=>step(-1));el('ygGalleryNext')?.addEventListener('click',()=>step(1));
-  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!el('ygGallery').hidden)close();});
-})();
-
-  </script>
 </body>
 </html>
