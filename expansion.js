@@ -2,8 +2,5343 @@
 (function(root){
  "use strict";
  const C=root.YG_CONTENT||(typeof require==='function'?require('./data.js'):null);
- const ext={"skills":[{"id":"v5_sk_01","name":"버스 창에 비친 빛","grade":0,"gain":{"mental":3,"luck":1},"daily":{"health":-1},"desc":"습득 시 정신력 +3, 행운 +1. 매일 건강 -1."},{"id":"v5_sk_02","name":"두 번 접은 영수증","grade":0,"gain":{"money":9000,"wealth":1},"daily":{"mental":-1},"desc":"습득 시 자금 +9000, 재물운 +1. 매일 정신력 -1."},{"id":"v5_sk_03","name":"얕은 물에 쓴 이름","grade":0,"gain":{"spirit":-3},"daily":{"mental":-1},"desc":"습득 시 신기 -3. 매일 정신력 -1."},{"id":"v5_sk_04","name":"부러진 연필심","grade":0,"gain":{"omen":1},"daily":{"health":-1},"desc":"습득 시 영감운 +1. 매일 건강 -1."},{"id":"v5_sk_05","name":"서랍 밑의 오원","grade":0,"gain":{"money":5000},"daily":{"wealth":1,"mental":-1},"desc":"습득 시 자금 +5000. 매일 재물운 +1, 정신력 -1."},{"id":"v5_sk_06","name":"거꾸로 맨 매듭","grade":0,"gain":{"luck":2},"daily":{"spirit":1},"desc":"습득 시 행운 +2. 매일 신기 +1."},{"id":"v5_sk_07","name":"손바닥의 성냥갑","grade":0,"gain":{"mental":5},"daily":{"health":-1},"desc":"습득 시 정신력 +5. 매일 건강 -1."},{"id":"v5_sk_08","name":"작은 창문 네 개","grade":0,"gain":{"health":4},"daily":{"mental":-1},"desc":"습득 시 건강 +4. 매일 정신력 -1."},{"id":"v5_sk_09","name":"노란 점선 한 줄","grade":0,"gain":{"bond":1},"daily":{"money":-700},"desc":"습득 시 인연운 +1. 매일 자금 -700."},{"id":"v5_sk_10","name":"덜 마른 수건","grade":0,"gain":{"mental":2},"daily":{"spirit":-1,"health":-1},"desc":"습득 시 정신력 +2. 매일 신기 -1, 건강 -1."},{"id":"v5_sk_11","name":"침대 밑의 동전","grade":0,"gain":{"wealth":2},"daily":{"mental":-2},"desc":"습득 시 재물운 +2. 매일 정신력 -2."},{"id":"v5_sk_12","name":"녹색 문고리","grade":0,"gain":{"clues":1},"daily":{"spirit":1},"desc":"습득 시 강령 단서 +1. 매일 신기 +1."},{"id":"v5_sk_13","name":"빈 초인종","grade":0,"gain":{"bond":2},"daily":{"luck":-1},"desc":"습득 시 인연운 +2. 매일 행운 -1."},{"id":"v5_sk_14","name":"어젯밤의 달력","grade":0,"gain":{"mental":7},"daily":{"mental":-1},"delay":{"luck":1},"desc":"습득 시 정신력 +7. 매일 정신력 -1. 다음 날 행운 +1."},{"id":"v5_sk_15","name":"낡은 회중시계","grade":1,"gain":{"luck":2},"daily":{"mental":-2},"bonus":{"rest_extra":2},"desc":"습득 시 행운 +2. 매일 정신력 -2. 지속 휴식 회복 +2."},{"id":"v5_sk_16","name":"차가운 빗물받이","grade":1,"gain":{"spirit":-6},"daily":{"health":-2},"bonus":{"purify_extra":2},"desc":"습득 시 신기 -6. 매일 건강 -2. 지속 정화 효율 +2."},{"id":"v5_sk_17","name":"문지방의 소금","grade":1,"gain":{"mental":10},"daily":{"money":-1800},"bonus":{"purify_extra":1},"desc":"습득 시 정신력 +10. 매일 자금 -1800. 지속 정화 효율 +1."},{"id":"v5_sk_18","name":"끝나지 않는 점호","grade":1,"gain":{"money":12000},"daily":{"health":-3},"bonus":{"job_extra":3000},"desc":"습득 시 자금 +12000. 매일 건강 -3. 지속 알바 수입 +3000."},{"id":"v5_sk_19","name":"도시의 낮은 울음","grade":1,"gain":{"omen":2},"daily":{"mental":-3},"desc":"습득 시 영감운 +2. 매일 정신력 -3."},{"id":"v5_sk_20","name":"여섯 번째 우편함","grade":1,"gain":{"bond":3},"daily":{"spirit":1,"mental":-2},"desc":"습득 시 인연운 +3. 매일 신기 +1, 정신력 -2."},{"id":"v5_sk_21","name":"접힌 처방전","grade":1,"gain":{"health":12},"daily":{"money":-3000},"desc":"습득 시 건강 +12. 매일 자금 -3000."},{"id":"v5_sk_22","name":"손끝으로 읽는 지도","grade":1,"gain":{"clues":2},"daily":{"mental":-3},"bonus":{"study_extra":3},"desc":"습득 시 강령 단서 +2. 매일 정신력 -3. 지속 조사 숙련 +3."},{"id":"v5_sk_23","name":"마른 국화 한 송이","grade":1,"gain":{"luck":3},"daily":{"health":-2},"desc":"습득 시 행운 +3. 매일 건강 -2."},{"id":"v5_sk_24","name":"재봉틀의 검은 실","grade":1,"gain":{"wealth":2},"daily":{"spirit":1},"bonus":{"job_extra":3500},"desc":"습득 시 재물운 +2. 매일 신기 +1. 지속 알바 수입 +3500."},{"id":"v5_sk_25","name":"반쯤 닫힌 커튼","grade":1,"gain":{"mental":15},"daily":{"health":-2},"bonus":{"sleep_extra":1},"desc":"습득 시 정신력 +15. 매일 건강 -2. 지속 수면 건강 회복 +1."},{"id":"v5_sk_26","name":"눈감은 교통신호","grade":1,"gain":{"luck":2},"daily":{"wealth":-1},"bonus":{"rest_extra":3},"desc":"습득 시 행운 +2. 매일 재물운 -1. 지속 휴식 회복 +3."},{"id":"v5_sk_27","name":"유리컵 속의 종이","grade":1,"gain":{"spirit":-8},"daily":{"mental":-4},"desc":"습득 시 신기 -8. 매일 정신력 -4."},{"id":"v5_sk_28","name":"오래된 야간 통행증","grade":1,"gain":{"wealth":3},"daily":{"luck":-2,"health":-1},"desc":"습득 시 재물운 +3. 매일 행운 -2, 건강 -1."},{"id":"v5_sk_29","name":"문틈의 회색 깃털","grade":1,"gain":{"omen":3},"daily":{"spirit":2},"desc":"습득 시 영감운 +3. 매일 신기 +2."},{"id":"v5_sk_30","name":"끊어진 전화선","grade":1,"gain":{"mental":5},"daily":{"luck":-1},"bonus":{"ritual_bonus":7},"desc":"습득 시 정신력 +5. 매일 행운 -1. 지속 강령 성공률 +7."},{"id":"v5_sk_31","name":"이름 없는 저금통","grade":2,"gain":{"money":30000},"daily":{"mental":-4},"bonus":{"job_extra":7500},"desc":"습득 시 자금 +30000. 매일 정신력 -4. 지속 알바 수입 +7500."},{"id":"v5_sk_32","name":"새벽의 이중 장부","grade":2,"gain":{"wealth":5},"daily":{"luck":-3,"spirit":1},"desc":"습득 시 재물운 +5. 매일 행운 -3, 신기 +1."},{"id":"v5_sk_33","name":"열리지 않는 사물함","grade":2,"gain":{"max_mental":10},"daily":{"health":-4,"spirit":1},"desc":"습득 시 정신력 최대치 +10. 매일 건강 -4, 신기 +1."},{"id":"v5_sk_34","name":"역순으로 흐른 강","grade":2,"gain":{"spirit":-12},"daily":{"mental":-6},"bonus":{"purify_extra":4},"desc":"습득 시 신기 -12. 매일 정신력 -6. 지속 정화 효율 +4."},{"id":"v5_sk_35","name":"흐릿한 가족사진","grade":2,"gain":{"bond":5},"daily":{"mental":-4,"spirit":2},"desc":"습득 시 인연운 +5. 매일 정신력 -4, 신기 +2."},{"id":"v5_sk_36","name":"매장된 버스 노선","grade":2,"gain":{"luck":5},"daily":{"health":-4},"bonus":{"job_extra":6500},"desc":"습득 시 행운 +5. 매일 건강 -4. 지속 알바 수입 +6500."},{"id":"v5_sk_37","name":"빈 의자의 주인","grade":2,"gain":{"mental":25},"daily":{"mental":-6,"spirit":2},"desc":"습득 시 정신력 +25. 매일 정신력 -6, 신기 +2."},{"id":"v5_sk_38","name":"소리가 나지 않는 종","grade":2,"gain":{"clues":4},"daily":{"spirit":2,"health":-3},"desc":"습득 시 강령 단서 +4. 매일 신기 +2, 건강 -3."},{"id":"v5_sk_39","name":"열두 장의 흑백 사진","grade":2,"gain":{"omen":4},"daily":{"mental":-4},"bonus":{"study_extra":6},"desc":"습득 시 영감운 +4. 매일 정신력 -4. 지속 조사 숙련 +6."},{"id":"v5_sk_40","name":"묻힌 계좌번호","grade":2,"gain":{"money":50000},"daily":{"mental":-8,"luck":-2},"desc":"습득 시 자금 +50000. 매일 정신력 -8, 행운 -2."},{"id":"v5_sk_41","name":"식탁의 네 번째 접시","grade":2,"gain":{"max_mental":12},"daily":{"spirit":3},"bonus":{"meal_mental":4},"desc":"습득 시 정신력 최대치 +12. 매일 신기 +3. 지속 식사 정신 회복 +4."},{"id":"v5_sk_42","name":"아직 켜진 장례식장","grade":2,"gain":{"health":20},"daily":{"health":-5,"spirit":2},"bonus":{"rest_extra":5},"desc":"습득 시 건강 +20. 매일 건강 -5, 신기 +2. 지속 휴식 회복 +5."},{"id":"v5_sk_43","name":"밤거울의 반사광","grade":2,"gain":{"luck":3,"omen":3},"daily":{"mental":-5},"desc":"습득 시 행운 +3, 영감운 +3. 매일 정신력 -5."},{"id":"v5_sk_44","name":"바닥에 놓인 발자국","grade":2,"gain":{"clues":3},"daily":{"spirit":3},"bonus":{"ritual_bonus":12},"desc":"습득 시 강령 단서 +3. 매일 신기 +3. 지속 강령 성공률 +12."},{"id":"v5_sk_45","name":"죽은 사람이 낸 월세","grade":3,"gain":{"money":100000},"daily":{"mental":-14,"health":-5,"spirit":3},"desc":"습득 시 자금 +100000. 매일 정신력 -14, 건강 -5, 신기 +3."},{"id":"v5_sk_46","name":"그 누구의 첫 번째 숨","grade":3,"gain":{"health":40},"daily":{"mental":-12,"spirit":4},"bonus":{"sleep_extra":3},"desc":"습득 시 건강 +40. 매일 정신력 -12, 신기 +4. 지속 수면 건강 회복 +3."},{"id":"v5_sk_47","name":"동공 안의 빈 방","grade":3,"gain":{"max_mental":25},"daily":{"health":-7,"spirit":5},"desc":"습득 시 정신력 최대치 +25. 매일 건강 -7, 신기 +5."},{"id":"v5_sk_48","name":"새벽 네 시의 공문","grade":3,"gain":{"wealth":10},"daily":{"luck":-6,"mental":-10},"desc":"습득 시 재물운 +10. 매일 행운 -6, 정신력 -10."},{"id":"v5_sk_49","name":"끝내 지우지 않은 이름","grade":3,"gain":{"spirit":-25},"daily":{"health":-12,"mental":-7},"bonus":{"purify_extra":8},"desc":"습득 시 신기 -25. 매일 건강 -12, 정신력 -7. 지속 정화 효율 +8."},{"id":"v5_sk_50","name":"백 번째 부재중 전화","grade":3,"gain":{"clues":8},"daily":{"spirit":5,"mental":-12},"bonus":{"ritual_bonus":18},"desc":"습득 시 강령 단서 +8. 매일 신기 +5, 정신력 -12. 지속 강령 성공률 +18."},{"id":"v5_sk_51","name":"전등 아래의 검은 눈","grade":3,"gain":{"omen":8},"daily":{"health":-6,"spirit":6},"desc":"습득 시 영감운 +8. 매일 건강 -6, 신기 +6."},{"id":"v5_sk_52","name":"내일의 가계부","grade":3,"gain":{"money":70000,"luck":5},"daily":{"mental":-15,"spirit":4},"bonus":{"job_extra":12000},"desc":"습득 시 자금 +70000, 행운 +5. 매일 정신력 -15, 신기 +4. 지속 알바 수입 +12000."},{"id":"v5_sk_53","name":"정오에 닫는 지하실","grade":3,"gain":{"health":30,"mental":25},"daily":{"luck":-5,"spirit":8},"desc":"습득 시 건강 +30, 정신력 +25. 매일 행운 -5, 신기 +8."},{"id":"v5_sk_54","name":"우물 바닥의 두 번째 하늘","grade":3,"gain":{"spirit":-18,"mental":30},"daily":{"health":-8,"wealth":-3},"desc":"습득 시 신기 -18, 정신력 +30. 매일 건강 -8, 재물운 -3."},{"id":"v5_sk_55","name":"마지막 종점의 승차권","grade":3,"gain":{"money":120000},"daily":{"mental":-18,"spirit":5,"bond":-3},"desc":"습득 시 자금 +120000. 매일 정신력 -18, 신기 +5, 인연운 -3."},{"id":"v5_sk_56","name":"아무것도 적지 않은 유언장","grade":3,"gain":{"max_mental":30},"daily":{"health":-10,"mental":-10,"spirit":6},"desc":"습득 시 정신력 최대치 +30. 매일 건강 -10, 정신력 -10, 신기 +6."}],"ghosts":[{"id":"v5_gh_01","name":"빈 방의 하숙생","story":"빨래를 걷지 못하고 매일 같은 창을 바라본다.","bonus":{"rest_extra":8},"daily":{"mental":-8,"health":-3,"spirit":2},"desc":"지속 휴식 정신력 회복 +8. 매일 정신력 -8, 건강 -3, 신기 +2."},{"id":"v5_gh_02","name":"교차로의 택시 기사","story":"목적지를 묻기 전에 미터기를 켠다.","bonus":{"job_extra":22000},"daily":{"mental":-10,"health":-2,"spirit":4},"desc":"지속 알바 수입 +22000. 매일 정신력 -10, 건강 -2, 신기 +4."},{"id":"v5_gh_03","name":"초등학교의 당직자","story":"누구도 듣지 않는 출석을 매일 부른다.","bonus":{"study_extra":11},"daily":{"mental":-7,"spirit":3,"luck":-1},"desc":"지속 조사 숙련 +11. 매일 정신력 -7, 신기 +3, 행운 -1."},{"id":"v5_gh_04","name":"세탁소의 여자","story":"돌아오지 않은 교복을 아직 다리고 있다.","bonus":{"meal_health":9},"daily":{"health":-6,"mental":-5,"spirit":2},"desc":"지속 식사 건강 회복 +9. 매일 건강 -6, 정신력 -5, 신기 +2."},{"id":"v5_gh_05","name":"지하주차장의 관리인","story":"경비실에 누가 지나갈 때마다 손을 든다.","bonus":{"job_extra":17000,"rest_extra":3},"daily":{"health":-7,"mental":-7,"spirit":3},"desc":"지속 알바 수입 +17000, 휴식 정신력 회복 +3. 매일 건강 -7, 정신력 -7, 신기 +3."},{"id":"v5_gh_06","name":"전파를 타는 어린아이","story":"목소리만 남아 끊임없이 전화벨을 울린다.","bonus":{"ritual_bonus":23},"daily":{"mental":-11,"health":-4,"spirit":5},"desc":"지속 강령 성공률 +23. 매일 정신력 -11, 건강 -4, 신기 +5."},{"id":"v5_gh_07","name":"종이배를 접는 노인","story":"물길을 따라 모든 이름이 흘러간다고 말한다.","bonus":{"purify_extra":11},"daily":{"health":-8,"mental":-3,"spirit":3},"desc":"지속 정화 효율 +11. 매일 건강 -8, 정신력 -3, 신기 +3."},{"id":"v5_gh_08","name":"야간 약국의 약사","story":"포장지가 없는 약을 하나씩 헤아린다.","bonus":{"sleep_extra":5},"daily":{"health":-4,"mental":-9,"spirit":4},"desc":"지속 수면 건강 회복 +5. 매일 건강 -4, 정신력 -9, 신기 +4."},{"id":"v5_gh_09","name":"낡은 복도의 안내원","story":"열쇠구멍을 통해 절대 들어가지 말라고 웃는다.","bonus":{"study_extra":9,"ritual_bonus":7},"daily":{"mental":-9,"spirit":5},"desc":"지속 조사 숙련 +9, 강령 성공률 +7. 매일 정신력 -9, 신기 +5."},{"id":"v5_gh_10","name":"흰 가운을 입은 남자","story":"진료기록에 없는 환자를 부르고 있다.","bonus":{"meal_health":11},"daily":{"health":-7,"mental":-7,"spirit":3},"desc":"지속 식사 건강 회복 +11. 매일 건강 -7, 정신력 -7, 신기 +3."},{"id":"v5_gh_11","name":"촬영되지 않은 사진사","story":"비어 있는 곳을 향해 셔터를 누른다.","bonus":{"ritual_bonus":18},"daily":{"mental":-8,"spirit":5,"luck":-1},"desc":"지속 강령 성공률 +18. 매일 정신력 -8, 신기 +5, 행운 -1."},{"id":"v5_gh_12","name":"가로등 아래의 배달원","story":"배달완료 문자가 새벽마다 온다.","bonus":{"job_extra":26000},"daily":{"health":-12,"mental":-5,"spirit":3},"desc":"지속 알바 수입 +26000. 매일 건강 -12, 정신력 -5, 신기 +3."},{"id":"v5_gh_13","name":"우편번호가 없는 집배원","story":"없는 동네의 편지를 매일 배달한다.","bonus":{"study_extra":14},"daily":{"health":-6,"mental":-11,"spirit":3},"desc":"지속 조사 숙련 +14. 매일 건강 -6, 정신력 -11, 신기 +3."},{"id":"v5_gh_14","name":"창문 닦는 청소부","story":"밖에서는 안이 보이지 않는다고 한다.","bonus":{"purify_extra":13},"daily":{"mental":-11,"spirit":4,"luck":-1},"desc":"지속 정화 효율 +13. 매일 정신력 -11, 신기 +4, 행운 -1."},{"id":"v5_gh_15","name":"어린이집의 원장","story":"그림 속 사람들의 이름을 전부 기억한다.","bonus":{"meal_mental":8},"daily":{"health":-4,"mental":-12,"spirit":4},"desc":"지속 식사 정신력 회복 +8. 매일 건강 -4, 정신력 -12, 신기 +4."},{"id":"v5_gh_16","name":"새벽 경비초소의 신병","story":"교대자가 오지 않아 아직 철야 중이다.","bonus":{"job_extra":12000,"rest_extra":6},"daily":{"mental":-14,"health":-7,"spirit":3},"desc":"지속 알바 수입 +12000, 휴식 정신력 회복 +6. 매일 정신력 -14, 건강 -7, 신기 +3."},{"id":"v5_gh_17","name":"지하역의 노숙자","story":"마지막 열차가 몇 년 늦었다고 투덜거린다.","bonus":{"sleep_extra":8},"daily":{"mental":-16,"spirit":6},"desc":"지속 수면 건강 회복 +8. 매일 정신력 -16, 신기 +6."},{"id":"v5_gh_18","name":"발신자 없는 상담원","story":"매번 다른 목소리로 안부를 묻는다.","bonus":{"study_extra":16,"ritual_bonus":8},"daily":{"health":-8,"mental":-12,"spirit":5},"desc":"지속 조사 숙련 +16, 강령 성공률 +8. 매일 건강 -8, 정신력 -12, 신기 +5."},{"id":"v5_gh_19","name":"냉동창고의 정육점 주인","story":"저울에 올라온 무게를 세는 일을 멈추지 못한다.","bonus":{"meal_health":13},"daily":{"mental":-17,"health":-6,"spirit":4},"desc":"지속 식사 건강 회복 +13. 매일 정신력 -17, 건강 -6, 신기 +4."},{"id":"v5_gh_20","name":"분실물 센터의 직원","story":"찾으러 오는 사람이 없는 물건을 보관한다.","bonus":{"rest_extra":10},"daily":{"mental":-13,"luck":-2,"spirit":5},"desc":"지속 휴식 정신력 회복 +10. 매일 정신력 -13, 행운 -2, 신기 +5."},{"id":"v5_gh_21","name":"엘리베이터의 노부인","story":"층 버튼을 누르지 않고도 맨 위에서 내려온다.","bonus":{"ritual_bonus":29},"daily":{"health":-9,"mental":-12,"spirit":6},"desc":"지속 강령 성공률 +29. 매일 건강 -9, 정신력 -12, 신기 +6."},{"id":"v5_gh_22","name":"시외버스의 검표원","story":"표를 찢고도 다시 돌려준다.","bonus":{"job_extra":34000},"daily":{"health":-11,"mental":-12,"spirit":6},"desc":"지속 알바 수입 +34000. 매일 건강 -11, 정신력 -12, 신기 +6."},{"id":"v5_gh_23","name":"고장 난 시계의 장인","story":"초침이 멈춘 시간의 값을 계산한다.","bonus":{"study_extra":20},"daily":{"mental":-16,"spirit":6},"desc":"지속 조사 숙련 +20. 매일 정신력 -16, 신기 +6."},{"id":"v5_gh_24","name":"사라진 등산객","story":"발견 당시 발자국이 하나도 없었다.","bonus":{"purify_extra":14,"sleep_extra":3},"daily":{"health":-12,"mental":-9,"spirit":6},"desc":"지속 정화 효율 +14, 수면 건강 회복 +3. 매일 건강 -12, 정신력 -9, 신기 +6."},{"id":"v5_gh_25","name":"버려진 공장의 사장","story":"가동 중인 기계가 하나 더 있다고 주장한다.","bonus":{"job_extra":38000},"daily":{"health":-15,"mental":-14,"spirit":7},"desc":"지속 알바 수입 +38000. 매일 건강 -15, 정신력 -14, 신기 +7."},{"id":"v5_gh_26","name":"익명의 장의사","story":"누구도 주문하지 않은 관을 미리 만든다.","bonus":{"ritual_bonus":32,"study_extra":9},"daily":{"health":-15,"mental":-18,"spirit":8},"desc":"지속 강령 성공률 +32, 조사 숙련 +9. 매일 건강 -15, 정신력 -18, 신기 +8."},{"id":"v5_gh_27","name":"보이지 않는 동거인","story":"냉장고의 음식이 두 사람분씩 사라진다.","bonus":{"rest_extra":13,"meal_mental":7},"daily":{"health":-11,"mental":-19,"spirit":8},"desc":"지속 휴식 정신력 회복 +13, 식사 정신력 회복 +7. 매일 건강 -11, 정신력 -19, 신기 +8."}],"meals":[{"name":"삼각김밥과 생수","price":3600,"health":1,"mental":0,"spirit":0},{"name":"컵라면","price":4200,"health":1,"mental":3,"spirit":0},{"name":"죽 한 그릇","price":9500,"health":5,"mental":2,"spirit":0},{"name":"계란 토스트","price":6500,"health":3,"mental":4,"spirit":0},{"name":"김치찌개","price":12500,"health":7,"mental":2,"spirit":0},{"name":"샐러드 도시락","price":13500,"health":8,"mental":0,"spirit":0},{"name":"냉동 볶음밥","price":6500,"health":3,"mental":2,"spirit":0},{"name":"분식 세트","price":9500,"health":4,"mental":6,"spirit":0},{"name":"갈비탕","price":19000,"health":10,"mental":3,"spirit":0},{"name":"회덮밥","price":16000,"health":7,"mental":5,"spirit":0},{"name":"커피와 빵","price":8700,"health":1,"mental":7,"spirit":0},{"name":"냉장고 남은 반찬","price":2500,"health":0,"mental":1,"spirit":0},{"name":"한정식 배달","price":31000,"health":13,"mental":7,"spirit":0},{"name":"비상식량 통조림","price":6500,"health":2,"mental":1,"spirit":0},{"name":"사찰식 채식","price":23000,"health":8,"mental":4,"spirit":-1},{"name":"새벽 편의점 핫바","price":4300,"health":2,"mental":3,"spirit":0},{"name":"장어구이 정식","price":40000,"health":16,"mental":8,"spirit":0},{"name":"늦은 밤 치킨","price":22500,"health":6,"mental":11,"spirit":1},{"name":"과일과 요거트","price":11800,"health":7,"mental":4,"spirit":0},{"name":"라면과 달걀","price":5100,"health":3,"mental":2,"spirit":0},{"name":"쌀국수","price":13500,"health":8,"mental":6,"spirit":0},{"name":"손수 만든 미역국","price":11500,"health":9,"mental":3,"spirit":-1}],"encounters":[{"id":"v5_work_01","title":"불량 계산대","body":"장부의 숫자가 맞지 않는다. 점장은 손실부터 계산한다.","tone":"bad","scene":"store","actions":["work"],"weight":1.3,"options":[{"label":"내 돈으로 메운다","text":"불량 계산대. 내 돈으로 메운다.","fx":{"money":-17000,"mental":-2}},{"label":"점장과 확인한다","text":"불량 계산대. 점장과 확인한다.","fx":{"mental":-7,"bond":-1}}]},{"id":"v5_work_02","title":"손님이 두고 간 팁","body":"늦은 손님이 잔돈을 받지 않고 나간다.","tone":"good","scene":"store","actions":["work"],"weight":0.85,"options":[{"label":"돌려주려 뛰어나간다","text":"손님이 두고 간 팁. 돌려주려 뛰어나간다.","fx":{"bond":2,"luck":1}},{"label":"팁으로 남긴다","text":"손님이 두고 간 팁. 팁으로 남긴다.","fx":{"money":8000}}]},{"id":"v5_work_03","title":"예고 없는 연장 근무","body":"마감 시간에도 손님이 줄지 않는다.","tone":"bad","scene":"store","actions":["work"],"weight":1.3,"options":[{"label":"마지막까지 돕는다","text":"예고 없는 연장 근무. 마지막까지 돕는다.","fx":{"health":-6,"mental":-4,"money":14000}},{"label":"정시에 퇴근한다","text":"예고 없는 연장 근무. 정시에 퇴근한다.","fx":{"bond":-2,"mental":-2}}]},{"id":"v5_work_04","title":"미끄러운 창고 바닥","body":"박스를 옮기다 물기 있는 바닥에서 미끄러졌다.","tone":"bad","scene":"store","actions":["work"],"weight":1.3,"options":[{"label":"병원에 간다","text":"미끄러운 창고 바닥. 병원에 간다.","fx":{"money":-27000,"health":5}},{"label":"참고 일한다","text":"미끄러운 창고 바닥. 참고 일한다.","fx":{"health":-13,"money":9000}}]},{"id":"v5_work_05","title":"점심 도시락","body":"직원이 반찬을 조금 더 챙겨 주었다.","tone":"good","scene":"store","actions":["work"],"weight":0.85,"options":[{"label":"함께 먹는다","text":"점심 도시락. 함께 먹는다.","fx":{"health":5,"mental":3,"bond":1}},{"label":"퇴근 후 먹는다","text":"점심 도시락. 퇴근 후 먹는다.","fx":{"health":3}}]},{"id":"v5_work_06","title":"재고 조사","body":"분실된 재고의 책임을 서로에게 떠넘긴다.","tone":"bad","scene":"store","actions":["work"],"weight":1.3,"options":[{"label":"오래 남아 확인한다","text":"재고 조사. 오래 남아 확인한다.","fx":{"health":-3,"mental":-6,"money":9000}},{"label":"일단 물러난다","text":"재고 조사. 일단 물러난다.","fx":{"bond":-2,"luck":-1}}]},{"id":"v5_work_07","title":"새로 온 동료","body":"새 직원은 웃으며 일의 순서를 묻는다.","tone":"neutral","scene":"store","actions":["work"],"weight":0.85,"options":[{"label":"차근차근 알려준다","text":"새로 온 동료. 차근차근 알려준다.","fx":{"mental":-2,"bond":2}},{"label":"매뉴얼을 건넨다","text":"새로 온 동료. 매뉴얼을 건넨다.","fx":{"bond":1}}]},{"id":"v5_work_08","title":"결근자 대신 교대","body":"점장에게 급한 연락이 왔다.","tone":"bad","scene":"store","actions":["work"],"weight":1.3,"options":[{"label":"추가 수당을 받는다","text":"결근자 대신 교대. 추가 수당을 받는다.","fx":{"money":18000,"health":-8}},{"label":"오늘은 어렵다고 한다","text":"결근자 대신 교대. 오늘은 어렵다고 한다.","fx":{"bond":-1}}]},{"id":"v5_work_09","title":"가게 앞의 분실물","body":"카운터 아래에 오래된 지갑이 끼어 있다.","tone":"good","scene":"store","actions":["work"],"weight":0.85,"options":[{"label":"보관함에 둔다","text":"가게 앞의 분실물. 보관함에 둔다.","fx":{"bond":2,"luck":1}},{"label":"무시한다","text":"가게 앞의 분실물. 무시한다.","fx":{"mental":-2}}]},{"id":"v5_work_10","title":"가벼운 감전","body":"오래된 커피 기계에서 파란 불꽃이 튄다.","tone":"bad","scene":"store","actions":["work"],"weight":1.3,"options":[{"label":"수리를 요청한다","text":"가벼운 감전. 수리를 요청한다.","fx":{"money":-4000,"health":-2}},{"label":"그냥 사용한다","text":"가벼운 감전. 그냥 사용한다.","fx":{"health":-11,"mental":-3}}]},{"id":"v5_work_11","title":"주문 실수","body":"서로 다른 주문이 한 번에 밀려들었다.","tone":"bad","scene":"store","actions":["work"],"weight":1.3,"options":[{"label":"차액을 변상한다","text":"주문 실수. 차액을 변상한다.","fx":{"money":-13000}},{"label":"손님을 설득한다","text":"주문 실수. 손님을 설득한다.","fx":{"mental":-9,"bond":-1}}]},{"id":"v5_work_12","title":"단골의 소개","body":"단골이 주말 단기 알바를 알려 준다.","tone":"good","scene":"store","actions":["work"],"weight":0.85,"options":[{"label":"연락처를 받는다","text":"단골의 소개. 연락처를 받는다.","fx":{"bond":2,"wealth":1}},{"label":"관심 없다고 한다","text":"단골의 소개. 관심 없다고 한다.","fx":{"mental":1}}]},{"id":"v5_meal_01","title":"식은 배달","body":"배달된 음식이 문 앞에서 한참을 식었다.","tone":"bad","scene":"meal","actions":["meal"],"weight":1.3,"options":[{"label":"다시 주문한다","text":"식은 배달. 다시 주문한다.","fx":{"money":-16000,"health":5}},{"label":"그냥 먹는다","text":"식은 배달. 그냥 먹는다.","fx":{"health":-5,"mental":-2}}]},{"id":"v5_meal_02","title":"서비스 군만두","body":"배달봉투 안에 주문하지 않은 작은 종이봉투가 있다.","tone":"good","scene":"meal","actions":["meal"],"weight":0.85,"options":[{"label":"음식을 먹는다","text":"서비스 군만두. 음식을 먹는다.","fx":{"health":3,"mental":4}},{"label":"배달원에게 연락한다","text":"서비스 군만두. 배달원에게 연락한다.","fx":{"bond":1,"mental":2}}]},{"id":"v5_meal_03","title":"상한 우유","body":"우유는 유통기한이 지나 있지 않지만 냄새가 이상하다.","tone":"bad","scene":"meal","actions":["meal"],"weight":1.3,"options":[{"label":"버리고 새로 산다","text":"상한 우유. 버리고 새로 산다.","fx":{"money":-6500}},{"label":"아깝지만 마신다","text":"상한 우유. 아깝지만 마신다.","fx":{"health":-11}}]},{"id":"v5_meal_04","title":"편의점의 침묵","body":"옆자리 손님이 같은 도시락을 고른다.","tone":"neutral","scene":"meal","actions":["meal"],"weight":0.85,"options":[{"label":"자리를 양보한다","text":"편의점의 침묵. 자리를 양보한다.","fx":{"bond":1,"mental":1}},{"label":"혼자 먹는다","text":"편의점의 침묵. 혼자 먹는다.","fx":{"mental":2}}]},{"id":"v5_meal_05","title":"닫힌 분식집","body":"퇴근길에 들른 식당의 셔터가 내려와 있다.","tone":"bad","scene":"meal","actions":["meal"],"weight":1.3,"options":[{"label":"다른 곳을 찾는다","text":"닫힌 분식집. 다른 곳을 찾는다.","fx":{"money":-6000,"mental":1}},{"label":"먹지 않고 돌아온다","text":"닫힌 분식집. 먹지 않고 돌아온다.","fx":{"health":-5,"mental":-2}}]},{"id":"v5_meal_06","title":"어머니의 반찬","body":"냉장고 맨 아래에 익숙한 반찬통 하나가 있다.","tone":"good","scene":"meal","actions":["meal"],"weight":0.85,"options":[{"label":"조금 데워 먹는다","text":"어머니의 반찬. 조금 데워 먹는다.","fx":{"health":4,"mental":5}},{"label":"내일로 남긴다","text":"어머니의 반찬. 내일로 남긴다.","fx":{"mental":1}}]},{"id":"v5_meal_07","title":"배달 결제 오류","body":"앱에는 두 번 결제가 찍혔다.","tone":"bad","scene":"meal","actions":["meal"],"weight":1.3,"options":[{"label":"환불을 요청한다","text":"배달 결제 오류. 환불을 요청한다.","fx":{"mental":-4,"money":-3000}},{"label":"그냥 넘어간다","text":"배달 결제 오류. 그냥 넘어간다.","fx":{"money":-17000}}]},{"id":"v5_meal_08","title":"뜨거운 국물","body":"추운 날 국물 한 숟가락이 속을 데운다.","tone":"good","scene":"meal","actions":["meal"],"weight":0.85,"options":[{"label":"천천히 마신다","text":"뜨거운 국물. 천천히 마신다.","fx":{"health":4,"mental":4}},{"label":"서둘러 먹는다","text":"뜨거운 국물. 서둘러 먹는다.","fx":{"health":3}}]},{"id":"v5_meal_09","title":"찢어진 포장","body":"배달 봉투에 있던 국물이 바닥까지 흘렀다.","tone":"bad","scene":"meal","actions":["meal"],"weight":1.3,"options":[{"label":"바닥을 닦고 다시 산다","text":"찢어진 포장. 바닥을 닦고 다시 산다.","fx":{"money":-14000,"mental":-3}},{"label":"남은 음식을 먹는다","text":"찢어진 포장. 남은 음식을 먹는다.","fx":{"health":-6}}]},{"id":"v5_meal_10","title":"낯선 합석","body":"식당의 자리가 모자라 낯선 사람이 앞에 앉았다.","tone":"neutral","scene":"meal","actions":["meal"],"weight":0.85,"options":[{"label":"말을 걸어 본다","text":"낯선 합석. 말을 걸어 본다.","fx":{"bond":1,"mental":-1}},{"label":"조용히 식사한다","text":"낯선 합석. 조용히 식사한다.","fx":{"mental":2}}]},{"id":"v5_walk_01","title":"꺼진 횡단보도","body":"신호등이 꺼지고 차량들이 느리게 지나간다.","tone":"bad","scene":"street","actions":["walk"],"weight":1.3,"options":[{"label":"멀리 돌아간다","text":"꺼진 횡단보도. 멀리 돌아간다.","fx":{"health":-2,"mental":-2}},{"label":"급하게 건넌다","text":"꺼진 횡단보도. 급하게 건넌다.","fx":{"health":-9,"luck":-1}}]},{"id":"v5_walk_02","title":"길고양이의 기지개","body":"문 아래 고양이 한 마리가 잠을 깼다.","tone":"good","scene":"street","actions":["walk"],"weight":0.85,"options":[{"label":"가만히 쓰다듬는다","text":"길고양이의 기지개. 가만히 쓰다듬는다.","fx":{"mental":6,"bond":1}},{"label":"멀리서 지켜본다","text":"길고양이의 기지개. 멀리서 지켜본다.","fx":{"mental":3}}]},{"id":"v5_walk_03","title":"자전거와 접촉","body":"좁은 골목에서 배달 자전거가 손목을 스친다.","tone":"bad","scene":"street","actions":["walk"],"weight":1.3,"options":[{"label":"의원에 다녀온다","text":"자전거와 접촉. 의원에 다녀온다.","fx":{"money":-19000,"health":2}},{"label":"문지르고 끝낸다","text":"자전거와 접촉. 문지르고 끝낸다.","fx":{"health":-8}}]},{"id":"v5_walk_04","title":"바람 빠진 풍선","body":"벤치 아래 흰 풍선 하나가 천천히 움직인다.","tone":"good","scene":"street","actions":["walk"],"weight":0.85,"options":[{"label":"아이에게 돌려준다","text":"바람 빠진 풍선. 아이에게 돌려준다.","fx":{"bond":2,"luck":1}},{"label":"그냥 지나간다","text":"바람 빠진 풍선. 그냥 지나간다.","fx":{"mental":1}}]},{"id":"v5_walk_05","title":"동네 게시판","body":"오래된 구인 광고를 본다.","tone":"neutral","scene":"street","actions":["walk"],"weight":0.85,"options":[{"label":"전화번호를 적는다","text":"동네 게시판. 전화번호를 적는다.","fx":{"wealth":1,"mental":-1}},{"label":"동네 소식만 읽는다","text":"동네 게시판. 동네 소식만 읽는다.","fx":{"mental":2}}]},{"id":"v5_walk_06","title":"나쁜 날씨","body":"갑자기 비가 쏟아져 옷이 다 젖었다.","tone":"bad","scene":"street","actions":["walk"],"weight":1.3,"options":[{"label":"우산을 산다","text":"나쁜 날씨. 우산을 산다.","fx":{"money":-13500}},{"label":"그냥 걸어간다","text":"나쁜 날씨. 그냥 걸어간다.","fx":{"health":-7,"mental":-3}}]},{"id":"v5_walk_07","title":"길가의 꽃집","body":"점원이 시들어 가는 꽃 한 송이를 무료로 건넨다.","tone":"good","scene":"street","actions":["walk"],"weight":0.85,"options":[{"label":"꽃을 받는다","text":"길가의 꽃집. 꽃을 받는다.","fx":{"mental":5,"luck":1}},{"label":"사양한다","text":"길가의 꽃집. 사양한다.","fx":{"bond":1}}]},{"id":"v5_walk_08","title":"찢어진 운동화","body":"신발 밑창이 갈라졌다.","tone":"bad","scene":"street","actions":["walk"],"weight":1.3,"options":[{"label":"수선점을 찾는다","text":"찢어진 운동화. 수선점을 찾는다.","fx":{"money":-17000,"health":1}},{"label":"테이프로 붙인다","text":"찢어진 운동화. 테이프로 붙인다.","fx":{"health":-4}}]},{"id":"v5_walk_09","title":"동네 약수터","body":"사람들이 차분히 줄을 서서 물을 담는다.","tone":"good","scene":"street","actions":["walk"],"weight":0.85,"options":[{"label":"물을 마신다","text":"동네 약수터. 물을 마신다.","fx":{"health":4,"mental":2}},{"label":"벤치에 앉는다","text":"동네 약수터. 벤치에 앉는다.","fx":{"mental":5}}]},{"id":"v5_walk_10","title":"낯선 길","body":"익숙한 골목이 끝나지 않고 길게 이어진다.","tone":"bad","scene":"street","actions":["walk"],"weight":1.3,"options":[{"label":"지도 앱을 연다","text":"낯선 길. 지도 앱을 연다.","fx":{"mental":-4,"spirit":1}},{"label":"길 끝까지 간다","text":"낯선 길. 길 끝까지 간다.","fx":{"mental":-8,"spirit":4}}]},{"id":"v5_research_01","title":"소멸된 블로그","body":"찾던 블로그의 글은 전부 삭제되어 있다.","tone":"bad","scene":"research","actions":["research"],"weight":1.3,"options":[{"label":"캐시를 살핀다","text":"소멸된 블로그. 캐시를 살핀다.","fx":{"mental":-5,"clues":1}},{"label":"미련 없이 닫는다","text":"소멸된 블로그. 미련 없이 닫는다.","fx":{"mental":1}}]},{"id":"v5_research_02","title":"유료 복구 프로그램","body":"오래된 게시글을 복구하려면 결제가 필요하다는 창이 뜬다.","tone":"bad","scene":"research","actions":["research"],"weight":1.3,"options":[{"label":"정식 이용권을 구매한다","text":"유료 복구 프로그램. 정식 이용권을 구매한다.","fx":{"money":-21000,"clues":1}},{"label":"불법 경로를 찾는다","text":"유료 복구 프로그램. 불법 경로를 찾는다.","fx":{"mental":-8,"spirit":3}}]},{"id":"v5_research_03","title":"익명 제보","body":"낯선 이용자가 관련 자료를 보내 주겠다고 한다.","tone":"good","scene":"research","actions":["research"],"weight":0.85,"options":[{"label":"답장을 보낸다","text":"익명 제보. 답장을 보낸다.","fx":{"bond":1,"clues":1}},{"label":"파일을 삭제한다","text":"익명 제보. 파일을 삭제한다.","fx":{"mental":2}}]},{"id":"v5_research_04","title":"공공 도서관 기록","body":"전자도서관에 오래된 지역지의 목차가 남아 있다.","tone":"neutral","scene":"research","actions":["research"],"weight":0.85,"options":[{"label":"연도를 추적한다","text":"공공 도서관 기록. 연도를 추적한다.","fx":{"clues":2,"mental":-2}},{"label":"목차만 기록한다","text":"공공 도서관 기록. 목차만 기록한다.","fx":{"clues":1}}]},{"id":"v5_research_05","title":"유출된 개인정보","body":"낯선 파일 안에 자신의 주소가 적혀 있다.","tone":"bad","scene":"research","actions":["research"],"weight":1.3,"options":[{"label":"파일을 파기한다","text":"유출된 개인정보. 파일을 파기한다.","fx":{"mental":-4,"spirit":-1}},{"label":"끝까지 열어본다","text":"유출된 개인정보. 끝까지 열어본다.","fx":{"mental":-9,"spirit":5}}]},{"id":"v5_research_06","title":"한밤의 댓글","body":"삭제된 글 아래 늦은 답글 하나가 달려 있다.","tone":"good","scene":"research","actions":["research"],"weight":0.85,"options":[{"label":"대화를 시도한다","text":"한밤의 댓글. 대화를 시도한다.","fx":{"clues":2,"bond":1}},{"label":"원문을 저장한다","text":"한밤의 댓글. 원문을 저장한다.","fx":{"clues":1}}]},{"id":"v5_research_07","title":"피싱 창","body":"방금 열어 본 페이지가 카드번호를 요구한다.","tone":"bad","scene":"research","actions":["research"],"weight":1.3,"options":[{"label":"즉시 창을 닫는다","text":"피싱 창. 즉시 창을 닫는다.","fx":{"mental":-2}},{"label":"안내를 따른다","text":"피싱 창. 안내를 따른다.","fx":{"money":-25000,"mental":-4}}]},{"id":"v5_research_08","title":"오래된 신문 광고","body":"도시 개발 이전의 지도가 이미지로 올라와 있다.","tone":"neutral","scene":"research","actions":["research"],"weight":0.85,"options":[{"label":"인쇄한다","text":"오래된 신문 광고. 인쇄한다.","fx":{"money":-2500,"clues":2}},{"label":"메모한다","text":"오래된 신문 광고. 메모한다.","fx":{"clues":1}}]},{"id":"v5_research_09","title":"터진 노트북 충전기","body":"멀티탭에서 탁 하는 소리와 함께 연기가 난다.","tone":"bad","scene":"research","actions":["research"],"weight":1.3,"options":[{"label":"충전기를 교체한다","text":"터진 노트북 충전기. 충전기를 교체한다.","fx":{"money":-33000,"health":-1}},{"label":"그대로 둔다","text":"터진 노트북 충전기. 그대로 둔다.","fx":{"health":-12,"mental":-4}}]},{"id":"v5_research_10","title":"잊힌 문자 사전","body":"작은 문헌에 동일한 기호의 여러 표기가 기록되어 있다.","tone":"good","scene":"research","actions":["research"],"weight":0.85,"options":[{"label":"원문을 대조한다","text":"잊힌 문자 사전. 원문을 대조한다.","fx":{"clues":2,"omen":1}},{"label":"마음을 가라앉힌다","text":"잊힌 문자 사전. 마음을 가라앉힌다.","fx":{"mental":4}}]},{"id":"v5_ritual_01","title":"꺼진 촛불","body":"강령진 한가운데의 불꽃이 미동 없이 사라졌다.","tone":"bad","scene":"ritual","actions":["ritual"],"weight":1.3,"options":[{"label":"다시 불을 붙인다","text":"꺼진 촛불. 다시 불을 붙인다.","fx":{"spirit":3,"mental":-5}},{"label":"의식을 중단한다","text":"꺼진 촛불. 의식을 중단한다.","fx":{"spirit":-2,"mental":-2}}]},{"id":"v5_ritual_02","title":"알 수 없는 발자국","body":"마른 바닥에 젖은 발자국이 하나씩 생긴다.","tone":"bad","scene":"ritual","actions":["ritual"],"weight":1.3,"options":[{"label":"문을 연다","text":"알 수 없는 발자국. 문을 연다.","fx":{"health":-6,"spirit":5}},{"label":"눈을 감고 센다","text":"알 수 없는 발자국. 눈을 감고 센다.","fx":{"mental":-8,"spirit":2}}]},{"id":"v5_ritual_03","title":"반대로 도는 시계","body":"초침이 한 칸씩 거꾸로 움직인다.","tone":"neutral","scene":"ritual","actions":["ritual"],"weight":0.85,"options":[{"label":"시간을 적는다","text":"반대로 도는 시계. 시간을 적는다.","fx":{"clues":2,"spirit":3}},{"label":"배터리를 뺀다","text":"반대로 도는 시계. 배터리를 뺀다.","fx":{"mental":2}}]},{"id":"v5_ritual_04","title":"거울 속의 옆얼굴","body":"거울 가장자리에 모르는 사람의 옆얼굴이 스친다.","tone":"bad","scene":"ritual","actions":["ritual"],"weight":1.3,"options":[{"label":"거울을 덮는다","text":"거울 속의 옆얼굴. 거울을 덮는다.","fx":{"money":-4000,"spirit":-2}},{"label":"이름을 부른다","text":"거울 속의 옆얼굴. 이름을 부른다.","fx":{"spirit":8,"mental":-7}}]},{"id":"v5_ritual_05","title":"잠깐의 고요","body":"강령진의 소음이 일순간 멎는다.","tone":"good","scene":"ritual","actions":["ritual"],"weight":0.85,"options":[{"label":"기록을 남긴다","text":"잠깐의 고요. 기록을 남긴다.","fx":{"clues":2}},{"label":"조금 쉰다","text":"잠깐의 고요. 조금 쉰다.","fx":{"mental":5}}]},{"id":"v5_ritual_06","title":"금속성 웃음","body":"냄비 뚜껑 안쪽에서 잔잔한 웃음이 난다.","tone":"bad","scene":"ritual","actions":["ritual"],"weight":1.3,"options":[{"label":"소금을 뿌린다","text":"금속성 웃음. 소금을 뿌린다.","fx":{"money":-6000,"spirit":-3}},{"label":"소리에 귀를 기울인다","text":"금속성 웃음. 소리에 귀를 기울인다.","fx":{"mental":-11,"spirit":5}}]},{"id":"v5_ritual_07","title":"의식의 역류","body":"잘못 쓴 기호 하나가 새까맣게 타들어 간다.","tone":"bad","scene":"ritual","actions":["ritual"],"weight":1.3,"options":[{"label":"기호를 지운다","text":"의식의 역류. 기호를 지운다.","fx":{"mental":-4,"spirit":-2}},{"label":"끝까지 버틴다","text":"의식의 역류. 끝까지 버틴다.","fx":{"health":-9,"mental":-5,"spirit":6}}]},{"id":"v5_ritual_08","title":"미완의 이름","body":"강령 중 누군가의 이름 마지막 글자만 들렸다.","tone":"neutral","scene":"ritual","actions":["ritual"],"weight":0.85,"options":[{"label":"기록해 둔다","text":"미완의 이름. 기록해 둔다.","fx":{"clues":2,"mental":-3}},{"label":"잊으려 한다","text":"미완의 이름. 잊으려 한다.","fx":{"mental":2}}]},{"id":"v5_ritual_09","title":"자기 목소리의 답장","body":"세 번 부른 이름이 자신의 목소리로 되돌아왔다.","tone":"bad","scene":"ritual","actions":["ritual"],"weight":1.3,"options":[{"label":"즉시 중단한다","text":"자기 목소리의 답장. 즉시 중단한다.","fx":{"mental":-4,"spirit":1}},{"label":"네 번째 이름을 부른다","text":"자기 목소리의 답장. 네 번째 이름을 부른다.","fx":{"spirit":10,"health":-7}}]},{"id":"v5_purify_01","title":"따뜻한 재","body":"향의 재가 바람 없이 제자리에 떨어진다.","tone":"good","scene":"purify","actions":["purify"],"weight":0.85,"options":[{"label":"차분히 기다린다","text":"따뜻한 재. 차분히 기다린다.","fx":{"spirit":-4,"mental":2}},{"label":"남은 재를 모은다","text":"따뜻한 재. 남은 재를 모은다.","fx":{"clues":1}}]},{"id":"v5_purify_02","title":"끊어진 염주","body":"낡은 염주가 바닥에 흩어진다.","tone":"bad","scene":"purify","actions":["purify"],"weight":1.3,"options":[{"label":"새 염주를 산다","text":"끊어진 염주. 새 염주를 산다.","fx":{"money":-18000,"spirit":-3}},{"label":"그냥 사용한다","text":"끊어진 염주. 그냥 사용한다.","fx":{"spirit":5,"mental":-4}}]},{"id":"v5_purify_03","title":"이름이 적힌 부적","body":"부적을 뒤집자 자신의 이름이 적혀 있다.","tone":"bad","scene":"purify","actions":["purify"],"weight":1.3,"options":[{"label":"불에 태운다","text":"이름이 적힌 부적. 불에 태운다.","fx":{"spirit":-5,"health":-3}},{"label":"보관한다","text":"이름이 적힌 부적. 보관한다.","fx":{"clues":1,"spirit":6}}]},{"id":"v5_purify_04","title":"고운 소금","body":"도자기에 소금을 덜자 숨소리가 또렷해진다.","tone":"good","scene":"purify","actions":["purify"],"weight":0.85,"options":[{"label":"문턱에 뿌린다","text":"고운 소금. 문턱에 뿌린다.","fx":{"spirit":-4,"money":-3000}},{"label":"작은 병에 담는다","text":"고운 소금. 작은 병에 담는다.","fx":{"mental":4}}]},{"id":"v5_purify_05","title":"젖은 제문","body":"정성 들여 적은 종이가 물에 젖어 번졌다.","tone":"bad","scene":"purify","actions":["purify"],"weight":1.3,"options":[{"label":"다시 준비한다","text":"젖은 제문. 다시 준비한다.","fx":{"money":-9000,"mental":-3}},{"label":"대강 읽는다","text":"젖은 제문. 대강 읽는다.","fx":{"spirit":4,"mental":-5}}]},{"id":"v5_purify_06","title":"정오의 향내","body":"창이 열린 사이 향내가 바깥으로 흘러나간다.","tone":"neutral","scene":"purify","actions":["purify"],"weight":0.85,"options":[{"label":"바람을 막는다","text":"정오의 향내. 바람을 막는다.","fx":{"spirit":-2}},{"label":"창을 더 연다","text":"정오의 향내. 창을 더 연다.","fx":{"mental":3}}]},{"id":"v5_purify_07","title":"다 쓴 소금","body":"소금이 바닥나 정화가 불완전하다.","tone":"bad","scene":"purify","actions":["purify"],"weight":1.3,"options":[{"label":"급히 사 온다","text":"다 쓴 소금. 급히 사 온다.","fx":{"money":-17000,"spirit":-2}},{"label":"오늘은 포기한다","text":"다 쓴 소금. 오늘은 포기한다.","fx":{"spirit":3,"mental":-2}}]},{"id":"v5_purify_08","title":"작은 평안","body":"방 안에 오래 머물던 차가운 기운이 덜하다.","tone":"good","scene":"purify","actions":["purify"],"weight":0.85,"options":[{"label":"조금 더 정돈한다","text":"작은 평안. 조금 더 정돈한다.","fx":{"spirit":-5,"mental":-2}},{"label":"그냥 쉬어 간다","text":"작은 평안. 그냥 쉬어 간다.","fx":{"mental":5}}]},{"id":"v5_rest_01","title":"햇볕 드는 의자","body":"잠깐 들어온 빛이 낡은 의자 끝에 걸친다.","tone":"good","scene":"rest","actions":["rest"],"weight":0.85,"options":[{"label":"창가에 앉는다","text":"햇볕 드는 의자. 창가에 앉는다.","fx":{"mental":5}},{"label":"낮잠을 잔다","text":"햇볕 드는 의자. 낮잠을 잔다.","fx":{"health":3,"mental":2}}]},{"id":"v5_rest_02","title":"고장 난 수도꼭지","body":"싱크대 아래에서 물이 조금씩 새어 나온다.","tone":"bad","scene":"rest","actions":["rest"],"weight":1.3,"options":[{"label":"수리 기사를 부른다","text":"고장 난 수도꼭지. 수리 기사를 부른다.","fx":{"money":-33000}},{"label":"수건으로 막는다","text":"고장 난 수도꼭지. 수건으로 막는다.","fx":{"mental":-6,"health":-2}}]},{"id":"v5_rest_03","title":"친구의 안부","body":"전화기에 이름을 아는 사람이 떠 있다.","tone":"good","scene":"rest","actions":["rest"],"weight":0.85,"options":[{"label":"통화를 한다","text":"친구의 안부. 통화를 한다.","fx":{"mental":7,"bond":1}},{"label":"문자로 답한다","text":"친구의 안부. 문자로 답한다.","fx":{"mental":3}}]},{"id":"v5_rest_04","title":"지나치게 쌓인 청구서","body":"문틈으로 공과금 고지서가 밀려 들어온다.","tone":"bad","scene":"rest","actions":["rest"],"weight":1.3,"options":[{"label":"밀린 돈을 낸다","text":"지나치게 쌓인 청구서. 밀린 돈을 낸다.","fx":{"money":-26000,"mental":2}},{"label":"안 보이는 곳에 넣는다","text":"지나치게 쌓인 청구서. 안 보이는 곳에 넣는다.","fx":{"mental":-6,"luck":-1}}]},{"id":"v5_rest_05","title":"거실의 낡은 라디오","body":"주파수를 돌리자 오래된 노래가 짧게 흐른다.","tone":"neutral","scene":"rest","actions":["rest"],"weight":0.85,"options":[{"label":"조용히 듣는다","text":"거실의 낡은 라디오. 조용히 듣는다.","fx":{"mental":4}},{"label":"전원을 끈다","text":"거실의 낡은 라디오. 전원을 끈다.","fx":{"mental":2}}]},{"id":"v5_rest_06","title":"전등이 나간 화장실","body":"형광등이 몇 번 깜박이다 꺼진다.","tone":"bad","scene":"rest","actions":["rest"],"weight":1.3,"options":[{"label":"전구를 교체한다","text":"전등이 나간 화장실. 전구를 교체한다.","fx":{"money":-11000,"mental":1}},{"label":"그냥 둔다","text":"전등이 나간 화장실. 그냥 둔다.","fx":{"mental":-5,"spirit":1}}]},{"id":"v5_rest_07","title":"늦잠 자는 이웃","body":"복도에서 누군가 웃으며 쓰레기 봉투를 건넨다.","tone":"good","scene":"rest","actions":["rest"],"weight":0.85,"options":[{"label":"도움을 준다","text":"늦잠 자는 이웃. 도움을 준다.","fx":{"bond":2,"mental":2}},{"label":"고개만 끄덕인다","text":"늦잠 자는 이웃. 고개만 끄덕인다.","fx":{"mental":2}}]},{"id":"v5_rest_08","title":"집 앞의 소음","body":"밤새 공사 소리가 들려온다.","tone":"bad","scene":"rest","actions":["rest"],"weight":1.3,"options":[{"label":"관리실에 항의한다","text":"집 앞의 소음. 관리실에 항의한다.","fx":{"mental":-4,"bond":-1}},{"label":"참고 있는다","text":"집 앞의 소음. 참고 있는다.","fx":{"mental":-7,"health":-2}}]},{"id":"v5_rest_09","title":"빈 찻잔","body":"식탁에 있던 찻잔을 한 번 더 닦는다.","tone":"neutral","scene":"rest","actions":["rest"],"weight":0.85,"options":[{"label":"차를 마신다","text":"빈 찻잔. 차를 마신다.","fx":{"mental":4}},{"label":"방을 정리한다","text":"빈 찻잔. 방을 정리한다.","fx":{"health":2}}]},{"id":"v5_sleep_01","title":"밤의 악몽","body":"한밤중 잠에서 깨자 손이 심하게 떨렸다.","tone":"bad","scene":"sleep","actions":["sleep"],"weight":1.3,"options":[{"label":"물을 마시고 다시 잔다","text":"밤의 악몽. 물을 마시고 다시 잔다.","fx":{"mental":-5,"health":1}},{"label":"불을 켜 둔다","text":"밤의 악몽. 불을 켜 둔다.","fx":{"mental":-2,"money":-1000}}]},{"id":"v5_sleep_02","title":"윗집의 쿵 소리","body":"새벽에 무언가 바닥을 끄는 소리가 난다.","tone":"bad","scene":"sleep","actions":["sleep"],"weight":1.3,"options":[{"label":"귀마개를 낀다","text":"윗집의 쿵 소리. 귀마개를 낀다.","fx":{"mental":-3}},{"label":"확인하러 나간다","text":"윗집의 쿵 소리. 확인하러 나간다.","fx":{"mental":-7,"spirit":2}}]},{"id":"v5_sleep_03","title":"오랜만의 무몽","body":"아무 꿈도 꾸지 않은 것만 같다.","tone":"good","scene":"sleep","actions":["sleep"],"weight":0.85,"options":[{"label":"잠을 유지한다","text":"오랜만의 무몽. 잠을 유지한다.","fx":{"health":3}},{"label":"일어나 스트레칭한다","text":"오랜만의 무몽. 일어나 스트레칭한다.","fx":{"health":2,"mental":2}}]},{"id":"v5_sleep_04","title":"틀어진 베개","body":"아침에 목을 잘 움직일 수 없다.","tone":"bad","scene":"sleep","actions":["sleep"],"weight":1.3,"options":[{"label":"마사지한다","text":"틀어진 베개. 마사지한다.","fx":{"money":-4000,"health":2}},{"label":"그냥 참는다","text":"틀어진 베개. 그냥 참는다.","fx":{"health":-6}}]},{"id":"v5_sleep_05","title":"창틈의 새소리","body":"바깥에서 새 몇 마리가 우는 소리가 들린다.","tone":"neutral","scene":"sleep","actions":["sleep"],"weight":0.85,"options":[{"label":"한동안 듣는다","text":"창틈의 새소리. 한동안 듣는다.","fx":{"mental":2}},{"label":"이불을 덮는다","text":"창틈의 새소리. 이불을 덮는다.","fx":{"health":2}}]},{"id":"v5_sleep_06","title":"차가운 꿈","body":"이불 속에서도 자꾸 추위가 느껴진다.","tone":"bad","scene":"sleep","actions":["sleep"],"weight":1.3,"options":[{"label":"보일러를 높인다","text":"차가운 꿈. 보일러를 높인다.","fx":{"money":-9000,"health":2}},{"label":"그냥 견딘다","text":"차가운 꿈. 그냥 견딘다.","fx":{"health":-5,"mental":-3}}]},{"id":"v5_postoffice","title":"도착하지 않은 편지","body":"현관 앞에 수신인 없는 편지봉투가 놓여 있다.","tone":"strange","scene":"store","actions":["rest","walk"],"chain_followup":false,"options":[{"label":"봉투를 챙긴다","text":"도착하지 않은 편지. 봉투를 챙긴다.","fx":{"mental":-2},"follow":"v5_postoffice_2","follow_days":1},{"label":"바로 버린다","text":"도착하지 않은 편지. 바로 버린다.","fx":{"luck":-1}}],"weight":0.65},{"id":"v5_postoffice_2","title":"분실된 주소","body":"봉투 안의 주소는 몇 년 전 지도에서 사라진 곳이다.","tone":"strange","scene":"research","actions":["research","walk"],"chain_followup":true,"options":[{"label":"주소를 찾아본다","text":"분실된 주소. 주소를 찾아본다.","fx":{"clues":2,"mental":-4},"follow":"v5_postoffice_3","follow_days":1},{"label":"그만 추적한다","text":"분실된 주소. 그만 추적한다.","fx":{"mental":3}}],"weight":0.65},{"id":"v5_postoffice_3","title":"돌아온 답장","body":"빈 우편함에서 사흘 전 보낸 적 없는 답장이 나온다.","tone":"strange","scene":"home","actions":["rest","walk"],"chain_followup":true,"options":[{"label":"편지를 소각한다","text":"돌아온 답장. 편지를 소각한다.","fx":{"spirit":-6,"mental":-3}},{"label":"기록으로 남긴다","text":"돌아온 답장. 기록으로 남긴다.","fx":{"clues":2,"spirit":3}}],"weight":0.65},{"id":"v5_night_clinic","title":"심야 의원의 전화","body":"건강검진 예약을 한 적이 없는데 확인 전화가 왔다.","tone":"strange","scene":"home","actions":["rest","work"],"chain_followup":false,"options":[{"label":"진료 시간을 잡는다","text":"심야 의원의 전화. 진료 시간을 잡는다.","fx":{"mental":-2},"follow":"v5_night_clinic_2","follow_days":1},{"label":"전화를 끊는다","text":"심야 의원의 전화. 전화를 끊는다.","fx":{"mental":1}}],"weight":0.65},{"id":"v5_night_clinic_2","title":"일반 진료","body":"낡은 건물 안 의사는 한참 동안 맥박을 잰다.","tone":"strange","scene":"street","actions":["walk","purify"],"chain_followup":true,"options":[{"label":"검사비를 지불한다","text":"일반 진료. 검사비를 지불한다.","fx":{"money":-45000,"health":17,"spirit":-4},"follow":"v5_night_clinic_3","follow_days":1},{"label":"검사를 거절한다","text":"일반 진료. 검사를 거절한다.","fx":{"mental":-6}}],"weight":0.65},{"id":"v5_night_clinic_3","title":"진료 기록","body":"문자로 전송된 진료 기록에 낯선 이름이 적혀 있다.","tone":"strange","scene":"research","actions":["research","rest"],"chain_followup":true,"options":[{"label":"기록을 보관한다","text":"진료 기록. 기록을 보관한다.","fx":{"clues":2,"spirit":2}},{"label":"삭제한다","text":"진료 기록. 삭제한다.","fx":{"spirit":-3}}],"weight":0.65},{"id":"v5_arc_cat","title":"빗길의 고양이","body":"길고양이가 빗속 창고 앞에서 울고 있다.","tone":"strange","scene":"street","actions":["walk"],"chain_followup":false,"options":[{"label":"고양이에게 먹을 것을 준다","text":"빗길의 고양이. 고양이에게 먹을 것을 준다.","fx":{"money":-4500,"bond":2},"follow":"v5_arc_cat_2","follow_days":1},{"label":"지나간다","text":"빗길의 고양이. 지나간다.","fx":{"mental":-1}}],"weight":0.65},{"id":"v5_arc_cat_2","title":"낮은 담장의 방문객","body":"어제 보았던 고양이가 같은 자리에서 기다린다.","tone":"strange","scene":"park","actions":["walk","meal"],"chain_followup":true,"options":[{"label":"조용히 인사한다","text":"낮은 담장의 방문객. 조용히 인사한다.","fx":{"mental":6,"luck":1},"follow":"v5_arc_cat_3","follow_days":1},{"label":"밥그릇을 채운다","text":"낮은 담장의 방문객. 밥그릇을 채운다.","fx":{"money":-4000,"bond":3}}],"weight":0.65},{"id":"v5_arc_cat_3","title":"작은 종이쪽지","body":"고양이 목걸이에 접힌 종이가 매달려 있다.","tone":"strange","scene":"park","actions":["walk","research"],"chain_followup":true,"options":[{"label":"종이를 펼친다","text":"작은 종이쪽지. 종이를 펼친다.","fx":{"clues":2,"spirit":1}},{"label":"목걸이를 그대로 둔다","text":"작은 종이쪽지. 목걸이를 그대로 둔다.","fx":{"mental":3}}],"weight":0.65},{"id":"v5_arc_book","title":"헌책방의 휴업 공고","body":"동네 중고서점에 마지막 영업일이 적혀 있다.","tone":"strange","scene":"store","actions":["walk","research"],"chain_followup":false,"options":[{"label":"문 닫기 전에 들른다","text":"헌책방의 휴업 공고. 문 닫기 전에 들른다.","fx":{"money":-15000,"clues":1},"follow":"v5_arc_book_2","follow_days":1},{"label":"그냥 지나친다","text":"헌책방의 휴업 공고. 그냥 지나친다.","fx":{"mental":2}}],"weight":0.65},{"id":"v5_arc_book_2","title":"책갈피에 남은 이름","body":"서점 주인은 오래된 책을 포장하다가 멈춘다.","tone":"strange","scene":"store","actions":["research","walk"],"chain_followup":true,"options":[{"label":"책갈피를 받는다","text":"책갈피에 남은 이름. 책갈피를 받는다.","fx":{"clues":2,"spirit":2},"follow":"v5_arc_book_3","follow_days":1},{"label":"돌려드린다","text":"책갈피에 남은 이름. 돌려드린다.","fx":{"bond":2}}],"weight":0.65},{"id":"v5_arc_book_3","title":"마지막 페이지","body":"책의 마지막 페이지에 정화 절차가 적혀 있다.","tone":"strange","scene":"research","actions":["research","purify"],"chain_followup":true,"options":[{"label":"절차를 따른다","text":"마지막 페이지. 절차를 따른다.","fx":{"spirit":-8,"mental":-4}},{"label":"책을 덮는다","text":"마지막 페이지. 책을 덮는다.","fx":{"mental":3}}],"weight":0.65},{"id":"v5_arc_friend","title":"읽지 않은 문자","body":"오래된 친구가 지금도 이 동네에 사느냐고 물었다.","tone":"strange","scene":"home","actions":["rest","walk"],"chain_followup":false,"options":[{"label":"곧바로 답한다","text":"읽지 않은 문자. 곧바로 답한다.","fx":{"bond":2},"follow":"v5_arc_friend_2","follow_days":1},{"label":"내일 답한다","text":"읽지 않은 문자. 내일 답한다.","fx":{"mental":1}}],"weight":0.65},{"id":"v5_arc_friend_2","title":"조용한 커피숍","body":"친구는 얼굴이 너무 안 좋아 보인다며 걱정한다.","tone":"strange","scene":"cafe","actions":["meal","walk"],"chain_followup":true,"options":[{"label":"사정을 조금 털어놓는다","text":"조용한 커피숍. 사정을 조금 털어놓는다.","fx":{"bond":3,"mental":5},"follow":"v5_arc_friend_3","follow_days":2},{"label":"별일 아니라고 한다","text":"조용한 커피숍. 별일 아니라고 한다.","fx":{"bond":-1,"mental":-2}}],"weight":0.65},{"id":"v5_arc_friend_3","title":"오래된 인연의 도움","body":"친구가 병원과 전문가 연락처가 적힌 종이를 건넨다.","tone":"strange","scene":"home","actions":["rest","research"],"chain_followup":true,"options":[{"label":"도움을 받아들인다","text":"오래된 인연의 도움. 도움을 받아들인다.","fx":{"mental":8,"spirit":-4}},{"label":"혼자 해결한다","text":"오래된 인연의 도움. 혼자 해결한다.","fx":{"clues":1,"mental":-2}}],"weight":0.65},{"id":"v5_arc_shrine","title":"아파트의 작은 제단","body":"산책길 담벼락 안에 오래된 향로가 놓여 있다.","tone":"strange","scene":"street","actions":["walk","purify"],"chain_followup":false,"options":[{"label":"향을 바친다","text":"아파트의 작은 제단. 향을 바친다.","fx":{"money":-7000,"spirit":-3},"follow":"v5_arc_shrine_2","follow_days":1},{"label":"향로만 살핀다","text":"아파트의 작은 제단. 향로만 살핀다.","fx":{"clues":2,"spirit":2}}],"weight":0.65},{"id":"v5_arc_shrine_2","title":"새벽 관리인의 경고","body":"관리인은 향로를 건드리지 말라고 한다.","tone":"strange","scene":"store","actions":["work","walk"],"chain_followup":true,"options":[{"label":"설명을 듣는다","text":"새벽 관리인의 경고. 설명을 듣는다.","fx":{"clues":2,"mental":-3},"follow":"v5_arc_shrine_3","follow_days":1},{"label":"그냥 떠난다","text":"새벽 관리인의 경고. 그냥 떠난다.","fx":{"mental":2}}],"weight":0.65},{"id":"v5_arc_shrine_3","title":"제단 아래의 열쇠","body":"향로 옆에서 녹슨 열쇠가 나왔다.","tone":"strange","scene":"ritual","actions":["purify","research"],"chain_followup":true,"options":[{"label":"보관한다","text":"제단 아래의 열쇠. 보관한다.","fx":{"clues":3,"spirit":4}},{"label":"향로 아래에 둔다","text":"제단 아래의 열쇠. 향로 아래에 둔다.","fx":{"spirit":-5,"mental":-1}}],"weight":0.65},{"id":"v5_arc_rain","title":"우산 가게의 영수증","body":"계산대에서 받은 영수증에 주문하지 않은 우산이 찍혀 있다.","tone":"strange","scene":"store","actions":["walk","meal"],"chain_followup":false,"options":[{"label":"직원에게 묻는다","text":"우산 가게의 영수증. 직원에게 묻는다.","fx":{"bond":1,"money":-3000},"follow":"v5_arc_rain_2","follow_days":1},{"label":"가게를 떠난다","text":"우산 가게의 영수증. 가게를 떠난다.","fx":{"mental":-2}}],"weight":0.65},{"id":"v5_arc_rain_2","title":"분실된 우산의 주인","body":"가게에서 오늘도 같은 물건을 찾는 사람이 있었다.","tone":"strange","scene":"street","actions":["walk","work"],"chain_followup":true,"options":[{"label":"우산을 찾아준다","text":"분실된 우산의 주인. 우산을 찾아준다.","fx":{"luck":2,"bond":2}},{"label":"그냥 지나친다","text":"분실된 우산의 주인. 그냥 지나친다.","fx":{"luck":-1}}],"weight":0.65},{"id":"v5_arc_work","title":"퇴직한 직원의 사물함","body":"버려진 사물함에 오늘 날짜가 적혀 있다.","tone":"strange","scene":"store","actions":["work"],"chain_followup":false,"options":[{"label":"사물함을 잠근다","text":"퇴직한 직원의 사물함. 사물함을 잠근다.","fx":{"mental":-3,"spirit":1},"follow":"v5_arc_work_2","follow_days":1},{"label":"관리자에게 신고한다","text":"퇴직한 직원의 사물함. 관리자에게 신고한다.","fx":{"bond":2}}],"weight":0.65},{"id":"v5_arc_work_2","title":"사물함 안의 손목시계","body":"일하던 자리 아래에서 멈춘 시계가 발견된다.","tone":"strange","scene":"store","actions":["work","research"],"chain_followup":true,"options":[{"label":"시계를 확인한다","text":"사물함 안의 손목시계. 시계를 확인한다.","fx":{"clues":2,"spirit":3},"follow":"v5_arc_work_3","follow_days":1},{"label":"주인에게 돌려준다","text":"사물함 안의 손목시계. 주인에게 돌려준다.","fx":{"bond":2,"luck":1}}],"weight":0.65},{"id":"v5_arc_work_3","title":"돌아온 직원","body":"퇴직한 직원이 여전히 누군가 사물함을 쓴다며 불평한다.","tone":"strange","scene":"store","actions":["work"],"chain_followup":true,"options":[{"label":"사과하고 정리한다","text":"돌아온 직원. 사과하고 정리한다.","fx":{"bond":2,"mental":3}},{"label":"사물함을 잠가 둔다","text":"돌아온 직원. 사물함을 잠가 둔다.","fx":{"mental":-4}}],"weight":0.65},{"id":"v5_warded_exorcist","title":"퇴마사의 방문","body":"낯선 퇴마사가 묻는다. \"가족 중 누가 늘 여기에 계시죠?\"","tone":"strange","scene":"ritual","actions":["purify","research","rest"],"requires_haunting":true,"weight":2.8,"options":[{"label":"의식을 맡긴다 · 78,000원","text":"퇴마 비용을 치르고 의식을 맡긴다.","exorcise":{"cost":78000,"chance":0.84}},{"label":"나중에 다시 찾아오기로 한다","text":"지금은 방에서 돌아서기로 한다.","fx":{"mental":-2}}]},{"id":"v5_warded_shaman","title":"무당의 문턱","body":"무당이 문 앞에 소금을 뿌리며 방 안을 오래 바라본다.","tone":"strange","scene":"shaman","actions":["walk","purify"],"requires_haunting":true,"weight":2.8,"options":[{"label":"의식을 맡긴다 · 120,000원","text":"퇴마 비용을 치르고 의식을 맡긴다.","exorcise":{"cost":120000,"chance":0.92}},{"label":"나중에 다시 찾아오기로 한다","text":"지금은 방에서 돌아서기로 한다.","fx":{"mental":-2}}]},{"id":"v5_warded_clinic","title":"성당의 안내자","body":"오랜 기도 소리가 들리는 작은 예배실. 안내자가 조용히 의식을 제안한다.","tone":"strange","scene":"ritual","actions":["walk","purify","research"],"requires_haunting":true,"weight":2.8,"options":[{"label":"의식을 맡긴다 · 58,000원","text":"퇴마 비용을 치르고 의식을 맡긴다.","exorcise":{"cost":58000,"chance":0.78}},{"label":"나중에 다시 찾아오기로 한다","text":"지금은 방에서 돌아서기로 한다.","fx":{"mental":-2}}]},{"id":"v5_warded_broker","title":"불법 제령 광고","body":"게시판의 익명 업자가 지박령 제거를 약속한다. 선금이 비싸다.","tone":"strange","scene":"ritual","actions":["research"],"requires_haunting":true,"weight":2.8,"options":[{"label":"의식을 맡긴다 · 45,000원","text":"퇴마 비용을 치르고 의식을 맡긴다.","exorcise":{"cost":45000,"chance":0.66}},{"label":"나중에 다시 찾아오기로 한다","text":"지금은 방에서 돌아서기로 한다.","fx":{"mental":-2}}]},{"id":"v5_haunt_00","title":"거울의 두 번째 호흡","body":"기척이 없는데 욕실 거울에 김이 서린다.","tone":"bad","scene":"rest","actions":["rest","purify"],"requires_haunting":true,"weight":1.6,"options":[{"label":"침착하게 버틴다","fx":{"spirit":-2,"mental":-4},"text":"한동안 숨을 고르고 기척이 지나가길 기다렸다."},{"label":"직접 확인한다","fx":{"spirit":5,"mental":-7},"text":"기척의 근원을 확인하려 다가갔다."}]},{"id":"v5_haunt_01","title":"잠든 팔의 멍","body":"잠에서 깬 팔에 검게 멍이 들어 있다.","tone":"bad","scene":"sleep","actions":["sleep"],"requires_haunting":true,"weight":1.6,"options":[{"label":"침착하게 버틴다","fx":{"health":-5,"mental":-3},"text":"한동안 숨을 고르고 기척이 지나가길 기다렸다."},{"label":"직접 확인한다","fx":{"health":-12,"spirit":4},"text":"기척의 근원을 확인하려 다가갔다."}]},{"id":"v5_haunt_02","title":"저절로 열린 창고","body":"일하는 곳의 창고 문이 스스로 닫힌다.","tone":"bad","scene":"work","actions":["work"],"requires_haunting":true,"weight":1.6,"options":[{"label":"침착하게 버틴다","fx":{"mental":-5},"text":"한동안 숨을 고르고 기척이 지나가길 기다렸다."},{"label":"직접 확인한다","fx":{"health":-6,"spirit":4},"text":"기척의 근원을 확인하려 다가갔다."}]},{"id":"v5_haunt_03","title":"구독하지 않은 채널","body":"화면에 자기 방에서 촬영된 영상이 자동 재생된다.","tone":"bad","scene":"research","actions":["research"],"requires_haunting":true,"weight":1.6,"options":[{"label":"침착하게 버틴다","fx":{"mental":-8,"spirit":-1},"text":"한동안 숨을 고르고 기척이 지나가길 기다렸다."},{"label":"직접 확인한다","fx":{"spirit":7,"mental":-8},"text":"기척의 근원을 확인하려 다가갔다."}]},{"id":"v5_haunt_04","title":"빈 접시의 무게","body":"밥을 먹으려던 자리에 접시 하나가 더 놓인다.","tone":"bad","scene":"meal","actions":["meal"],"requires_haunting":true,"weight":1.6,"options":[{"label":"침착하게 버틴다","fx":{"mental":-5},"text":"한동안 숨을 고르고 기척이 지나가길 기다렸다."},{"label":"직접 확인한다","fx":{"spirit":5,"health":-4},"text":"기척의 근원을 확인하려 다가갔다."}]},{"id":"v5_haunt_05","title":"길 위의 그림자","body":"가로등 아래 그림자가 두 개로 갈라진다.","tone":"bad","scene":"walk","actions":["walk"],"requires_haunting":true,"weight":1.6,"options":[{"label":"침착하게 버틴다","fx":{"mental":-7},"text":"한동안 숨을 고르고 기척이 지나가길 기다렸다."},{"label":"직접 확인한다","fx":{"spirit":6,"health":-5},"text":"기척의 근원을 확인하려 다가갔다."}]},{"id":"v5_haunt_06","title":"뒤집힌 부적","body":"정화 중 손을 떼자 부적이 뒤집혀 있다.","tone":"bad","scene":"purify","actions":["purify"],"requires_haunting":true,"weight":1.6,"options":[{"label":"침착하게 버틴다","fx":{"spirit":-3,"mental":-5},"text":"한동안 숨을 고르고 기척이 지나가길 기다렸다."},{"label":"직접 확인한다","fx":{"spirit":8,"mental":-4},"text":"기척의 근원을 확인하려 다가갔다."}]},{"id":"v5_relic_notebook","title":"빈 노트의 첫 문장","body":"해방 후 얻은 노트 첫 장에 작은 주소가 저절로 나타났다.","tone":"strange","scene":"research","actions":["research","rest"],"requires_item":"명부의 빈 페이지","options":[{"label":"주소를 적어 둔다","text":"주소는 도시에서 사라진 행정구역으로 이어졌다.","fx":{"clues":3,"spirit":2},"consume_item":"명부의 빈 페이지","relic":"먹지 않는 연필"},{"label":"그대로 덮는다","text":"노트를 서랍 깊은 곳에 넣었다.","fx":{"mental":2}}]},{"id":"v5_relic_key","title":"열쇠가 맞는 자물쇠","body":"낡은 철문에 열쇠 구멍 하나가 남아 있다.","tone":"strange","scene":"street","actions":["walk","purify"],"requires_item":"녹슨 방 열쇠","options":[{"label":"문을 연다","text":"문 너머에는 작은 목걸이가 놓여 있었다.","fx":{"mental":-3,"spirit":-4},"consume_item":"녹슨 방 열쇠","relic":"흑백 유리 목걸이"},{"label":"다시 돌아선다","text":"아직 문을 열 때가 아닌 것 같다.","fx":{"mental":2}}]}],"relics":[{"id":"r01","name":"먹지 않는 연필","desc":"조사 숙련 +3. 매일 정신력 -1.","bonus":{"study_extra":3},"daily":{"mental":-1}},{"id":"r02","name":"흑백 유리 목걸이","desc":"정화 효율 +3. 매일 건강 -1.","bonus":{"purify_extra":3},"daily":{"health":-1}},{"id":"r03","name":"고요한 염주","desc":"정화 효율 +2. 매일 신기 -1.","bonus":{"purify_extra":2},"daily":{"spirit":-1}},{"id":"r04","name":"자정의 손목시계","desc":"휴식 회복 +3. 매일 정신력 -2.","bonus":{"rest_extra":3},"daily":{"mental":-2}},{"id":"r05","name":"세 번째 현관 열쇠","desc":"아르바이트 수입 +4,000원. 매일 신기 +1.","bonus":{"job_extra":4000},"daily":{"spirit":1}},{"id":"r06","name":"접힌 흰 손수건","desc":"식사 건강 회복 +3. 매일 자금 -1,000원.","bonus":{"meal_health":3},"daily":{"money":-1000}},{"id":"r07","name":"깨진 소형 거울","desc":"강령 성공률 +4%. 매일 신기 +1.","bonus":{"ritual_bonus":4},"daily":{"spirit":1}},{"id":"r08","name":"말 없는 방울","desc":"수면 건강 회복 +1. 매일 정신력 -1.","bonus":{"sleep_extra":1},"daily":{"mental":-1}}],"questItems":["명부의 빈 페이지","녹슨 방 열쇠","검은 봉투","낯선 사진","정화사 연락처","유리병 속 흙","주인 없는 승차권","마른 국화 리본"]};
+ const ext={
+  "skills": [
+    {
+      "id": "v5_sk_01",
+      "name": "창문놀이 친구",
+      "grade": 0,
+      "gain": {
+        "mental": 3,
+        "luck": 1
+      },
+      "daily": {
+        "health": -1
+      },
+      "price": 12000
+    },
+    {
+      "id": "v5_sk_02",
+      "name": "장판에숨긴뇌물",
+      "grade": 0,
+      "gain": {
+        "money": 9000,
+        "wealth": 1
+      },
+      "daily": {
+        "mental": -1
+      },
+      "price": 16000
+    },
+    {
+      "id": "v5_sk_03",
+      "name": "얕은 물에 이름",
+      "grade": 0,
+      "gain": {
+        "spirit": -3
+      },
+      "daily": {
+        "mental": -1
+      },
+      "price": 20000
+    },
+    {
+      "id": "v5_sk_04",
+      "name": "연필심 먹기",
+      "grade": 0,
+      "gain": {
+        "omen": 1,
+        "health": -3
+      },
+      "price": 13000
+    },
+    {
+      "id": "v5_sk_05",
+      "name": "서랍 밑에 오원",
+      "grade": 0,
+      "gain": {
+        "money": 5000
+      },
+      "daily": {
+        "wealth": 1,
+        "mental": -4
+      },
+      "price": 17000
+    },
+    {
+      "id": "v5_sk_06",
+      "name": "거꾸로 매듭",
+      "grade": 0,
+      "gain": {
+        "luck": 2
+      },
+      "daily": {
+        "spirit": 1
+      },
+      "price": 10000
+    },
+    {
+      "id": "v5_sk_07",
+      "name": "성냥갑 빨간머리 공룡",
+      "grade": 0,
+      "gain": {
+        "mental": 5
+      },
+      "daily": {
+        "health": -1
+      },
+      "price": 14000
+    },
+    {
+      "id": "v5_sk_08",
+      "name": "마름모 창문 네 개",
+      "grade": 0,
+      "gain": {
+        "health": 4
+      },
+      "daily": {
+        "mental": -1
+      },
+      "price": 18000
+    },
+    {
+      "id": "v5_sk_09",
+      "name": "노란 점선 한 줄 그어",
+      "grade": 0,
+      "gain": {
+        "bond": 1
+      },
+      "daily": {
+        "money": -700
+      },
+      "price": 11000
+    },
+    {
+      "id": "v5_sk_10",
+      "name": "수건 수박",
+      "grade": 0,
+      "gain": {
+        "mental": 2
+      },
+      "daily": {
+        "spirit": -1,
+        "health": -1
+      },
+      "price": 17000
+    },
+    {
+      "id": "v5_sk_11",
+      "name": "돈꿈꿔",
+      "grade": 0,
+      "gain": {
+        "wealth": 2
+      },
+      "daily": {
+        "mental": -2
+      },
+      "price": 10000
+    },
+    {
+      "id": "v5_sk_12",
+      "name": "녹색 문고리",
+      "grade": 0,
+      "gain": {
+        "clues": 1
+      },
+      "daily": {
+        "spirit": 1
+      },
+      "price": 14000
+    },
+    {
+      "id": "v5_sk_13",
+      "name": "열고닫고 열고닫고",
+      "grade": 0,
+      "gain": {
+        "bond": 2,
+        "luck": -2
+      },
+      "special": {
+        "remove_bonus": 0.07
+      },
+      "price": 18000
+    },
+    {
+      "id": "v5_sk_14",
+      "name": "어젯밤에 그 달력",
+      "grade": 0,
+      "gain": {
+        "mental": 7
+      },
+      "doom_gain": 1,
+      "price": 11000
+    },
+    {
+      "id": "v5_sk_15",
+      "name": "회색회중회계",
+      "grade": 1,
+      "gain": {
+        "luck": 2
+      },
+      "daily": {
+        "mental": -2
+      },
+      "bonus": {
+        "rest_extra": 2
+      },
+      "price": 37000
+    },
+    {
+      "id": "v5_sk_16",
+      "name": "차가운 빗물받이",
+      "grade": 1,
+      "gain": {
+        "spirit": -6
+      },
+      "daily": {
+        "health": -2
+      },
+      "bonus": {
+        "purify_extra": 2
+      },
+      "price": 30000
+    },
+    {
+      "id": "v5_sk_17",
+      "name": "소금 절인 대구",
+      "grade": 1,
+      "gain": {
+        "mental": 10
+      },
+      "daily": {
+        "money": -1800
+      },
+      "bonus": {
+        "purify_extra": 1
+      },
+      "price": 36000
+    },
+    {
+      "id": "v5_sk_18",
+      "name": "끝나지 않는 티파티",
+      "grade": 1,
+      "gain": {
+        "money": 12000
+      },
+      "daily": {
+        "health": -3
+      },
+      "bonus": {
+        "job_extra": 2000
+      },
+      "price": 42000
+    },
+    {
+      "id": "v5_sk_19",
+      "name": "도시는 낮게 운다",
+      "grade": 1,
+      "gain": {
+        "omen": 2
+      },
+      "daily": {
+        "mental": -3
+      },
+      "price": 35000
+    },
+    {
+      "id": "v5_sk_20",
+      "name": "여섯 번째 우편함에 편지",
+      "grade": 1,
+      "gain": {
+        "bond": 3
+      },
+      "daily": {
+        "spirit": 1,
+        "mental": -2
+      },
+      "price": 35000
+    },
+    {
+      "id": "v5_sk_21",
+      "name": "곱게 접은 물약",
+      "grade": 1,
+      "gain": {
+        "health": 12
+      },
+      "daily": {
+        "money": -3000
+      },
+      "price": 41000
+    },
+    {
+      "id": "v5_sk_22",
+      "name": "손끝으로 읽는 지도",
+      "grade": 1,
+      "gain": {
+        "clues": 2
+      },
+      "daily": {
+        "mental": -3
+      },
+      "bonus": {
+        "study_extra": 3
+      },
+      "special": {
+        "on_other_removed": {
+          "clues": 1,
+          "mental": -1
+        }
+      },
+      "price": 34000
+    },
+    {
+      "id": "v5_sk_23",
+      "name": "마른꽃송이",
+      "grade": 1,
+      "gain": {
+        "luck": 3
+      },
+      "daily": {
+        "health": -2
+      },
+      "price": 40000
+    },
+    {
+      "id": "v5_sk_24",
+      "name": "검은 실 재봉틀",
+      "grade": 1,
+      "gain": {
+        "wealth": 2
+      },
+      "bonus": {
+        "job_extra": 3500
+      },
+      "doom_gain": 2,
+      "special": {
+        "on_other_removed": {
+          "money": 2200
+        }
+      },
+      "price": 33000
+    },
+    {
+      "id": "v5_sk_25",
+      "name": "커튼 너머의 그대여",
+      "grade": 1,
+      "gain": {
+        "mental": 15
+      },
+      "daily": {
+        "health": -2
+      },
+      "bonus": {
+        "sleep_extra": 1
+      },
+      "price": 39000
+    },
+    {
+      "id": "v5_sk_26",
+      "name": "눈감은 교통신호",
+      "grade": 1,
+      "gain": {
+        "luck": 2
+      },
+      "daily": {
+        "wealth": -1
+      },
+      "bonus": {
+        "rest_extra": 3
+      },
+      "price": 32000
+    },
+    {
+      "id": "v5_sk_27",
+      "name": "유리컵 속의 종이",
+      "grade": 1,
+      "gain": {
+        "spirit": -8
+      },
+      "daily": {
+        "mental": -3
+      },
+      "price": 38000
+    },
+    {
+      "id": "v5_sk_28",
+      "name": "오래된 야간 통행증",
+      "grade": 1,
+      "gain": {
+        "wealth": 3
+      },
+      "daily": {
+        "luck": -2,
+        "health": -1
+      },
+      "price": 31000
+    },
+    {
+      "id": "v5_sk_29",
+      "name": "문틈의 회색 깃털",
+      "grade": 1,
+      "gain": {
+        "omen": 3
+      },
+      "daily": {
+        "spirit": 2
+      },
+      "price": 37000
+    },
+    {
+      "id": "v5_sk_30",
+      "name": "브라운관 연락없음",
+      "grade": 1,
+      "gain": {
+        "mental": 5
+      },
+      "daily": {
+        "luck": -1
+      },
+      "bonus": {
+        "ritual_bonus": 7
+      },
+      "price": 37000
+    },
+    {
+      "id": "v5_sk_31",
+      "name": "꿀꿀이의 이름은?",
+      "grade": 2,
+      "gain": {
+        "money": 30000
+      },
+      "daily": {
+        "mental": -8
+      },
+      "bonus": {
+        "job_extra": 4500
+      },
+      "special": {
+        "remove_scale_money": 1600
+      },
+      "price": 83000
+    },
+    {
+      "id": "v5_sk_32",
+      "name": "가짜 돈더미",
+      "grade": 2,
+      "gain": {
+        "wealth": 5
+      },
+      "daily": {
+        "luck": -3,
+        "spirit": 1
+      },
+      "price": 89000
+    },
+    {
+      "id": "v5_sk_33",
+      "name": "그 사물함은 잠겼어",
+      "grade": 2,
+      "gain": {
+        "max_mental": 10
+      },
+      "daily": {
+        "health": -2,
+        "spirit": 1
+      },
+      "price": 95000
+    },
+    {
+      "id": "v5_sk_34",
+      "name": "역순으로 흐른 강",
+      "grade": 2,
+      "gain": {
+        "spirit": -12
+      },
+      "daily": {
+        "mental": -6
+      },
+      "bonus": {
+        "purify_extra": 4
+      },
+      "price": 88000
+    },
+    {
+      "id": "v5_sk_35",
+      "name": "가족사진 가족아님",
+      "grade": 2,
+      "gain": {
+        "bond": 5
+      },
+      "daily": {
+        "mental": -2,
+        "spirit": 2
+      },
+      "special": {
+        "conditional_daily": [
+          {
+            "stat": "bond",
+            "min": 5,
+            "fx": {
+              "mental": 3
+            },
+            "text": "인연운 5 이상이면 매일 정신력 +3"
+          }
+        ]
+      },
+      "price": 94000
+    },
+    {
+      "id": "v5_sk_36",
+      "name": "버스 기다리는 누나",
+      "grade": 2,
+      "gain": {
+        "luck": 5
+      },
+      "daily": {
+        "health": -4
+      },
+      "bonus": {
+        "job_extra": 3500
+      },
+      "price": 87000
+    },
+    {
+      "id": "v5_sk_37",
+      "name": "이 의자 내꺼",
+      "grade": 2,
+      "gain": {
+        "mental": 25
+      },
+      "daily": {
+        "mental": -6,
+        "spirit": 2
+      },
+      "price": 93000
+    },
+    {
+      "id": "v5_sk_38",
+      "name": "소리가 나지 않는 종",
+      "grade": 2,
+      "gain": {
+        "clues": 4
+      },
+      "daily": {
+        "spirit": 2,
+        "health": -3
+      },
+      "doom_gain": 2,
+      "special": {
+        "conditional_daily": [
+          {
+            "stat": "doom",
+            "min": 5,
+            "fx": {
+              "clues": 1
+            },
+            "text": "불길한 운명이 짙으면 매일 강령 단서 +1"
+          }
+        ]
+      },
+      "price": 86000
+    },
+    {
+      "id": "v5_sk_39",
+      "name": "열두 장의 흑백 사진",
+      "grade": 2,
+      "gain": {
+        "omen": 4
+      },
+      "daily": {
+        "mental": -4
+      },
+      "bonus": {
+        "study_extra": 6
+      },
+      "doom_gain": 2,
+      "special": {
+        "on_other_removed": {
+          "doom": -1,
+          "mental": -3
+        }
+      },
+      "price": 92000
+    },
+    {
+      "id": "v5_sk_40",
+      "name": "해적 선장이 여기 있다",
+      "grade": 2,
+      "gain": {
+        "money": 50000
+      },
+      "daily": {
+        "mental": -8,
+        "luck": -2
+      },
+      "price": 92000
+    },
+    {
+      "id": "v5_sk_41",
+      "name": "식탁보 당겨보니 종이비행기",
+      "grade": 2,
+      "gain": {
+        "max_mental": 12
+      },
+      "daily": {
+        "spirit": 3
+      },
+      "bonus": {
+        "meal_mental": 4
+      },
+      "price": 85000
+    },
+    {
+      "id": "v5_sk_42",
+      "name": "뜬 눈이 편해요",
+      "grade": 2,
+      "gain": {
+        "health": 20
+      },
+      "daily": {
+        "health": -5,
+        "spirit": 2
+      },
+      "bonus": {
+        "rest_extra": 5
+      },
+      "price": 91000
+    },
+    {
+      "id": "v5_sk_43",
+      "name": "밤거울이웃",
+      "grade": 2,
+      "gain": {
+        "luck": 3,
+        "omen": 3
+      },
+      "daily": {
+        "mental": -5
+      },
+      "price": 84000
+    },
+    {
+      "id": "v5_sk_44",
+      "name": "노란꽃을따라가",
+      "grade": 2,
+      "gain": {
+        "clues": 3
+      },
+      "daily": {
+        "spirit": 3
+      },
+      "bonus": {
+        "ritual_bonus": 12
+      },
+      "price": 90000
+    },
+    {
+      "id": "v5_sk_45",
+      "name": "죽은 사람이 낸 월세",
+      "grade": 3,
+      "gain": {
+        "money": 200000
+      },
+      "daily": {
+        "health": -5,
+        "spirit": 3
+      },
+      "doom_gain": 3,
+      "special": {
+        "conditional_daily": [
+          {
+            "stat": "doom",
+            "min": 5,
+            "fx": {
+              "money": 6500
+            },
+            "text": "불길한 운명이 짙으면 매일 자금 +6,500원"
+          }
+        ]
+      },
+      "price": 109000
+    },
+    {
+      "id": "v5_sk_46",
+      "name": "그 누구의 첫 번째 숨",
+      "grade": 3,
+      "gain": {
+        "health": 40
+      },
+      "daily": {
+        "mental": -12,
+        "spirit": 4
+      },
+      "bonus": {
+        "sleep_extra": 3
+      },
+      "price": 159000
+    },
+    {
+      "id": "v5_sk_47",
+      "name": "동공 안에 빈 방 안에 공동",
+      "grade": 3,
+      "gain": {
+        "max_mental": 25
+      },
+      "daily": {
+        "health": -7,
+        "spirit": 5
+      },
+      "price": 123000
+    },
+    {
+      "id": "v5_sk_48",
+      "name": "안녕하세요, 지금 새벽 네 시인데, 미안한데요, 안녕하세요, 여기 공문 있습니다, 네, 아뇨, 네.",
+      "grade": 3,
+      "gain": {
+        "wealth": 10
+      },
+      "daily": {
+        "luck": -6,
+        "mental": -10
+      },
+      "price": 173000
+    },
+    {
+      "id": "v5_sk_49",
+      "name": "남은이름은너",
+      "grade": 3,
+      "gain": {
+        "spirit": -25
+      },
+      "daily": {
+        "health": -12,
+        "mental": -15
+      },
+      "bonus": {
+        "purify_extra": 4
+      },
+      "doom_gain": -2,
+      "special": {
+        "remove_bonus": 0.12
+      },
+      "price": 137000
+    },
+    {
+      "id": "v5_sk_50",
+      "name": "백 번째 부재중 전화",
+      "grade": 3,
+      "gain": {
+        "clues": 8
+      },
+      "daily": {
+        "spirit": 5,
+        "mental": -12
+      },
+      "bonus": {
+        "ritual_bonus": 18
+      },
+      "special": {
+        "conditional_daily": [
+          {
+            "stat": "spirit",
+            "min": 45,
+            "fx": {
+              "mental": 6
+            },
+            "text": "신기 45 이상이면 매일 정신력 +6"
+          }
+        ]
+      },
+      "price": 150000
+    },
+    {
+      "id": "v5_sk_51",
+      "name": "전등 아래 친구 눈",
+      "grade": 3,
+      "gain": {
+        "omen": 8
+      },
+      "daily": {
+        "health": -6,
+        "spirit": 6
+      },
+      "special": {
+        "conditional_daily": [
+          {
+            "stat": "mental",
+            "max": 35,
+            "fx": {
+              "omen": 1,
+              "doom": 1
+            },
+            "text": "정신력 35 이하이면 매일 영감운 +1, 불길한 운명 증가"
+          }
+        ]
+      },
+      "price": 114000
+    },
+    {
+      "id": "v5_sk_52",
+      "name": "벼락 맞은 옻나무",
+      "grade": 3,
+      "gain": {
+        "money": 70000,
+        "luck": 5
+      },
+      "daily": {
+        "mental": -15,
+        "spirit": 4
+      },
+      "bonus": {
+        "job_extra": 9000
+      },
+      "price": 164000
+    },
+    {
+      "id": "v5_sk_53",
+      "name": "닫는 지하실",
+      "grade": 3,
+      "gain": {
+        "health": 30,
+        "mental": 25
+      },
+      "daily": {
+        "luck": -5,
+        "spirit": 8
+      },
+      "price": 128000
+    },
+    {
+      "id": "v5_sk_54",
+      "name": "우물 바닥에 하늘이 있더라",
+      "grade": 3,
+      "gain": {
+        "spirit": -18,
+        "mental": 30
+      },
+      "daily": {
+        "health": -8,
+        "wealth": -3
+      },
+      "price": 178000
+    },
+    {
+      "id": "v5_sk_55",
+      "name": "티켓 여기있어요",
+      "grade": 3,
+      "gain": {
+        "money": 120000
+      },
+      "daily": {
+        "mental": -18,
+        "spirit": 5,
+        "bond": -3
+      },
+      "special": {
+        "on_other_removed": {
+          "money": 4500,
+          "doom": 1
+        }
+      },
+      "price": 142000
+    },
+    {
+      "id": "v5_sk_56",
+      "name": "빈 공책 빈 공책 빈 공책",
+      "grade": 3,
+      "gain": {
+        "max_mental": 30
+      },
+      "daily": {
+        "health": -10,
+        "mental": -10,
+        "spirit": 6
+      },
+      "price": 106000
+    }
+  ],
+  "ghosts": [
+    {
+      "id": "v5_gh_01",
+      "name": "빈 방의 하숙생",
+      "story": "빨래를 걷지 못하고 매일 같은 창을 바라본다.",
+      "bonus": {
+        "rest_extra": 8
+      },
+      "daily": {
+        "mental": -8,
+        "health": -3,
+        "spirit": 2
+      }
+    },
+    {
+      "id": "v5_gh_02",
+      "name": "교차로의 택시 기사",
+      "story": "목적지를 묻기 전에 미터기를 켠다.",
+      "bonus": {
+        "job_extra": 22000
+      },
+      "daily": {
+        "mental": -10,
+        "health": -2,
+        "spirit": 4
+      }
+    },
+    {
+      "id": "v5_gh_03",
+      "name": "초등학교의 당직자",
+      "story": "누구도 듣지 않는 출석을 매일 부른다.",
+      "bonus": {
+        "study_extra": 11
+      },
+      "daily": {
+        "mental": -7,
+        "spirit": 3,
+        "luck": -1
+      }
+    },
+    {
+      "id": "v5_gh_04",
+      "name": "세탁소의 여자",
+      "story": "돌아오지 않은 교복을 아직 다리고 있다.",
+      "bonus": {
+        "meal_health": 9
+      },
+      "daily": {
+        "health": -6,
+        "mental": -5,
+        "spirit": 2
+      }
+    },
+    {
+      "id": "v5_gh_05",
+      "name": "지하주차장의 관리인",
+      "story": "경비실에 누가 지나갈 때마다 손을 든다.",
+      "bonus": {
+        "job_extra": 17000,
+        "rest_extra": 3
+      },
+      "daily": {
+        "health": -7,
+        "mental": -7,
+        "spirit": 3
+      }
+    },
+    {
+      "id": "v5_gh_06",
+      "name": "전파를 타는 어린아이",
+      "story": "목소리만 남아 끊임없이 전화벨을 울린다.",
+      "bonus": {
+        "ritual_bonus": 23
+      },
+      "daily": {
+        "mental": -11,
+        "health": -4,
+        "spirit": 5
+      },
+      "special": {
+        "conditional_daily": [
+          {
+            "stat": "doom",
+            "min": 5,
+            "fx": {
+              "clues": 2,
+              "spirit": 1
+            },
+            "text": "불길한 운명이 짙으면 매일 강령 단서 +2, 신기 +1"
+          }
+        ]
+      }
+    },
+    {
+      "id": "v5_gh_07",
+      "name": "종이배를 접는 노인",
+      "story": "물길을 따라 모든 이름이 흘러간다고 말한다.",
+      "bonus": {
+        "purify_extra": 11
+      },
+      "daily": {
+        "health": -8,
+        "mental": -3,
+        "spirit": 3
+      }
+    },
+    {
+      "id": "v5_gh_08",
+      "name": "야간 약국의 약사",
+      "story": "포장지가 없는 약을 하나씩 헤아린다.",
+      "bonus": {
+        "sleep_extra": 5
+      },
+      "daily": {
+        "health": -4,
+        "mental": -9,
+        "spirit": 4
+      }
+    },
+    {
+      "id": "v5_gh_09",
+      "name": "낡은 복도의 안내원",
+      "story": "열쇠구멍을 통해 절대 들어가지 말라고 웃는다.",
+      "bonus": {
+        "study_extra": 9,
+        "ritual_bonus": 7
+      },
+      "daily": {
+        "mental": -9,
+        "spirit": 5
+      }
+    },
+    {
+      "id": "v5_gh_10",
+      "name": "흰 가운을 입은 남자",
+      "story": "진료기록에 없는 환자를 부르고 있다.",
+      "bonus": {
+        "meal_health": 11
+      },
+      "daily": {
+        "health": -7,
+        "mental": -7,
+        "spirit": 3
+      }
+    },
+    {
+      "id": "v5_gh_11",
+      "name": "촬영되지 않은 사진사",
+      "story": "비어 있는 곳을 향해 셔터를 누른다.",
+      "bonus": {
+        "ritual_bonus": 18
+      },
+      "daily": {
+        "mental": -8,
+        "spirit": 5,
+        "luck": -1
+      }
+    },
+    {
+      "id": "v5_gh_12",
+      "name": "가로등 아래의 배달원",
+      "story": "배달완료 문자가 새벽마다 온다.",
+      "bonus": {
+        "job_extra": 26000
+      },
+      "daily": {
+        "health": -12,
+        "mental": -5,
+        "spirit": 3
+      },
+      "special": {
+        "on_work": {
+          "mental": 2
+        }
+      }
+    },
+    {
+      "id": "v5_gh_13",
+      "name": "우편번호가 없는 집배원",
+      "story": "없는 동네의 편지를 매일 배달한다.",
+      "bonus": {
+        "study_extra": 14
+      },
+      "daily": {
+        "health": -6,
+        "mental": -11,
+        "spirit": 3
+      }
+    },
+    {
+      "id": "v5_gh_14",
+      "name": "창문 닦는 청소부",
+      "story": "밖에서는 안이 보이지 않는다고 한다.",
+      "bonus": {
+        "purify_extra": 13
+      },
+      "daily": {
+        "mental": -11,
+        "spirit": 4,
+        "luck": -1
+      }
+    },
+    {
+      "id": "v5_gh_15",
+      "name": "어린이집의 원장",
+      "story": "그림 속 사람들의 이름을 전부 기억한다.",
+      "bonus": {
+        "meal_mental": 8
+      },
+      "daily": {
+        "health": -4,
+        "mental": -12,
+        "spirit": 4
+      }
+    },
+    {
+      "id": "v5_gh_16",
+      "name": "새벽 경비초소의 신병",
+      "story": "교대자가 오지 않아 아직 철야 중이다.",
+      "bonus": {
+        "job_extra": 12000,
+        "rest_extra": 6
+      },
+      "daily": {
+        "mental": -14,
+        "health": -7,
+        "spirit": 3
+      }
+    },
+    {
+      "id": "v5_gh_17",
+      "name": "지하역의 노숙자",
+      "story": "마지막 열차가 몇 년 늦었다고 투덜거린다.",
+      "bonus": {
+        "sleep_extra": 8
+      },
+      "daily": {
+        "mental": -16,
+        "spirit": 6
+      },
+      "special": {
+        "conditional_daily": [
+          {
+            "stat": "mental",
+            "max": 30,
+            "fx": {
+              "health": 5
+            },
+            "text": "정신력 30 이하이면 매일 건강 +5"
+          }
+        ]
+      }
+    },
+    {
+      "id": "v5_gh_18",
+      "name": "발신자 없는 상담원",
+      "story": "매번 다른 목소리로 안부를 묻는다.",
+      "bonus": {
+        "study_extra": 16,
+        "ritual_bonus": 8
+      },
+      "daily": {
+        "health": -8,
+        "mental": -12,
+        "spirit": 5
+      }
+    },
+    {
+      "id": "v5_gh_19",
+      "name": "냉동창고의 정육점 주인",
+      "story": "저울에 올라온 무게를 세는 일을 멈추지 못한다.",
+      "bonus": {
+        "meal_health": 13
+      },
+      "daily": {
+        "mental": -17,
+        "health": -6,
+        "spirit": 4
+      }
+    },
+    {
+      "id": "v5_gh_20",
+      "name": "분실물 센터의 직원",
+      "story": "찾으러 오는 사람이 없는 물건을 보관한다.",
+      "bonus": {
+        "rest_extra": 10
+      },
+      "daily": {
+        "mental": -13,
+        "luck": -2,
+        "spirit": 5
+      },
+      "special": {
+        "on_other_removed": {
+          "money": 5000,
+          "doom": 1
+        }
+      }
+    },
+    {
+      "id": "v5_gh_21",
+      "name": "엘리베이터의 노부인",
+      "story": "층 버튼을 누르지 않고도 맨 위에서 내려온다.",
+      "bonus": {
+        "ritual_bonus": 29
+      },
+      "daily": {
+        "health": -9,
+        "mental": -12,
+        "spirit": 6
+      }
+    },
+    {
+      "id": "v5_gh_22",
+      "name": "시외버스의 검표원",
+      "story": "표를 찢고도 다시 돌려준다.",
+      "bonus": {
+        "job_extra": 34000
+      },
+      "daily": {
+        "health": -11,
+        "mental": -12,
+        "spirit": 6
+      }
+    },
+    {
+      "id": "v5_gh_23",
+      "name": "고장 난 시계의 장인",
+      "story": "초침이 멈춘 시간의 값을 계산한다.",
+      "bonus": {
+        "study_extra": 20
+      },
+      "daily": {
+        "mental": -16,
+        "spirit": 6
+      }
+    },
+    {
+      "id": "v5_gh_24",
+      "name": "사라진 등산객",
+      "story": "발견 당시 발자국이 하나도 없었다.",
+      "bonus": {
+        "purify_extra": 14,
+        "sleep_extra": 3
+      },
+      "daily": {
+        "health": -12,
+        "mental": -9,
+        "spirit": 6
+      }
+    },
+    {
+      "id": "v5_gh_25",
+      "name": "버려진 공장의 사장",
+      "story": "가동 중인 기계가 하나 더 있다고 주장한다.",
+      "bonus": {
+        "job_extra": 38000
+      },
+      "daily": {
+        "health": -15,
+        "mental": -14,
+        "spirit": 7
+      }
+    },
+    {
+      "id": "v5_gh_26",
+      "name": "익명의 장의사",
+      "story": "누구도 주문하지 않은 관을 미리 만든다.",
+      "bonus": {
+        "ritual_bonus": 32,
+        "study_extra": 9
+      },
+      "daily": {
+        "health": -15,
+        "mental": -18,
+        "spirit": 8
+      },
+      "special": {
+        "conditional_daily": [
+          {
+            "stat": "doom",
+            "min": 8,
+            "fx": {
+              "spirit": -4,
+              "mental": -5
+            },
+            "text": "불길한 운명이 짙으면 매일 신기 -4, 정신력 -5"
+          }
+        ]
+      }
+    },
+    {
+      "id": "v5_gh_27",
+      "name": "보이지 않는 동거인",
+      "story": "냉장고의 음식이 두 사람분씩 사라진다.",
+      "bonus": {
+        "rest_extra": 13,
+        "meal_mental": 7
+      },
+      "daily": {
+        "health": -11,
+        "mental": -19,
+        "spirit": 8
+      },
+      "special": {
+        "on_meal": {
+          "mental": 3,
+          "spirit": 1
+        }
+      }
+    }
+  ],
+  "meals": [
+    {
+      "name": "삼각김밥과 생수",
+      "price": 3600,
+      "health": 1,
+      "mental": 0,
+      "spirit": 0
+    },
+    {
+      "name": "계란 토스트",
+      "price": 6500,
+      "health": 3,
+      "mental": 4,
+      "spirit": 0
+    },
+    {
+      "name": "김치찌개",
+      "price": 12500,
+      "health": 7,
+      "mental": 2,
+      "spirit": 0
+    },
+    {
+      "name": "분식 세트",
+      "price": 9500,
+      "health": 4,
+      "mental": 6,
+      "spirit": 0
+    },
+    {
+      "name": "갈비탕",
+      "price": 19000,
+      "health": 10,
+      "mental": 3,
+      "spirit": 0
+    },
+    {
+      "name": "커피와 빵",
+      "price": 8700,
+      "health": 1,
+      "mental": 7,
+      "spirit": 0
+    },
+    {
+      "name": "사찰식 채식",
+      "price": 23000,
+      "health": 8,
+      "mental": 4,
+      "spirit": -1
+    },
+    {
+      "name": "늦은 밤 치킨",
+      "price": 22500,
+      "health": 6,
+      "mental": 11,
+      "spirit": 1
+    }
+  ],
+  "encounters": [
+    {
+      "id": "v5_work_01",
+      "title": "불량 계산대",
+      "body": "장부의 숫자가 맞지 않는다. 점장은 손실부터 계산한다.",
+      "tone": "bad",
+      "scene": "store",
+      "actions": [
+        "work"
+      ],
+      "weight": 1.3,
+      "options": [
+        {
+          "label": "내 돈으로 메운다",
+          "text": "불량 계산대. 내 돈으로 메운다.",
+          "fx": {
+            "money": -17000,
+            "mental": -2
+          }
+        },
+        {
+          "label": "점장과 확인한다",
+          "text": "불량 계산대. 점장과 확인한다.",
+          "fx": {
+            "mental": -7,
+            "bond": -1
+          }
+        }
+      ]
+    },
+    {
+      "id": "v5_work_02",
+      "title": "손님이 두고 간 팁",
+      "body": "늦은 손님이 잔돈을 받지 않고 나간다.",
+      "tone": "good",
+      "scene": "store",
+      "actions": [
+        "work"
+      ],
+      "weight": 0.85,
+      "options": [
+        {
+          "label": "돌려주려 뛰어나간다",
+          "text": "손님이 두고 간 팁. 돌려주려 뛰어나간다.",
+          "fx": {
+            "bond": 2,
+            "luck": 1
+          }
+        },
+        {
+          "label": "팁으로 남긴다",
+          "text": "손님이 두고 간 팁. 팁으로 남긴다.",
+          "fx": {
+            "money": 8000
+          }
+        }
+      ]
+    },
+    {
+      "id": "v5_work_03",
+      "title": "예고 없는 연장 근무",
+      "body": "마감 시간에도 손님이 줄지 않는다.",
+      "tone": "bad",
+      "scene": "store",
+      "actions": [
+        "work"
+      ],
+      "weight": 1.3,
+      "options": [
+        {
+          "label": "마지막까지 돕는다",
+          "text": "예고 없는 연장 근무. 마지막까지 돕는다.",
+          "fx": {
+            "health": -6,
+            "mental": -4,
+            "money": 14000
+          }
+        },
+        {
+          "label": "정시에 퇴근한다",
+          "text": "예고 없는 연장 근무. 정시에 퇴근한다.",
+          "fx": {
+            "bond": -2,
+            "mental": -2
+          }
+        }
+      ]
+    },
+    {
+      "id": "v5_work_04",
+      "title": "미끄러운 창고 바닥",
+      "body": "박스를 옮기다 물기 있는 바닥에서 미끄러졌다.",
+      "tone": "bad",
+      "scene": "store",
+      "actions": [
+        "work"
+      ],
+      "weight": 1.3,
+      "options": [
+        {
+          "label": "병원에 간다",
+          "text": "미끄러운 창고 바닥. 병원에 간다.",
+          "fx": {
+            "money": -27000,
+            "health": 5
+          }
+        },
+        {
+          "label": "참고 일한다",
+          "text": "미끄러운 창고 바닥. 참고 일한다.",
+          "fx": {
+            "health": -13,
+            "money": 9000
+          }
+        }
+      ]
+    },
+    {
+      "id": "v5_work_05",
+      "title": "점심 도시락",
+      "body": "직원이 반찬을 조금 더 챙겨 주었다.",
+      "tone": "good",
+      "scene": "store",
+      "actions": [
+        "work"
+      ],
+      "weight": 0.85,
+      "options": [
+        {
+          "label": "함께 먹는다",
+          "text": "점심 도시락. 함께 먹는다.",
+          "fx": {
+            "health": 5,
+            "mental": 3,
+            "bond": 1
+          }
+        },
+        {
+          "label": "퇴근 후 먹는다",
+          "text": "점심 도시락. 퇴근 후 먹는다.",
+          "fx": {
+            "health": 3
+          }
+        }
+      ]
+    },
+    {
+      "id": "v5_work_06",
+      "title": "재고 조사",
+      "body": "분실된 재고의 책임을 서로에게 떠넘긴다.",
+      "tone": "bad",
+      "scene": "store",
+      "actions": [
+        "work"
+      ],
+      "weight": 1.3,
+      "options": [
+        {
+          "label": "오래 남아 확인한다",
+          "text": "재고 조사. 오래 남아 확인한다.",
+          "fx": {
+            "health": -3,
+            "mental": -6,
+            "money": 9000
+          }
+        },
+        {
+          "label": "일단 물러난다",
+          "text": "재고 조사. 일단 물러난다.",
+          "fx": {
+            "bond": -2,
+            "luck": -1
+          }
+        }
+      ]
+    },
+    {
+      "id": "v5_work_07",
+      "title": "새로 온 동료",
+      "body": "새 직원은 웃으며 일의 순서를 묻는다.",
+      "tone": "neutral",
+      "scene": "store",
+      "actions": [
+        "work"
+      ],
+      "weight": 0.85,
+      "options": [
+        {
+          "label": "차근차근 알려준다",
+          "text": "새로 온 동료. 차근차근 알려준다.",
+          "fx": {
+            "mental": -2,
+            "bond": 2
+          }
+        },
+        {
+          "label": "매뉴얼을 건넨다",
+          "text": "새로 온 동료. 매뉴얼을 건넨다.",
+          "fx": {
+            "bond": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "v5_work_08",
+      "title": "결근자 대신 교대",
+      "body": "점장에게 급한 연락이 왔다.",
+      "tone": "bad",
+      "scene": "store",
+      "actions": [
+        "work"
+      ],
+      "weight": 1.3,
+      "options": [
+        {
+          "label": "추가 수당을 받는다",
+          "text": "결근자 대신 교대. 추가 수당을 받는다.",
+          "fx": {
+            "money": 18000,
+            "health": -8
+          }
+        },
+        {
+          "label": "오늘은 어렵다고 한다",
+          "text": "결근자 대신 교대. 오늘은 어렵다고 한다.",
+          "fx": {
+            "bond": -1
+          }
+        }
+      ]
+    },
+    {
+      "id": "v5_work_09",
+      "title": "가게 앞의 분실물",
+      "body": "카운터 아래에 오래된 지갑이 끼어 있다.",
+      "tone": "good",
+      "scene": "store",
+      "actions": [
+        "work"
+      ],
+      "weight": 0.85,
+      "options": [
+        {
+          "label": "보관함에 둔다",
+          "text": "가게 앞의 분실물. 보관함에 둔다.",
+          "fx": {
+            "bond": 2,
+            "luck": 1
+          }
+        },
+        {
+          "label": "무시한다",
+          "text": "가게 앞의 분실물. 무시한다.",
+          "fx": {
+            "mental": -2
+          }
+        }
+      ]
+    },
+    {
+      "id": "v5_work_10",
+      "title": "가벼운 감전",
+      "body": "오래된 커피 기계에서 파란 불꽃이 튄다.",
+      "tone": "bad",
+      "scene": "store",
+      "actions": [
+        "work"
+      ],
+      "weight": 1.3,
+      "options": [
+        {
+          "label": "수리를 요청한다",
+          "text": "가벼운 감전. 수리를 요청한다.",
+          "fx": {
+            "money": -4000,
+            "health": -2
+          }
+        },
+        {
+          "label": "그냥 사용한다",
+          "text": "가벼운 감전. 그냥 사용한다.",
+          "fx": {
+            "health": -11,
+            "mental": -3
+          }
+        }
+      ]
+    },
+    {
+      "id": "v5_work_11",
+      "title": "주문 실수",
+      "body": "서로 다른 주문이 한 번에 밀려들었다.",
+      "tone": "bad",
+      "scene": "store",
+      "actions": [
+        "work"
+      ],
+      "weight": 1.3,
+      "options": [
+        {
+          "label": "차액을 변상한다",
+          "text": "주문 실수. 차액을 변상한다.",
+          "fx": {
+            "money": -13000
+          }
+        },
+        {
+          "label": "손님을 설득한다",
+          "text": "주문 실수. 손님을 설득한다.",
+          "fx": {
+            "mental": -9,
+            "bond": -1
+          }
+        }
+      ]
+    },
+    {
+      "id": "v5_work_12",
+      "title": "단골의 소개",
+      "body": "단골이 주말 단기 알바를 알려 준다.",
+      "tone": "good",
+      "scene": "store",
+      "actions": [
+        "work"
+      ],
+      "weight": 0.85,
+      "options": [
+        {
+          "label": "연락처를 받는다",
+          "text": "단골의 소개. 연락처를 받는다.",
+          "fx": {
+            "bond": 2,
+            "wealth": 1
+          }
+        },
+        {
+          "label": "관심 없다고 한다",
+          "text": "단골의 소개. 관심 없다고 한다.",
+          "fx": {
+            "mental": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "v5_meal_01",
+      "title": "식은 배달",
+      "body": "배달된 음식이 문 앞에서 한참을 식었다.",
+      "tone": "bad",
+      "scene": "meal",
+      "actions": [
+        "meal"
+      ],
+      "weight": 1.3,
+      "options": [
+        {
+          "label": "다시 주문한다",
+          "text": "식은 배달. 다시 주문한다.",
+          "fx": {
+            "money": -16000,
+            "health": 5
+          }
+        },
+        {
+          "label": "그냥 먹는다",
+          "text": "식은 배달. 그냥 먹는다.",
+          "fx": {
+            "health": -5,
+            "mental": -2
+          }
+        }
+      ]
+    },
+    {
+      "id": "v5_meal_02",
+      "title": "서비스 군만두",
+      "body": "배달봉투 안에 주문하지 않은 작은 종이봉투가 있다.",
+      "tone": "good",
+      "scene": "meal",
+      "actions": [
+        "meal"
+      ],
+      "weight": 0.85,
+      "options": [
+        {
+          "label": "음식을 먹는다",
+          "text": "서비스 군만두. 음식을 먹는다.",
+          "fx": {
+            "health": 3,
+            "mental": 4
+          }
+        },
+        {
+          "label": "배달원에게 연락한다",
+          "text": "서비스 군만두. 배달원에게 연락한다.",
+          "fx": {
+            "bond": 1,
+            "mental": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "v5_meal_03",
+      "title": "상한 우유",
+      "body": "우유는 유통기한이 지나 있지 않지만 냄새가 이상하다.",
+      "tone": "bad",
+      "scene": "meal",
+      "actions": [
+        "meal"
+      ],
+      "weight": 1.3,
+      "options": [
+        {
+          "label": "버리고 새로 산다",
+          "text": "상한 우유. 버리고 새로 산다.",
+          "fx": {
+            "money": -6500
+          }
+        },
+        {
+          "label": "아깝지만 마신다",
+          "text": "상한 우유. 아깝지만 마신다.",
+          "fx": {
+            "health": -11
+          }
+        }
+      ]
+    },
+    {
+      "id": "v5_meal_04",
+      "title": "편의점의 침묵",
+      "body": "옆자리 손님이 같은 도시락을 고른다.",
+      "tone": "neutral",
+      "scene": "meal",
+      "actions": [
+        "meal"
+      ],
+      "weight": 0.85,
+      "options": [
+        {
+          "label": "자리를 양보한다",
+          "text": "편의점의 침묵. 자리를 양보한다.",
+          "fx": {
+            "bond": 1,
+            "mental": 1
+          }
+        },
+        {
+          "label": "혼자 먹는다",
+          "text": "편의점의 침묵. 혼자 먹는다.",
+          "fx": {
+            "mental": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "v5_meal_05",
+      "title": "닫힌 분식집",
+      "body": "퇴근길에 들른 식당의 셔터가 내려와 있다.",
+      "tone": "bad",
+      "scene": "meal",
+      "actions": [
+        "meal"
+      ],
+      "weight": 1.3,
+      "options": [
+        {
+          "label": "다른 곳을 찾는다",
+          "text": "닫힌 분식집. 다른 곳을 찾는다.",
+          "fx": {
+            "money": -6000,
+            "mental": 1
+          }
+        },
+        {
+          "label": "먹지 않고 돌아온다",
+          "text": "닫힌 분식집. 먹지 않고 돌아온다.",
+          "fx": {
+            "health": -5,
+            "mental": -2
+          }
+        }
+      ]
+    },
+    {
+      "id": "v5_meal_06",
+      "title": "어머니의 반찬",
+      "body": "냉장고 맨 아래에 익숙한 반찬통 하나가 있다.",
+      "tone": "good",
+      "scene": "meal",
+      "actions": [
+        "meal"
+      ],
+      "weight": 0.85,
+      "options": [
+        {
+          "label": "조금 데워 먹는다",
+          "text": "어머니의 반찬. 조금 데워 먹는다.",
+          "fx": {
+            "health": 4,
+            "mental": 5
+          }
+        },
+        {
+          "label": "내일로 남긴다",
+          "text": "어머니의 반찬. 내일로 남긴다.",
+          "fx": {
+            "mental": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "v5_meal_07",
+      "title": "배달 결제 오류",
+      "body": "앱에는 두 번 결제가 찍혔다.",
+      "tone": "bad",
+      "scene": "meal",
+      "actions": [
+        "meal"
+      ],
+      "weight": 1.3,
+      "options": [
+        {
+          "label": "환불을 요청한다",
+          "text": "배달 결제 오류. 환불을 요청한다.",
+          "fx": {
+            "mental": -4,
+            "money": -3000
+          }
+        },
+        {
+          "label": "그냥 넘어간다",
+          "text": "배달 결제 오류. 그냥 넘어간다.",
+          "fx": {
+            "money": -17000
+          }
+        }
+      ]
+    },
+    {
+      "id": "v5_meal_08",
+      "title": "뜨거운 국물",
+      "body": "추운 날 국물 한 숟가락이 속을 데운다.",
+      "tone": "good",
+      "scene": "meal",
+      "actions": [
+        "meal"
+      ],
+      "weight": 0.85,
+      "options": [
+        {
+          "label": "천천히 마신다",
+          "text": "뜨거운 국물. 천천히 마신다.",
+          "fx": {
+            "health": 4,
+            "mental": 4
+          }
+        },
+        {
+          "label": "서둘러 먹는다",
+          "text": "뜨거운 국물. 서둘러 먹는다.",
+          "fx": {
+            "health": 3
+          }
+        }
+      ]
+    },
+    {
+      "id": "v5_meal_09",
+      "title": "찢어진 포장",
+      "body": "배달 봉투에 있던 국물이 바닥까지 흘렀다.",
+      "tone": "bad",
+      "scene": "meal",
+      "actions": [
+        "meal"
+      ],
+      "weight": 1.3,
+      "options": [
+        {
+          "label": "바닥을 닦고 다시 산다",
+          "text": "찢어진 포장. 바닥을 닦고 다시 산다.",
+          "fx": {
+            "money": -14000,
+            "mental": -3
+          }
+        },
+        {
+          "label": "남은 음식을 먹는다",
+          "text": "찢어진 포장. 남은 음식을 먹는다.",
+          "fx": {
+            "health": -6
+          }
+        }
+      ]
+    },
+    {
+      "id": "v5_meal_10",
+      "title": "낯선 합석",
+      "body": "식당의 자리가 모자라 낯선 사람이 앞에 앉았다.",
+      "tone": "neutral",
+      "scene": "meal",
+      "actions": [
+        "meal"
+      ],
+      "weight": 0.85,
+      "options": [
+        {
+          "label": "말을 걸어 본다",
+          "text": "낯선 합석. 말을 걸어 본다.",
+          "fx": {
+            "bond": 1,
+            "mental": -1
+          }
+        },
+        {
+          "label": "조용히 식사한다",
+          "text": "낯선 합석. 조용히 식사한다.",
+          "fx": {
+            "mental": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "v5_walk_01",
+      "title": "꺼진 횡단보도",
+      "body": "신호등이 꺼지고 차량들이 느리게 지나간다.",
+      "tone": "bad",
+      "scene": "street",
+      "actions": [
+        "walk"
+      ],
+      "weight": 1.3,
+      "options": [
+        {
+          "label": "멀리 돌아간다",
+          "text": "꺼진 횡단보도. 멀리 돌아간다.",
+          "fx": {
+            "health": -2,
+            "mental": -2
+          }
+        },
+        {
+          "label": "급하게 건넌다",
+          "text": "꺼진 횡단보도. 급하게 건넌다.",
+          "fx": {
+            "health": -9,
+            "luck": -1
+          }
+        }
+      ]
+    },
+    {
+      "id": "v5_walk_02",
+      "title": "길고양이의 기지개",
+      "body": "문 아래 고양이 한 마리가 잠을 깼다.",
+      "tone": "good",
+      "scene": "street",
+      "actions": [
+        "walk"
+      ],
+      "weight": 0.85,
+      "options": [
+        {
+          "label": "가만히 쓰다듬는다",
+          "text": "길고양이의 기지개. 가만히 쓰다듬는다.",
+          "fx": {
+            "mental": 6,
+            "bond": 1
+          }
+        },
+        {
+          "label": "멀리서 지켜본다",
+          "text": "길고양이의 기지개. 멀리서 지켜본다.",
+          "fx": {
+            "mental": 3
+          }
+        }
+      ]
+    },
+    {
+      "id": "v5_walk_03",
+      "title": "자전거와 접촉",
+      "body": "좁은 골목에서 배달 자전거가 손목을 스친다.",
+      "tone": "bad",
+      "scene": "street",
+      "actions": [
+        "walk"
+      ],
+      "weight": 1.3,
+      "options": [
+        {
+          "label": "의원에 다녀온다",
+          "text": "자전거와 접촉. 의원에 다녀온다.",
+          "fx": {
+            "money": -19000,
+            "health": 2
+          }
+        },
+        {
+          "label": "문지르고 끝낸다",
+          "text": "자전거와 접촉. 문지르고 끝낸다.",
+          "fx": {
+            "health": -8
+          }
+        }
+      ]
+    },
+    {
+      "id": "v5_walk_04",
+      "title": "바람 빠진 풍선",
+      "body": "벤치 아래 흰 풍선 하나가 천천히 움직인다.",
+      "tone": "good",
+      "scene": "street",
+      "actions": [
+        "walk"
+      ],
+      "weight": 0.85,
+      "options": [
+        {
+          "label": "아이에게 돌려준다",
+          "text": "바람 빠진 풍선. 아이에게 돌려준다.",
+          "fx": {
+            "bond": 2,
+            "luck": 1
+          }
+        },
+        {
+          "label": "그냥 지나간다",
+          "text": "바람 빠진 풍선. 그냥 지나간다.",
+          "fx": {
+            "mental": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "v5_walk_05",
+      "title": "동네 게시판",
+      "body": "오래된 구인 광고를 본다.",
+      "tone": "neutral",
+      "scene": "street",
+      "actions": [
+        "walk"
+      ],
+      "weight": 0.85,
+      "options": [
+        {
+          "label": "전화번호를 적는다",
+          "text": "동네 게시판. 전화번호를 적는다.",
+          "fx": {
+            "wealth": 1,
+            "mental": -1
+          }
+        },
+        {
+          "label": "동네 소식만 읽는다",
+          "text": "동네 게시판. 동네 소식만 읽는다.",
+          "fx": {
+            "mental": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "v5_walk_06",
+      "title": "나쁜 날씨",
+      "body": "갑자기 비가 쏟아져 옷이 다 젖었다.",
+      "tone": "bad",
+      "scene": "street",
+      "actions": [
+        "walk"
+      ],
+      "weight": 1.3,
+      "options": [
+        {
+          "label": "우산을 산다",
+          "text": "나쁜 날씨. 우산을 산다.",
+          "fx": {
+            "money": -13500
+          }
+        },
+        {
+          "label": "그냥 걸어간다",
+          "text": "나쁜 날씨. 그냥 걸어간다.",
+          "fx": {
+            "health": -7,
+            "mental": -3
+          }
+        }
+      ]
+    },
+    {
+      "id": "v5_walk_07",
+      "title": "길가의 꽃집",
+      "body": "점원이 시들어 가는 꽃 한 송이를 무료로 건넨다.",
+      "tone": "good",
+      "scene": "street",
+      "actions": [
+        "walk"
+      ],
+      "weight": 0.85,
+      "options": [
+        {
+          "label": "꽃을 받는다",
+          "text": "길가의 꽃집. 꽃을 받는다.",
+          "fx": {
+            "mental": 5,
+            "luck": 1
+          }
+        },
+        {
+          "label": "사양한다",
+          "text": "길가의 꽃집. 사양한다.",
+          "fx": {
+            "bond": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "v5_walk_08",
+      "title": "찢어진 운동화",
+      "body": "신발 밑창이 갈라졌다.",
+      "tone": "bad",
+      "scene": "street",
+      "actions": [
+        "walk"
+      ],
+      "weight": 1.3,
+      "options": [
+        {
+          "label": "수선점을 찾는다",
+          "text": "찢어진 운동화. 수선점을 찾는다.",
+          "fx": {
+            "money": -17000,
+            "health": 1
+          }
+        },
+        {
+          "label": "테이프로 붙인다",
+          "text": "찢어진 운동화. 테이프로 붙인다.",
+          "fx": {
+            "health": -4
+          }
+        }
+      ]
+    },
+    {
+      "id": "v5_walk_09",
+      "title": "동네 약수터",
+      "body": "사람들이 차분히 줄을 서서 물을 담는다.",
+      "tone": "good",
+      "scene": "street",
+      "actions": [
+        "walk"
+      ],
+      "weight": 0.85,
+      "options": [
+        {
+          "label": "물을 마신다",
+          "text": "동네 약수터. 물을 마신다.",
+          "fx": {
+            "health": 4,
+            "mental": 2
+          }
+        },
+        {
+          "label": "벤치에 앉는다",
+          "text": "동네 약수터. 벤치에 앉는다.",
+          "fx": {
+            "mental": 5
+          }
+        }
+      ]
+    },
+    {
+      "id": "v5_walk_10",
+      "title": "낯선 길",
+      "body": "익숙한 골목이 끝나지 않고 길게 이어진다.",
+      "tone": "bad",
+      "scene": "street",
+      "actions": [
+        "walk"
+      ],
+      "weight": 1.3,
+      "options": [
+        {
+          "label": "지도 앱을 연다",
+          "text": "낯선 길. 지도 앱을 연다.",
+          "fx": {
+            "mental": -4,
+            "spirit": 1
+          }
+        },
+        {
+          "label": "길 끝까지 간다",
+          "text": "낯선 길. 길 끝까지 간다.",
+          "fx": {
+            "mental": -8,
+            "spirit": 4
+          }
+        }
+      ]
+    },
+    {
+      "id": "v5_research_01",
+      "title": "소멸된 블로그",
+      "body": "찾던 블로그의 글은 전부 삭제되어 있다.",
+      "tone": "bad",
+      "scene": "research",
+      "actions": [
+        "research"
+      ],
+      "weight": 1.3,
+      "options": [
+        {
+          "label": "캐시를 살핀다",
+          "text": "소멸된 블로그. 캐시를 살핀다.",
+          "fx": {
+            "mental": -5,
+            "clues": 1
+          }
+        },
+        {
+          "label": "미련 없이 닫는다",
+          "text": "소멸된 블로그. 미련 없이 닫는다.",
+          "fx": {
+            "mental": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "v5_research_02",
+      "title": "유료 복구 프로그램",
+      "body": "오래된 게시글을 복구하려면 결제가 필요하다는 창이 뜬다.",
+      "tone": "bad",
+      "scene": "research",
+      "actions": [
+        "research"
+      ],
+      "weight": 1.3,
+      "options": [
+        {
+          "label": "정식 이용권을 구매한다",
+          "text": "유료 복구 프로그램. 정식 이용권을 구매한다.",
+          "fx": {
+            "money": -21000,
+            "clues": 1
+          }
+        },
+        {
+          "label": "불법 경로를 찾는다",
+          "text": "유료 복구 프로그램. 불법 경로를 찾는다.",
+          "fx": {
+            "mental": -8,
+            "spirit": 3
+          }
+        }
+      ]
+    },
+    {
+      "id": "v5_research_03",
+      "title": "익명 제보",
+      "body": "낯선 이용자가 관련 자료를 보내 주겠다고 한다.",
+      "tone": "good",
+      "scene": "research",
+      "actions": [
+        "research"
+      ],
+      "weight": 0.85,
+      "options": [
+        {
+          "label": "답장을 보낸다",
+          "text": "익명 제보. 답장을 보낸다.",
+          "fx": {
+            "bond": 1,
+            "clues": 1
+          }
+        },
+        {
+          "label": "파일을 삭제한다",
+          "text": "익명 제보. 파일을 삭제한다.",
+          "fx": {
+            "mental": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "v5_research_04",
+      "title": "공공 도서관 기록",
+      "body": "전자도서관에 오래된 지역지의 목차가 남아 있다.",
+      "tone": "neutral",
+      "scene": "research",
+      "actions": [
+        "research"
+      ],
+      "weight": 0.85,
+      "options": [
+        {
+          "label": "연도를 추적한다",
+          "text": "공공 도서관 기록. 연도를 추적한다.",
+          "fx": {
+            "clues": 2,
+            "mental": -2
+          }
+        },
+        {
+          "label": "목차만 기록한다",
+          "text": "공공 도서관 기록. 목차만 기록한다.",
+          "fx": {
+            "clues": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "v5_research_05",
+      "title": "유출된 개인정보",
+      "body": "낯선 파일 안에 자신의 주소가 적혀 있다.",
+      "tone": "bad",
+      "scene": "research",
+      "actions": [
+        "research"
+      ],
+      "weight": 1.3,
+      "options": [
+        {
+          "label": "파일을 파기한다",
+          "text": "유출된 개인정보. 파일을 파기한다.",
+          "fx": {
+            "mental": -4,
+            "spirit": -1
+          }
+        },
+        {
+          "label": "끝까지 열어본다",
+          "text": "유출된 개인정보. 끝까지 열어본다.",
+          "fx": {
+            "mental": -9,
+            "spirit": 5
+          }
+        }
+      ]
+    },
+    {
+      "id": "v5_research_06",
+      "title": "한밤의 댓글",
+      "body": "삭제된 글 아래 늦은 답글 하나가 달려 있다.",
+      "tone": "good",
+      "scene": "research",
+      "actions": [
+        "research"
+      ],
+      "weight": 0.85,
+      "options": [
+        {
+          "label": "대화를 시도한다",
+          "text": "한밤의 댓글. 대화를 시도한다.",
+          "fx": {
+            "clues": 2,
+            "bond": 1
+          }
+        },
+        {
+          "label": "원문을 저장한다",
+          "text": "한밤의 댓글. 원문을 저장한다.",
+          "fx": {
+            "clues": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "v5_research_07",
+      "title": "피싱 창",
+      "body": "방금 열어 본 페이지가 카드번호를 요구한다.",
+      "tone": "bad",
+      "scene": "research",
+      "actions": [
+        "research"
+      ],
+      "weight": 1.3,
+      "options": [
+        {
+          "label": "즉시 창을 닫는다",
+          "text": "피싱 창. 즉시 창을 닫는다.",
+          "fx": {
+            "mental": -2
+          }
+        },
+        {
+          "label": "안내를 따른다",
+          "text": "피싱 창. 안내를 따른다.",
+          "fx": {
+            "money": -25000,
+            "mental": -4
+          }
+        }
+      ]
+    },
+    {
+      "id": "v5_research_08",
+      "title": "오래된 신문 광고",
+      "body": "도시 개발 이전의 지도가 이미지로 올라와 있다.",
+      "tone": "neutral",
+      "scene": "research",
+      "actions": [
+        "research"
+      ],
+      "weight": 0.85,
+      "options": [
+        {
+          "label": "인쇄한다",
+          "text": "오래된 신문 광고. 인쇄한다.",
+          "fx": {
+            "money": -2500,
+            "clues": 2
+          }
+        },
+        {
+          "label": "메모한다",
+          "text": "오래된 신문 광고. 메모한다.",
+          "fx": {
+            "clues": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "v5_research_09",
+      "title": "터진 노트북 충전기",
+      "body": "멀티탭에서 탁 하는 소리와 함께 연기가 난다.",
+      "tone": "bad",
+      "scene": "research",
+      "actions": [
+        "research"
+      ],
+      "weight": 1.3,
+      "options": [
+        {
+          "label": "충전기를 교체한다",
+          "text": "터진 노트북 충전기. 충전기를 교체한다.",
+          "fx": {
+            "money": -33000,
+            "health": -1
+          }
+        },
+        {
+          "label": "그대로 둔다",
+          "text": "터진 노트북 충전기. 그대로 둔다.",
+          "fx": {
+            "health": -12,
+            "mental": -4
+          }
+        }
+      ]
+    },
+    {
+      "id": "v5_research_10",
+      "title": "잊힌 문자 사전",
+      "body": "작은 문헌에 동일한 기호의 여러 표기가 기록되어 있다.",
+      "tone": "good",
+      "scene": "research",
+      "actions": [
+        "research"
+      ],
+      "weight": 0.85,
+      "options": [
+        {
+          "label": "원문을 대조한다",
+          "text": "잊힌 문자 사전. 원문을 대조한다.",
+          "fx": {
+            "clues": 2,
+            "omen": 1
+          }
+        },
+        {
+          "label": "마음을 가라앉힌다",
+          "text": "잊힌 문자 사전. 마음을 가라앉힌다.",
+          "fx": {
+            "mental": 4
+          }
+        }
+      ]
+    },
+    {
+      "id": "v5_ritual_01",
+      "title": "꺼진 촛불",
+      "body": "강령진 한가운데의 불꽃이 미동 없이 사라졌다.",
+      "tone": "bad",
+      "scene": "ritual",
+      "actions": [
+        "ritual"
+      ],
+      "weight": 1.3,
+      "options": [
+        {
+          "label": "다시 불을 붙인다",
+          "text": "꺼진 촛불. 다시 불을 붙인다.",
+          "fx": {
+            "spirit": 3,
+            "mental": -5
+          }
+        },
+        {
+          "label": "의식을 중단한다",
+          "text": "꺼진 촛불. 의식을 중단한다.",
+          "fx": {
+            "spirit": -2,
+            "mental": -2
+          }
+        }
+      ]
+    },
+    {
+      "id": "v5_ritual_02",
+      "title": "알 수 없는 발자국",
+      "body": "마른 바닥에 젖은 발자국이 하나씩 생긴다.",
+      "tone": "bad",
+      "scene": "ritual",
+      "actions": [
+        "ritual"
+      ],
+      "weight": 1.3,
+      "options": [
+        {
+          "label": "문을 연다",
+          "text": "알 수 없는 발자국. 문을 연다.",
+          "fx": {
+            "health": -6,
+            "spirit": 5
+          }
+        },
+        {
+          "label": "눈을 감고 센다",
+          "text": "알 수 없는 발자국. 눈을 감고 센다.",
+          "fx": {
+            "mental": -8,
+            "spirit": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "v5_ritual_03",
+      "title": "반대로 도는 시계",
+      "body": "초침이 한 칸씩 거꾸로 움직인다.",
+      "tone": "neutral",
+      "scene": "ritual",
+      "actions": [
+        "ritual"
+      ],
+      "weight": 0.85,
+      "options": [
+        {
+          "label": "시간을 적는다",
+          "text": "반대로 도는 시계. 시간을 적는다.",
+          "fx": {
+            "clues": 2,
+            "spirit": 3
+          }
+        },
+        {
+          "label": "배터리를 뺀다",
+          "text": "반대로 도는 시계. 배터리를 뺀다.",
+          "fx": {
+            "mental": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "v5_ritual_04",
+      "title": "거울 속의 옆얼굴",
+      "body": "거울 가장자리에 모르는 사람의 옆얼굴이 스친다.",
+      "tone": "bad",
+      "scene": "ritual",
+      "actions": [
+        "ritual"
+      ],
+      "weight": 1.3,
+      "options": [
+        {
+          "label": "거울을 덮는다",
+          "text": "거울 속의 옆얼굴. 거울을 덮는다.",
+          "fx": {
+            "money": -4000,
+            "spirit": -2
+          }
+        },
+        {
+          "label": "이름을 부른다",
+          "text": "거울 속의 옆얼굴. 이름을 부른다.",
+          "fx": {
+            "spirit": 8,
+            "mental": -7
+          }
+        }
+      ]
+    },
+    {
+      "id": "v5_ritual_05",
+      "title": "잠깐의 고요",
+      "body": "강령진의 소음이 일순간 멎는다.",
+      "tone": "good",
+      "scene": "ritual",
+      "actions": [
+        "ritual"
+      ],
+      "weight": 0.85,
+      "options": [
+        {
+          "label": "기록을 남긴다",
+          "text": "잠깐의 고요. 기록을 남긴다.",
+          "fx": {
+            "clues": 2
+          }
+        },
+        {
+          "label": "조금 쉰다",
+          "text": "잠깐의 고요. 조금 쉰다.",
+          "fx": {
+            "mental": 5
+          }
+        }
+      ]
+    },
+    {
+      "id": "v5_ritual_06",
+      "title": "금속성 웃음",
+      "body": "냄비 뚜껑 안쪽에서 잔잔한 웃음이 난다.",
+      "tone": "bad",
+      "scene": "ritual",
+      "actions": [
+        "ritual"
+      ],
+      "weight": 1.3,
+      "options": [
+        {
+          "label": "소금을 뿌린다",
+          "text": "금속성 웃음. 소금을 뿌린다.",
+          "fx": {
+            "money": -6000,
+            "spirit": -3
+          }
+        },
+        {
+          "label": "소리에 귀를 기울인다",
+          "text": "금속성 웃음. 소리에 귀를 기울인다.",
+          "fx": {
+            "mental": -11,
+            "spirit": 5
+          }
+        }
+      ]
+    },
+    {
+      "id": "v5_ritual_07",
+      "title": "의식의 역류",
+      "body": "잘못 쓴 기호 하나가 새까맣게 타들어 간다.",
+      "tone": "bad",
+      "scene": "ritual",
+      "actions": [
+        "ritual"
+      ],
+      "weight": 1.3,
+      "options": [
+        {
+          "label": "기호를 지운다",
+          "text": "의식의 역류. 기호를 지운다.",
+          "fx": {
+            "mental": -4,
+            "spirit": -2
+          }
+        },
+        {
+          "label": "끝까지 버틴다",
+          "text": "의식의 역류. 끝까지 버틴다.",
+          "fx": {
+            "health": -9,
+            "mental": -5,
+            "spirit": 6
+          }
+        }
+      ]
+    },
+    {
+      "id": "v5_ritual_08",
+      "title": "미완의 이름",
+      "body": "강령 중 누군가의 이름 마지막 글자만 들렸다.",
+      "tone": "neutral",
+      "scene": "ritual",
+      "actions": [
+        "ritual"
+      ],
+      "weight": 0.85,
+      "options": [
+        {
+          "label": "기록해 둔다",
+          "text": "미완의 이름. 기록해 둔다.",
+          "fx": {
+            "clues": 2,
+            "mental": -3
+          }
+        },
+        {
+          "label": "잊으려 한다",
+          "text": "미완의 이름. 잊으려 한다.",
+          "fx": {
+            "mental": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "v5_ritual_09",
+      "title": "자기 목소리의 답장",
+      "body": "세 번 부른 이름이 자신의 목소리로 되돌아왔다.",
+      "tone": "bad",
+      "scene": "ritual",
+      "actions": [
+        "ritual"
+      ],
+      "weight": 1.3,
+      "options": [
+        {
+          "label": "즉시 중단한다",
+          "text": "자기 목소리의 답장. 즉시 중단한다.",
+          "fx": {
+            "mental": -4,
+            "spirit": 1
+          }
+        },
+        {
+          "label": "네 번째 이름을 부른다",
+          "text": "자기 목소리의 답장. 네 번째 이름을 부른다.",
+          "fx": {
+            "spirit": 10,
+            "health": -7
+          }
+        }
+      ]
+    },
+    {
+      "id": "v5_purify_01",
+      "title": "따뜻한 재",
+      "body": "향의 재가 바람 없이 제자리에 떨어진다.",
+      "tone": "good",
+      "scene": "purify",
+      "actions": [
+        "purify"
+      ],
+      "weight": 0.85,
+      "options": [
+        {
+          "label": "차분히 기다린다",
+          "text": "따뜻한 재. 차분히 기다린다.",
+          "fx": {
+            "spirit": -4,
+            "mental": 2
+          }
+        },
+        {
+          "label": "남은 재를 모은다",
+          "text": "따뜻한 재. 남은 재를 모은다.",
+          "fx": {
+            "clues": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "v5_purify_02",
+      "title": "끊어진 염주",
+      "body": "낡은 염주가 바닥에 흩어진다.",
+      "tone": "bad",
+      "scene": "purify",
+      "actions": [
+        "purify"
+      ],
+      "weight": 1.3,
+      "options": [
+        {
+          "label": "새 염주를 산다",
+          "text": "끊어진 염주. 새 염주를 산다.",
+          "fx": {
+            "money": -18000,
+            "spirit": -3
+          }
+        },
+        {
+          "label": "그냥 사용한다",
+          "text": "끊어진 염주. 그냥 사용한다.",
+          "fx": {
+            "spirit": 5,
+            "mental": -4
+          }
+        }
+      ]
+    },
+    {
+      "id": "v5_purify_03",
+      "title": "이름이 적힌 부적",
+      "body": "부적을 뒤집자 자신의 이름이 적혀 있다.",
+      "tone": "bad",
+      "scene": "purify",
+      "actions": [
+        "purify"
+      ],
+      "weight": 1.3,
+      "options": [
+        {
+          "label": "불에 태운다",
+          "text": "이름이 적힌 부적. 불에 태운다.",
+          "fx": {
+            "spirit": -5,
+            "health": -3
+          }
+        },
+        {
+          "label": "보관한다",
+          "text": "이름이 적힌 부적. 보관한다.",
+          "fx": {
+            "clues": 1,
+            "spirit": 6
+          }
+        }
+      ]
+    },
+    {
+      "id": "v5_purify_04",
+      "title": "고운 소금",
+      "body": "도자기에 소금을 덜자 숨소리가 또렷해진다.",
+      "tone": "good",
+      "scene": "purify",
+      "actions": [
+        "purify"
+      ],
+      "weight": 0.85,
+      "options": [
+        {
+          "label": "문턱에 뿌린다",
+          "text": "고운 소금. 문턱에 뿌린다.",
+          "fx": {
+            "spirit": -4,
+            "money": -3000
+          }
+        },
+        {
+          "label": "작은 병에 담는다",
+          "text": "고운 소금. 작은 병에 담는다.",
+          "fx": {
+            "mental": 4
+          }
+        }
+      ]
+    },
+    {
+      "id": "v5_purify_05",
+      "title": "젖은 제문",
+      "body": "정성 들여 적은 종이가 물에 젖어 번졌다.",
+      "tone": "bad",
+      "scene": "purify",
+      "actions": [
+        "purify"
+      ],
+      "weight": 1.3,
+      "options": [
+        {
+          "label": "다시 준비한다",
+          "text": "젖은 제문. 다시 준비한다.",
+          "fx": {
+            "money": -9000,
+            "mental": -3
+          }
+        },
+        {
+          "label": "대강 읽는다",
+          "text": "젖은 제문. 대강 읽는다.",
+          "fx": {
+            "spirit": 4,
+            "mental": -5
+          }
+        }
+      ]
+    },
+    {
+      "id": "v5_purify_06",
+      "title": "정오의 향내",
+      "body": "창이 열린 사이 향내가 바깥으로 흘러나간다.",
+      "tone": "neutral",
+      "scene": "purify",
+      "actions": [
+        "purify"
+      ],
+      "weight": 0.85,
+      "options": [
+        {
+          "label": "바람을 막는다",
+          "text": "정오의 향내. 바람을 막는다.",
+          "fx": {
+            "spirit": -2
+          }
+        },
+        {
+          "label": "창을 더 연다",
+          "text": "정오의 향내. 창을 더 연다.",
+          "fx": {
+            "mental": 3
+          }
+        }
+      ]
+    },
+    {
+      "id": "v5_purify_07",
+      "title": "다 쓴 소금",
+      "body": "소금이 바닥나 정화가 불완전하다.",
+      "tone": "bad",
+      "scene": "purify",
+      "actions": [
+        "purify"
+      ],
+      "weight": 1.3,
+      "options": [
+        {
+          "label": "급히 사 온다",
+          "text": "다 쓴 소금. 급히 사 온다.",
+          "fx": {
+            "money": -17000,
+            "spirit": -2
+          }
+        },
+        {
+          "label": "오늘은 포기한다",
+          "text": "다 쓴 소금. 오늘은 포기한다.",
+          "fx": {
+            "spirit": 3,
+            "mental": -2
+          }
+        }
+      ]
+    },
+    {
+      "id": "v5_purify_08",
+      "title": "작은 평안",
+      "body": "방 안에 오래 머물던 차가운 기운이 덜하다.",
+      "tone": "good",
+      "scene": "purify",
+      "actions": [
+        "purify"
+      ],
+      "weight": 0.85,
+      "options": [
+        {
+          "label": "조금 더 정돈한다",
+          "text": "작은 평안. 조금 더 정돈한다.",
+          "fx": {
+            "spirit": -5,
+            "mental": -2
+          }
+        },
+        {
+          "label": "그냥 쉬어 간다",
+          "text": "작은 평안. 그냥 쉬어 간다.",
+          "fx": {
+            "mental": 5
+          }
+        }
+      ]
+    },
+    {
+      "id": "v5_rest_01",
+      "title": "햇볕 드는 의자",
+      "body": "잠깐 들어온 빛이 낡은 의자 끝에 걸친다.",
+      "tone": "good",
+      "scene": "rest",
+      "actions": [
+        "rest"
+      ],
+      "weight": 0.85,
+      "options": [
+        {
+          "label": "창가에 앉는다",
+          "text": "햇볕 드는 의자. 창가에 앉는다.",
+          "fx": {
+            "mental": 5
+          }
+        },
+        {
+          "label": "낮잠을 잔다",
+          "text": "햇볕 드는 의자. 낮잠을 잔다.",
+          "fx": {
+            "health": 3,
+            "mental": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "v5_rest_02",
+      "title": "고장 난 수도꼭지",
+      "body": "싱크대 아래에서 물이 조금씩 새어 나온다.",
+      "tone": "bad",
+      "scene": "rest",
+      "actions": [
+        "rest"
+      ],
+      "weight": 1.3,
+      "options": [
+        {
+          "label": "수리 기사를 부른다",
+          "text": "고장 난 수도꼭지. 수리 기사를 부른다.",
+          "fx": {
+            "money": -33000
+          }
+        },
+        {
+          "label": "수건으로 막는다",
+          "text": "고장 난 수도꼭지. 수건으로 막는다.",
+          "fx": {
+            "mental": -6,
+            "health": -2
+          }
+        }
+      ]
+    },
+    {
+      "id": "v5_rest_03",
+      "title": "친구의 안부",
+      "body": "전화기에 이름을 아는 사람이 떠 있다.",
+      "tone": "good",
+      "scene": "rest",
+      "actions": [
+        "rest"
+      ],
+      "weight": 0.85,
+      "options": [
+        {
+          "label": "통화를 한다",
+          "text": "친구의 안부. 통화를 한다.",
+          "fx": {
+            "mental": 7,
+            "bond": 1
+          }
+        },
+        {
+          "label": "문자로 답한다",
+          "text": "친구의 안부. 문자로 답한다.",
+          "fx": {
+            "mental": 3
+          }
+        }
+      ]
+    },
+    {
+      "id": "v5_rest_04",
+      "title": "지나치게 쌓인 청구서",
+      "body": "문틈으로 공과금 고지서가 밀려 들어온다.",
+      "tone": "bad",
+      "scene": "rest",
+      "actions": [
+        "rest"
+      ],
+      "weight": 1.3,
+      "options": [
+        {
+          "label": "밀린 돈을 낸다",
+          "text": "지나치게 쌓인 청구서. 밀린 돈을 낸다.",
+          "fx": {
+            "money": -26000,
+            "mental": 2
+          }
+        },
+        {
+          "label": "안 보이는 곳에 넣는다",
+          "text": "지나치게 쌓인 청구서. 안 보이는 곳에 넣는다.",
+          "fx": {
+            "mental": -6,
+            "luck": -1
+          }
+        }
+      ]
+    },
+    {
+      "id": "v5_rest_05",
+      "title": "거실의 낡은 라디오",
+      "body": "주파수를 돌리자 오래된 노래가 짧게 흐른다.",
+      "tone": "neutral",
+      "scene": "rest",
+      "actions": [
+        "rest"
+      ],
+      "weight": 0.85,
+      "options": [
+        {
+          "label": "조용히 듣는다",
+          "text": "거실의 낡은 라디오. 조용히 듣는다.",
+          "fx": {
+            "mental": 4
+          }
+        },
+        {
+          "label": "전원을 끈다",
+          "text": "거실의 낡은 라디오. 전원을 끈다.",
+          "fx": {
+            "mental": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "v5_rest_06",
+      "title": "전등이 나간 화장실",
+      "body": "형광등이 몇 번 깜박이다 꺼진다.",
+      "tone": "bad",
+      "scene": "rest",
+      "actions": [
+        "rest"
+      ],
+      "weight": 1.3,
+      "options": [
+        {
+          "label": "전구를 교체한다",
+          "text": "전등이 나간 화장실. 전구를 교체한다.",
+          "fx": {
+            "money": -11000,
+            "mental": 1
+          }
+        },
+        {
+          "label": "그냥 둔다",
+          "text": "전등이 나간 화장실. 그냥 둔다.",
+          "fx": {
+            "mental": -5,
+            "spirit": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "v5_rest_07",
+      "title": "늦잠 자는 이웃",
+      "body": "복도에서 누군가 웃으며 쓰레기 봉투를 건넨다.",
+      "tone": "good",
+      "scene": "rest",
+      "actions": [
+        "rest"
+      ],
+      "weight": 0.85,
+      "options": [
+        {
+          "label": "도움을 준다",
+          "text": "늦잠 자는 이웃. 도움을 준다.",
+          "fx": {
+            "bond": 2,
+            "mental": 2
+          }
+        },
+        {
+          "label": "고개만 끄덕인다",
+          "text": "늦잠 자는 이웃. 고개만 끄덕인다.",
+          "fx": {
+            "mental": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "v5_rest_08",
+      "title": "집 앞의 소음",
+      "body": "밤새 공사 소리가 들려온다.",
+      "tone": "bad",
+      "scene": "rest",
+      "actions": [
+        "rest"
+      ],
+      "weight": 1.3,
+      "options": [
+        {
+          "label": "관리실에 항의한다",
+          "text": "집 앞의 소음. 관리실에 항의한다.",
+          "fx": {
+            "mental": -4,
+            "bond": -1
+          }
+        },
+        {
+          "label": "참고 있는다",
+          "text": "집 앞의 소음. 참고 있는다.",
+          "fx": {
+            "mental": -7,
+            "health": -2
+          }
+        }
+      ]
+    },
+    {
+      "id": "v5_rest_09",
+      "title": "빈 찻잔",
+      "body": "식탁에 있던 찻잔을 한 번 더 닦는다.",
+      "tone": "neutral",
+      "scene": "rest",
+      "actions": [
+        "rest"
+      ],
+      "weight": 0.85,
+      "options": [
+        {
+          "label": "차를 마신다",
+          "text": "빈 찻잔. 차를 마신다.",
+          "fx": {
+            "mental": 4
+          }
+        },
+        {
+          "label": "방을 정리한다",
+          "text": "빈 찻잔. 방을 정리한다.",
+          "fx": {
+            "health": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "v5_sleep_01",
+      "title": "밤의 악몽",
+      "body": "한밤중 잠에서 깨자 손이 심하게 떨렸다.",
+      "tone": "bad",
+      "scene": "sleep",
+      "actions": [
+        "sleep"
+      ],
+      "weight": 1.3,
+      "options": [
+        {
+          "label": "물을 마시고 다시 잔다",
+          "text": "밤의 악몽. 물을 마시고 다시 잔다.",
+          "fx": {
+            "mental": -5,
+            "health": 1
+          }
+        },
+        {
+          "label": "불을 켜 둔다",
+          "text": "밤의 악몽. 불을 켜 둔다.",
+          "fx": {
+            "mental": -2,
+            "money": -1000
+          }
+        }
+      ]
+    },
+    {
+      "id": "v5_sleep_02",
+      "title": "윗집의 쿵 소리",
+      "body": "새벽에 무언가 바닥을 끄는 소리가 난다.",
+      "tone": "bad",
+      "scene": "sleep",
+      "actions": [
+        "sleep"
+      ],
+      "weight": 1.3,
+      "options": [
+        {
+          "label": "귀마개를 낀다",
+          "text": "윗집의 쿵 소리. 귀마개를 낀다.",
+          "fx": {
+            "mental": -3
+          }
+        },
+        {
+          "label": "확인하러 나간다",
+          "text": "윗집의 쿵 소리. 확인하러 나간다.",
+          "fx": {
+            "mental": -7,
+            "spirit": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "v5_sleep_03",
+      "title": "오랜만의 무몽",
+      "body": "아무 꿈도 꾸지 않은 것만 같다.",
+      "tone": "good",
+      "scene": "sleep",
+      "actions": [
+        "sleep"
+      ],
+      "weight": 0.85,
+      "options": [
+        {
+          "label": "잠을 유지한다",
+          "text": "오랜만의 무몽. 잠을 유지한다.",
+          "fx": {
+            "health": 3
+          }
+        },
+        {
+          "label": "일어나 스트레칭한다",
+          "text": "오랜만의 무몽. 일어나 스트레칭한다.",
+          "fx": {
+            "health": 2,
+            "mental": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "v5_sleep_04",
+      "title": "틀어진 베개",
+      "body": "아침에 목을 잘 움직일 수 없다.",
+      "tone": "bad",
+      "scene": "sleep",
+      "actions": [
+        "sleep"
+      ],
+      "weight": 1.3,
+      "options": [
+        {
+          "label": "마사지한다",
+          "text": "틀어진 베개. 마사지한다.",
+          "fx": {
+            "money": -4000,
+            "health": 2
+          }
+        },
+        {
+          "label": "그냥 참는다",
+          "text": "틀어진 베개. 그냥 참는다.",
+          "fx": {
+            "health": -6
+          }
+        }
+      ]
+    },
+    {
+      "id": "v5_sleep_05",
+      "title": "창틈의 새소리",
+      "body": "바깥에서 새 몇 마리가 우는 소리가 들린다.",
+      "tone": "neutral",
+      "scene": "sleep",
+      "actions": [
+        "sleep"
+      ],
+      "weight": 0.85,
+      "options": [
+        {
+          "label": "한동안 듣는다",
+          "text": "창틈의 새소리. 한동안 듣는다.",
+          "fx": {
+            "mental": 2
+          }
+        },
+        {
+          "label": "이불을 덮는다",
+          "text": "창틈의 새소리. 이불을 덮는다.",
+          "fx": {
+            "health": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "v5_sleep_06",
+      "title": "차가운 꿈",
+      "body": "이불 속에서도 자꾸 추위가 느껴진다.",
+      "tone": "bad",
+      "scene": "sleep",
+      "actions": [
+        "sleep"
+      ],
+      "weight": 1.3,
+      "options": [
+        {
+          "label": "보일러를 높인다",
+          "text": "차가운 꿈. 보일러를 높인다.",
+          "fx": {
+            "money": -9000,
+            "health": 2
+          }
+        },
+        {
+          "label": "그냥 견딘다",
+          "text": "차가운 꿈. 그냥 견딘다.",
+          "fx": {
+            "health": -5,
+            "mental": -3
+          }
+        }
+      ]
+    },
+    {
+      "id": "v5_postoffice",
+      "title": "도착하지 않은 편지",
+      "body": "현관 앞에 수신인 없는 편지봉투가 놓여 있다.",
+      "tone": "strange",
+      "scene": "store",
+      "actions": [
+        "rest",
+        "walk"
+      ],
+      "chain_followup": false,
+      "options": [
+        {
+          "label": "봉투를 챙긴다",
+          "text": "도착하지 않은 편지. 봉투를 챙긴다.",
+          "fx": {
+            "mental": -2
+          },
+          "follow": "v5_postoffice_2",
+          "follow_days": 1
+        },
+        {
+          "label": "바로 버린다",
+          "text": "도착하지 않은 편지. 바로 버린다.",
+          "fx": {
+            "luck": -1
+          }
+        }
+      ],
+      "weight": 0.65
+    },
+    {
+      "id": "v5_postoffice_2",
+      "title": "분실된 주소",
+      "body": "봉투 안의 주소는 몇 년 전 지도에서 사라진 곳이다.",
+      "tone": "strange",
+      "scene": "research",
+      "actions": [
+        "research",
+        "walk"
+      ],
+      "chain_followup": true,
+      "options": [
+        {
+          "label": "주소를 찾아본다",
+          "text": "분실된 주소. 주소를 찾아본다.",
+          "fx": {
+            "clues": 2,
+            "mental": -4
+          },
+          "follow": "v5_postoffice_3",
+          "follow_days": 1
+        },
+        {
+          "label": "그만 추적한다",
+          "text": "분실된 주소. 그만 추적한다.",
+          "fx": {
+            "mental": 3
+          }
+        }
+      ],
+      "weight": 0.65
+    },
+    {
+      "id": "v5_postoffice_3",
+      "title": "돌아온 답장",
+      "body": "빈 우편함에서 사흘 전 보낸 적 없는 답장이 나온다.",
+      "tone": "strange",
+      "scene": "home",
+      "actions": [
+        "rest",
+        "walk"
+      ],
+      "chain_followup": true,
+      "options": [
+        {
+          "label": "편지를 소각한다",
+          "text": "돌아온 답장. 편지를 소각한다.",
+          "fx": {
+            "spirit": -6,
+            "mental": -3
+          }
+        },
+        {
+          "label": "기록으로 남긴다",
+          "text": "돌아온 답장. 기록으로 남긴다.",
+          "fx": {
+            "clues": 2,
+            "spirit": 3
+          }
+        }
+      ],
+      "weight": 0.65
+    },
+    {
+      "id": "v5_night_clinic",
+      "title": "심야 의원의 전화",
+      "body": "건강검진 예약을 한 적이 없는데 확인 전화가 왔다.",
+      "tone": "strange",
+      "scene": "home",
+      "actions": [
+        "rest",
+        "work"
+      ],
+      "chain_followup": false,
+      "options": [
+        {
+          "label": "진료 시간을 잡는다",
+          "text": "심야 의원의 전화. 진료 시간을 잡는다.",
+          "fx": {
+            "mental": -2
+          },
+          "follow": "v5_night_clinic_2",
+          "follow_days": 1
+        },
+        {
+          "label": "전화를 끊는다",
+          "text": "심야 의원의 전화. 전화를 끊는다.",
+          "fx": {
+            "mental": 1
+          }
+        }
+      ],
+      "weight": 0.65
+    },
+    {
+      "id": "v5_night_clinic_2",
+      "title": "일반 진료",
+      "body": "낡은 건물 안 의사는 한참 동안 맥박을 잰다.",
+      "tone": "strange",
+      "scene": "street",
+      "actions": [
+        "walk",
+        "purify"
+      ],
+      "chain_followup": true,
+      "options": [
+        {
+          "label": "검사비를 지불한다",
+          "text": "일반 진료. 검사비를 지불한다.",
+          "fx": {
+            "money": -45000,
+            "health": 17,
+            "spirit": -4
+          },
+          "follow": "v5_night_clinic_3",
+          "follow_days": 1
+        },
+        {
+          "label": "검사를 거절한다",
+          "text": "일반 진료. 검사를 거절한다.",
+          "fx": {
+            "mental": -6
+          }
+        }
+      ],
+      "weight": 0.65
+    },
+    {
+      "id": "v5_night_clinic_3",
+      "title": "진료 기록",
+      "body": "문자로 전송된 진료 기록에 낯선 이름이 적혀 있다.",
+      "tone": "strange",
+      "scene": "research",
+      "actions": [
+        "research",
+        "rest"
+      ],
+      "chain_followup": true,
+      "options": [
+        {
+          "label": "기록을 보관한다",
+          "text": "진료 기록. 기록을 보관한다.",
+          "fx": {
+            "clues": 2,
+            "spirit": 2
+          }
+        },
+        {
+          "label": "삭제한다",
+          "text": "진료 기록. 삭제한다.",
+          "fx": {
+            "spirit": -3
+          }
+        }
+      ],
+      "weight": 0.65
+    },
+    {
+      "id": "v5_arc_cat",
+      "title": "빗길의 고양이",
+      "body": "길고양이가 빗속 창고 앞에서 울고 있다.",
+      "tone": "strange",
+      "scene": "street",
+      "actions": [
+        "walk"
+      ],
+      "chain_followup": false,
+      "options": [
+        {
+          "label": "고양이에게 먹을 것을 준다",
+          "text": "빗길의 고양이. 고양이에게 먹을 것을 준다.",
+          "fx": {
+            "money": -4500,
+            "bond": 2
+          },
+          "follow": "v5_arc_cat_2",
+          "follow_days": 1
+        },
+        {
+          "label": "지나간다",
+          "text": "빗길의 고양이. 지나간다.",
+          "fx": {
+            "mental": -1
+          }
+        }
+      ],
+      "weight": 0.65
+    },
+    {
+      "id": "v5_arc_cat_2",
+      "title": "낮은 담장의 방문객",
+      "body": "어제 보았던 고양이가 같은 자리에서 기다린다.",
+      "tone": "strange",
+      "scene": "park",
+      "actions": [
+        "walk",
+        "meal"
+      ],
+      "chain_followup": true,
+      "options": [
+        {
+          "label": "조용히 인사한다",
+          "text": "낮은 담장의 방문객. 조용히 인사한다.",
+          "fx": {
+            "mental": 6,
+            "luck": 1
+          },
+          "follow": "v5_arc_cat_3",
+          "follow_days": 1
+        },
+        {
+          "label": "밥그릇을 채운다",
+          "text": "낮은 담장의 방문객. 밥그릇을 채운다.",
+          "fx": {
+            "money": -4000,
+            "bond": 3
+          }
+        }
+      ],
+      "weight": 0.65
+    },
+    {
+      "id": "v5_arc_cat_3",
+      "title": "작은 종이쪽지",
+      "body": "고양이 목걸이에 접힌 종이가 매달려 있다.",
+      "tone": "strange",
+      "scene": "park",
+      "actions": [
+        "walk",
+        "research"
+      ],
+      "chain_followup": true,
+      "options": [
+        {
+          "label": "종이를 펼친다",
+          "text": "작은 종이쪽지. 종이를 펼친다.",
+          "fx": {
+            "clues": 2,
+            "spirit": 1
+          }
+        },
+        {
+          "label": "목걸이를 그대로 둔다",
+          "text": "작은 종이쪽지. 목걸이를 그대로 둔다.",
+          "fx": {
+            "mental": 3
+          }
+        }
+      ],
+      "weight": 0.65
+    },
+    {
+      "id": "v5_arc_book",
+      "title": "헌책방의 휴업 공고",
+      "body": "동네 중고서점에 마지막 영업일이 적혀 있다.",
+      "tone": "strange",
+      "scene": "store",
+      "actions": [
+        "walk",
+        "research"
+      ],
+      "chain_followup": false,
+      "options": [
+        {
+          "label": "문 닫기 전에 들른다",
+          "text": "헌책방의 휴업 공고. 문 닫기 전에 들른다.",
+          "fx": {
+            "money": -15000,
+            "clues": 1
+          },
+          "follow": "v5_arc_book_2",
+          "follow_days": 1
+        },
+        {
+          "label": "그냥 지나친다",
+          "text": "헌책방의 휴업 공고. 그냥 지나친다.",
+          "fx": {
+            "mental": 2
+          }
+        }
+      ],
+      "weight": 0.65
+    },
+    {
+      "id": "v5_arc_book_2",
+      "title": "책갈피에 남은 이름",
+      "body": "서점 주인은 오래된 책을 포장하다가 멈춘다.",
+      "tone": "strange",
+      "scene": "store",
+      "actions": [
+        "research",
+        "walk"
+      ],
+      "chain_followup": true,
+      "options": [
+        {
+          "label": "책갈피를 받는다",
+          "text": "책갈피에 남은 이름. 책갈피를 받는다.",
+          "fx": {
+            "clues": 2,
+            "spirit": 2
+          },
+          "follow": "v5_arc_book_3",
+          "follow_days": 1
+        },
+        {
+          "label": "돌려드린다",
+          "text": "책갈피에 남은 이름. 돌려드린다.",
+          "fx": {
+            "bond": 2
+          }
+        }
+      ],
+      "weight": 0.65
+    },
+    {
+      "id": "v5_arc_book_3",
+      "title": "마지막 페이지",
+      "body": "책의 마지막 페이지에 정화 절차가 적혀 있다.",
+      "tone": "strange",
+      "scene": "research",
+      "actions": [
+        "research",
+        "purify"
+      ],
+      "chain_followup": true,
+      "options": [
+        {
+          "label": "절차를 따른다",
+          "text": "마지막 페이지. 절차를 따른다.",
+          "fx": {
+            "spirit": -8,
+            "mental": -4
+          }
+        },
+        {
+          "label": "책을 덮는다",
+          "text": "마지막 페이지. 책을 덮는다.",
+          "fx": {
+            "mental": 3
+          }
+        }
+      ],
+      "weight": 0.65
+    },
+    {
+      "id": "v5_arc_friend",
+      "title": "읽지 않은 문자",
+      "body": "오래된 친구가 지금도 이 동네에 사느냐고 물었다.",
+      "tone": "strange",
+      "scene": "home",
+      "actions": [
+        "rest",
+        "walk"
+      ],
+      "chain_followup": false,
+      "options": [
+        {
+          "label": "곧바로 답한다",
+          "text": "읽지 않은 문자. 곧바로 답한다.",
+          "fx": {
+            "bond": 2
+          },
+          "follow": "v5_arc_friend_2",
+          "follow_days": 1
+        },
+        {
+          "label": "내일 답한다",
+          "text": "읽지 않은 문자. 내일 답한다.",
+          "fx": {
+            "mental": 1
+          }
+        }
+      ],
+      "weight": 0.65
+    },
+    {
+      "id": "v5_arc_friend_2",
+      "title": "조용한 커피숍",
+      "body": "친구는 얼굴이 너무 안 좋아 보인다며 걱정한다.",
+      "tone": "strange",
+      "scene": "cafe",
+      "actions": [
+        "meal",
+        "walk"
+      ],
+      "chain_followup": true,
+      "options": [
+        {
+          "label": "사정을 조금 털어놓는다",
+          "text": "조용한 커피숍. 사정을 조금 털어놓는다.",
+          "fx": {
+            "bond": 3,
+            "mental": 5
+          },
+          "follow": "v5_arc_friend_3",
+          "follow_days": 2
+        },
+        {
+          "label": "별일 아니라고 한다",
+          "text": "조용한 커피숍. 별일 아니라고 한다.",
+          "fx": {
+            "bond": -1,
+            "mental": -2
+          }
+        }
+      ],
+      "weight": 0.65
+    },
+    {
+      "id": "v5_arc_friend_3",
+      "title": "오래된 인연의 도움",
+      "body": "친구가 병원과 전문가 연락처가 적힌 종이를 건넨다.",
+      "tone": "strange",
+      "scene": "home",
+      "actions": [
+        "rest",
+        "research"
+      ],
+      "chain_followup": true,
+      "options": [
+        {
+          "label": "도움을 받아들인다",
+          "text": "오래된 인연의 도움. 도움을 받아들인다.",
+          "fx": {
+            "mental": 8,
+            "spirit": -4
+          }
+        },
+        {
+          "label": "혼자 해결한다",
+          "text": "오래된 인연의 도움. 혼자 해결한다.",
+          "fx": {
+            "clues": 1,
+            "mental": -2
+          }
+        }
+      ],
+      "weight": 0.65
+    },
+    {
+      "id": "v5_arc_shrine",
+      "title": "아파트의 작은 제단",
+      "body": "산책길 담벼락 안에 오래된 향로가 놓여 있다.",
+      "tone": "strange",
+      "scene": "street",
+      "actions": [
+        "walk",
+        "purify"
+      ],
+      "chain_followup": false,
+      "options": [
+        {
+          "label": "향을 바친다",
+          "text": "아파트의 작은 제단. 향을 바친다.",
+          "fx": {
+            "money": -7000,
+            "spirit": -3
+          },
+          "follow": "v5_arc_shrine_2",
+          "follow_days": 1
+        },
+        {
+          "label": "향로만 살핀다",
+          "text": "아파트의 작은 제단. 향로만 살핀다.",
+          "fx": {
+            "clues": 2,
+            "spirit": 2
+          }
+        }
+      ],
+      "weight": 0.65
+    },
+    {
+      "id": "v5_arc_shrine_2",
+      "title": "새벽 관리인의 경고",
+      "body": "관리인은 향로를 건드리지 말라고 한다.",
+      "tone": "strange",
+      "scene": "store",
+      "actions": [
+        "work",
+        "walk"
+      ],
+      "chain_followup": true,
+      "options": [
+        {
+          "label": "설명을 듣는다",
+          "text": "새벽 관리인의 경고. 설명을 듣는다.",
+          "fx": {
+            "clues": 2,
+            "mental": -3
+          },
+          "follow": "v5_arc_shrine_3",
+          "follow_days": 1
+        },
+        {
+          "label": "그냥 떠난다",
+          "text": "새벽 관리인의 경고. 그냥 떠난다.",
+          "fx": {
+            "mental": 2
+          }
+        }
+      ],
+      "weight": 0.65
+    },
+    {
+      "id": "v5_arc_shrine_3",
+      "title": "제단 아래의 열쇠",
+      "body": "향로 옆에서 녹슨 열쇠가 나왔다.",
+      "tone": "strange",
+      "scene": "ritual",
+      "actions": [
+        "purify",
+        "research"
+      ],
+      "chain_followup": true,
+      "options": [
+        {
+          "label": "보관한다",
+          "text": "제단 아래의 열쇠. 보관한다.",
+          "fx": {
+            "clues": 3,
+            "spirit": 4
+          }
+        },
+        {
+          "label": "향로 아래에 둔다",
+          "text": "제단 아래의 열쇠. 향로 아래에 둔다.",
+          "fx": {
+            "spirit": -5,
+            "mental": -1
+          }
+        }
+      ],
+      "weight": 0.65
+    },
+    {
+      "id": "v5_arc_rain",
+      "title": "우산 가게의 영수증",
+      "body": "계산대에서 받은 영수증에 주문하지 않은 우산이 찍혀 있다.",
+      "tone": "strange",
+      "scene": "store",
+      "actions": [
+        "walk",
+        "meal"
+      ],
+      "chain_followup": false,
+      "options": [
+        {
+          "label": "직원에게 묻는다",
+          "text": "우산 가게의 영수증. 직원에게 묻는다.",
+          "fx": {
+            "bond": 1,
+            "money": -3000
+          },
+          "follow": "v5_arc_rain_2",
+          "follow_days": 1
+        },
+        {
+          "label": "가게를 떠난다",
+          "text": "우산 가게의 영수증. 가게를 떠난다.",
+          "fx": {
+            "mental": -2
+          }
+        }
+      ],
+      "weight": 0.65
+    },
+    {
+      "id": "v5_arc_rain_2",
+      "title": "분실된 우산의 주인",
+      "body": "가게에서 오늘도 같은 물건을 찾는 사람이 있었다.",
+      "tone": "strange",
+      "scene": "street",
+      "actions": [
+        "walk",
+        "work"
+      ],
+      "chain_followup": true,
+      "options": [
+        {
+          "label": "우산을 찾아준다",
+          "text": "분실된 우산의 주인. 우산을 찾아준다.",
+          "fx": {
+            "luck": 2,
+            "bond": 2
+          }
+        },
+        {
+          "label": "그냥 지나친다",
+          "text": "분실된 우산의 주인. 그냥 지나친다.",
+          "fx": {
+            "luck": -1
+          }
+        }
+      ],
+      "weight": 0.65
+    },
+    {
+      "id": "v5_arc_work",
+      "title": "퇴직한 직원의 사물함",
+      "body": "버려진 사물함에 오늘 날짜가 적혀 있다.",
+      "tone": "strange",
+      "scene": "store",
+      "actions": [
+        "work"
+      ],
+      "chain_followup": false,
+      "options": [
+        {
+          "label": "사물함을 잠근다",
+          "text": "퇴직한 직원의 사물함. 사물함을 잠근다.",
+          "fx": {
+            "mental": -3,
+            "spirit": 1
+          },
+          "follow": "v5_arc_work_2",
+          "follow_days": 1
+        },
+        {
+          "label": "관리자에게 신고한다",
+          "text": "퇴직한 직원의 사물함. 관리자에게 신고한다.",
+          "fx": {
+            "bond": 2
+          }
+        }
+      ],
+      "weight": 0.65
+    },
+    {
+      "id": "v5_arc_work_2",
+      "title": "사물함 안의 손목시계",
+      "body": "일하던 자리 아래에서 멈춘 시계가 발견된다.",
+      "tone": "strange",
+      "scene": "store",
+      "actions": [
+        "work",
+        "research"
+      ],
+      "chain_followup": true,
+      "options": [
+        {
+          "label": "시계를 확인한다",
+          "text": "사물함 안의 손목시계. 시계를 확인한다.",
+          "fx": {
+            "clues": 2,
+            "spirit": 3
+          },
+          "follow": "v5_arc_work_3",
+          "follow_days": 1
+        },
+        {
+          "label": "주인에게 돌려준다",
+          "text": "사물함 안의 손목시계. 주인에게 돌려준다.",
+          "fx": {
+            "bond": 2,
+            "luck": 1
+          }
+        }
+      ],
+      "weight": 0.65
+    },
+    {
+      "id": "v5_arc_work_3",
+      "title": "돌아온 직원",
+      "body": "퇴직한 직원이 여전히 누군가 사물함을 쓴다며 불평한다.",
+      "tone": "strange",
+      "scene": "store",
+      "actions": [
+        "work"
+      ],
+      "chain_followup": true,
+      "options": [
+        {
+          "label": "사과하고 정리한다",
+          "text": "돌아온 직원. 사과하고 정리한다.",
+          "fx": {
+            "bond": 2,
+            "mental": 3
+          }
+        },
+        {
+          "label": "사물함을 잠가 둔다",
+          "text": "돌아온 직원. 사물함을 잠가 둔다.",
+          "fx": {
+            "mental": -4
+          }
+        }
+      ],
+      "weight": 0.65
+    },
+    {
+      "id": "v5_warded_exorcist",
+      "title": "퇴마사의 방문",
+      "body": "낯선 퇴마사가 묻는다. \"가족 중 누가 늘 여기에 계시죠?\"",
+      "tone": "strange",
+      "scene": "ritual",
+      "actions": [
+        "purify",
+        "research",
+        "rest"
+      ],
+      "requires_haunting": true,
+      "weight": 2.8,
+      "options": [
+        {
+          "label": "의식을 맡긴다 · 78,000원",
+          "text": "퇴마 비용을 치르고 의식을 맡긴다.",
+          "exorcise": {
+            "cost": 78000,
+            "chance": 0.84
+          }
+        },
+        {
+          "label": "나중에 다시 찾아오기로 한다",
+          "text": "지금은 방에서 돌아서기로 한다.",
+          "fx": {
+            "mental": -2
+          }
+        }
+      ]
+    },
+    {
+      "id": "v5_warded_shaman",
+      "title": "무당의 문턱",
+      "body": "무당이 문 앞에 소금을 뿌리며 방 안을 오래 바라본다.",
+      "tone": "strange",
+      "scene": "shaman",
+      "actions": [
+        "walk",
+        "purify"
+      ],
+      "requires_haunting": true,
+      "weight": 2.8,
+      "options": [
+        {
+          "label": "의식을 맡긴다 · 120,000원",
+          "text": "퇴마 비용을 치르고 의식을 맡긴다.",
+          "exorcise": {
+            "cost": 120000,
+            "chance": 0.92
+          }
+        },
+        {
+          "label": "나중에 다시 찾아오기로 한다",
+          "text": "지금은 방에서 돌아서기로 한다.",
+          "fx": {
+            "mental": -2
+          }
+        }
+      ]
+    },
+    {
+      "id": "v5_warded_clinic",
+      "title": "성당의 안내자",
+      "body": "오랜 기도 소리가 들리는 작은 예배실. 안내자가 조용히 의식을 제안한다.",
+      "tone": "strange",
+      "scene": "ritual",
+      "actions": [
+        "walk",
+        "purify",
+        "research"
+      ],
+      "requires_haunting": true,
+      "weight": 2.8,
+      "options": [
+        {
+          "label": "의식을 맡긴다 · 58,000원",
+          "text": "퇴마 비용을 치르고 의식을 맡긴다.",
+          "exorcise": {
+            "cost": 58000,
+            "chance": 0.78
+          }
+        },
+        {
+          "label": "나중에 다시 찾아오기로 한다",
+          "text": "지금은 방에서 돌아서기로 한다.",
+          "fx": {
+            "mental": -2
+          }
+        }
+      ]
+    },
+    {
+      "id": "v5_warded_broker",
+      "title": "불법 제령 광고",
+      "body": "게시판의 익명 업자가 지박령 제거를 약속한다. 선금이 비싸다.",
+      "tone": "strange",
+      "scene": "ritual",
+      "actions": [
+        "research"
+      ],
+      "requires_haunting": true,
+      "weight": 2.8,
+      "options": [
+        {
+          "label": "의식을 맡긴다 · 45,000원",
+          "text": "퇴마 비용을 치르고 의식을 맡긴다.",
+          "exorcise": {
+            "cost": 45000,
+            "chance": 0.66
+          }
+        },
+        {
+          "label": "나중에 다시 찾아오기로 한다",
+          "text": "지금은 방에서 돌아서기로 한다.",
+          "fx": {
+            "mental": -2
+          }
+        }
+      ]
+    },
+    {
+      "id": "v5_haunt_00",
+      "title": "거울의 두 번째 호흡",
+      "body": "기척이 없는데 욕실 거울에 김이 서린다.",
+      "tone": "bad",
+      "scene": "rest",
+      "actions": [
+        "rest",
+        "purify"
+      ],
+      "requires_haunting": true,
+      "weight": 1.6,
+      "options": [
+        {
+          "label": "침착하게 버틴다",
+          "fx": {
+            "spirit": -2,
+            "mental": -4
+          },
+          "text": "한동안 숨을 고르고 기척이 지나가길 기다렸다."
+        },
+        {
+          "label": "직접 확인한다",
+          "fx": {
+            "spirit": 5,
+            "mental": -7
+          },
+          "text": "기척의 근원을 확인하려 다가갔다."
+        }
+      ]
+    },
+    {
+      "id": "v5_haunt_01",
+      "title": "잠든 팔의 멍",
+      "body": "잠에서 깬 팔에 검게 멍이 들어 있다.",
+      "tone": "bad",
+      "scene": "sleep",
+      "actions": [
+        "sleep"
+      ],
+      "requires_haunting": true,
+      "weight": 1.6,
+      "options": [
+        {
+          "label": "침착하게 버틴다",
+          "fx": {
+            "health": -5,
+            "mental": -3
+          },
+          "text": "한동안 숨을 고르고 기척이 지나가길 기다렸다."
+        },
+        {
+          "label": "직접 확인한다",
+          "fx": {
+            "health": -12,
+            "spirit": 4
+          },
+          "text": "기척의 근원을 확인하려 다가갔다."
+        }
+      ]
+    },
+    {
+      "id": "v5_haunt_02",
+      "title": "저절로 열린 창고",
+      "body": "일하는 곳의 창고 문이 스스로 닫힌다.",
+      "tone": "bad",
+      "scene": "work",
+      "actions": [
+        "work"
+      ],
+      "requires_haunting": true,
+      "weight": 1.6,
+      "options": [
+        {
+          "label": "침착하게 버틴다",
+          "fx": {
+            "mental": -5
+          },
+          "text": "한동안 숨을 고르고 기척이 지나가길 기다렸다."
+        },
+        {
+          "label": "직접 확인한다",
+          "fx": {
+            "health": -6,
+            "spirit": 4
+          },
+          "text": "기척의 근원을 확인하려 다가갔다."
+        }
+      ]
+    },
+    {
+      "id": "v5_haunt_03",
+      "title": "구독하지 않은 채널",
+      "body": "화면에 자기 방에서 촬영된 영상이 자동 재생된다.",
+      "tone": "bad",
+      "scene": "research",
+      "actions": [
+        "research"
+      ],
+      "requires_haunting": true,
+      "weight": 1.6,
+      "options": [
+        {
+          "label": "침착하게 버틴다",
+          "fx": {
+            "mental": -8,
+            "spirit": -1
+          },
+          "text": "한동안 숨을 고르고 기척이 지나가길 기다렸다."
+        },
+        {
+          "label": "직접 확인한다",
+          "fx": {
+            "spirit": 7,
+            "mental": -8
+          },
+          "text": "기척의 근원을 확인하려 다가갔다."
+        }
+      ]
+    },
+    {
+      "id": "v5_haunt_04",
+      "title": "빈 접시의 무게",
+      "body": "밥을 먹으려던 자리에 접시 하나가 더 놓인다.",
+      "tone": "bad",
+      "scene": "meal",
+      "actions": [
+        "meal"
+      ],
+      "requires_haunting": true,
+      "weight": 1.6,
+      "options": [
+        {
+          "label": "침착하게 버틴다",
+          "fx": {
+            "mental": -5
+          },
+          "text": "한동안 숨을 고르고 기척이 지나가길 기다렸다."
+        },
+        {
+          "label": "직접 확인한다",
+          "fx": {
+            "spirit": 5,
+            "health": -4
+          },
+          "text": "기척의 근원을 확인하려 다가갔다."
+        }
+      ]
+    },
+    {
+      "id": "v5_haunt_05",
+      "title": "길 위의 그림자",
+      "body": "가로등 아래 그림자가 두 개로 갈라진다.",
+      "tone": "bad",
+      "scene": "walk",
+      "actions": [
+        "walk"
+      ],
+      "requires_haunting": true,
+      "weight": 1.6,
+      "options": [
+        {
+          "label": "침착하게 버틴다",
+          "fx": {
+            "mental": -7
+          },
+          "text": "한동안 숨을 고르고 기척이 지나가길 기다렸다."
+        },
+        {
+          "label": "직접 확인한다",
+          "fx": {
+            "spirit": 6,
+            "health": -5
+          },
+          "text": "기척의 근원을 확인하려 다가갔다."
+        }
+      ]
+    },
+    {
+      "id": "v5_haunt_06",
+      "title": "뒤집힌 부적",
+      "body": "정화 중 손을 떼자 부적이 뒤집혀 있다.",
+      "tone": "bad",
+      "scene": "purify",
+      "actions": [
+        "purify"
+      ],
+      "requires_haunting": true,
+      "weight": 1.6,
+      "options": [
+        {
+          "label": "침착하게 버틴다",
+          "fx": {
+            "spirit": -3,
+            "mental": -5
+          },
+          "text": "한동안 숨을 고르고 기척이 지나가길 기다렸다."
+        },
+        {
+          "label": "직접 확인한다",
+          "fx": {
+            "spirit": 8,
+            "mental": -4
+          },
+          "text": "기척의 근원을 확인하려 다가갔다."
+        }
+      ]
+    },
+    {
+      "id": "v5_relic_notebook",
+      "title": "빈 노트의 첫 문장",
+      "body": "해방 후 얻은 노트 첫 장에 작은 주소가 저절로 나타났다.",
+      "tone": "strange",
+      "scene": "research",
+      "actions": [
+        "research",
+        "rest"
+      ],
+      "requires_item": "명부의 빈 페이지",
+      "options": [
+        {
+          "label": "주소를 적어 둔다",
+          "text": "주소는 도시에서 사라진 행정구역으로 이어졌다.",
+          "fx": {
+            "clues": 3,
+            "spirit": 2
+          },
+          "consume_item": "명부의 빈 페이지",
+          "relic": "무딘 연필"
+        },
+        {
+          "label": "그대로 덮는다",
+          "text": "노트를 서랍 깊은 곳에 넣었다.",
+          "fx": {
+            "mental": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "v5_relic_key",
+      "title": "열쇠가 맞는 자물쇠",
+      "body": "낡은 철문에 열쇠 구멍 하나가 남아 있다.",
+      "tone": "strange",
+      "scene": "street",
+      "actions": [
+        "walk",
+        "purify"
+      ],
+      "requires_item": "녹슨 방 열쇠",
+      "options": [
+        {
+          "label": "문을 연다",
+          "text": "문 너머에는 작은 목걸이가 놓여 있었다.",
+          "fx": {
+            "mental": -3,
+            "spirit": -4
+          },
+          "consume_item": "녹슨 방 열쇠",
+          "relic": "유리 목걸이"
+        },
+        {
+          "label": "다시 돌아선다",
+          "text": "아직 문을 열 때가 아닌 것 같다.",
+          "fx": {
+            "mental": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "q_black_envelope",
+      "title": "검은 봉투의 발신인",
+      "body": "봉투 안에는 입금 기록이 있다. 발신자란의 글씨만 지워져 있다.",
+      "scene": "research",
+      "tone": "strange",
+      "actions": [
+        "research",
+        "rest"
+      ],
+      "requires_item": "검은 봉투",
+      "weight": 1.8,
+      "options": [
+        {
+          "label": "봉투를 은행에 가져간다",
+          "text": "오래된 계좌의 잔액이 정산됐다.",
+          "fx": {
+            "money": 24000,
+            "doom": 1
+          },
+          "consume_item": "검은 봉투"
+        },
+        {
+          "label": "봉투를 태운다",
+          "text": "새까만 재가 바닥에 얇게 쌓였다.",
+          "fx": {
+            "spirit": -5,
+            "mental": -2
+          },
+          "consume_item": "검은 봉투"
+        }
+      ]
+    },
+    {
+      "id": "q_photo",
+      "title": "사진 뒷면의 빈 자리",
+      "body": "처음 보는 사진에 오늘의 날짜가 적혀 있다. 찍힌 장소는 근처 거리다.",
+      "scene": "street",
+      "tone": "strange",
+      "actions": [
+        "walk",
+        "research"
+      ],
+      "requires_item": "낯선 사진",
+      "weight": 1.8,
+      "options": [
+        {
+          "label": "사진 속 장소를 찾는다",
+          "text": "새로운 의식의 흔적과 낯선 감각이 남았다.",
+          "fx": {
+            "clues": 3,
+            "spirit": 3
+          },
+          "consume_item": "낯선 사진"
+        },
+        {
+          "label": "사진을 덮어 둔다",
+          "text": "사진은 아직 주머니에 남아 있다.",
+          "fx": {
+            "mental": 3
+          }
+        }
+      ]
+    },
+    {
+      "id": "q_purifier",
+      "title": "정화사와의 상담",
+      "body": "수화기 너머의 정화사가 이름보다 먼저 집 구조를 묻는다.",
+      "scene": "ritual",
+      "tone": "strange",
+      "actions": [
+        "purify",
+        "research"
+      ],
+      "requires_item": "정화사 연락처",
+      "weight": 1.8,
+      "options": [
+        {
+          "label": "비용을 지불하고 상담한다",
+          "minimum_money": 42000,
+          "text": "정화 절차를 적은 기록이 도착했다.",
+          "fx": {
+            "money": -42000,
+            "spirit": -13,
+            "doom": -1
+          },
+          "consume_item": "정화사 연락처"
+        },
+        {
+          "label": "통화만 끝낸다",
+          "text": "정화사는 언제든 다시 전화하라고 말한다.",
+          "fx": {
+            "mental": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "q_soil",
+      "title": "흙이 담긴 유리병",
+      "body": "유리병의 흙이 젖어 있고, 안쪽에서 낮은 진동이 느껴진다.",
+      "scene": "ritual",
+      "tone": "strange",
+      "actions": [
+        "ritual",
+        "purify"
+      ],
+      "requires_item": "유리병 속 흙",
+      "weight": 1.8,
+      "options": [
+        {
+          "label": "흙을 의식에 사용한다",
+          "text": "병 바닥에 새로 그린 강령의 표식이 남았다.",
+          "fx": {
+            "clues": 3,
+            "doom": 2,
+            "spirit": -4
+          },
+          "consume_item": "유리병 속 흙"
+        },
+        {
+          "label": "흙을 땅에 돌려준다",
+          "text": "흙냄새가 사라지며 몸이 가벼워졌다.",
+          "fx": {
+            "health": 8,
+            "doom": -1
+          },
+          "consume_item": "유리병 속 흙"
+        }
+      ]
+    },
+    {
+      "id": "q_ticket",
+      "title": "도착하지 않는 정류장",
+      "body": "승차권에 적힌 정류장은 현재 노선도에 없다.",
+      "scene": "street",
+      "tone": "strange",
+      "actions": [
+        "walk",
+        "work"
+      ],
+      "requires_item": "주인 없는 승차권",
+      "weight": 1.8,
+      "options": [
+        {
+          "label": "표를 들고 버스를 기다린다",
+          "text": "기사에게 표를 보여 주자 작은 종이봉투를 건넸다.",
+          "fx": {
+            "money": 18000,
+            "clues": 1,
+            "doom": 1
+          },
+          "consume_item": "주인 없는 승차권"
+        },
+        {
+          "label": "표를 찢는다",
+          "text": "멀리서 출발하는 엔진 소리가 들렸다.",
+          "fx": {
+            "spirit": -7
+          },
+          "consume_item": "주인 없는 승차권"
+        }
+      ]
+    },
+    {
+      "id": "q_chrysanthemum",
+      "title": "마른 국화 리본",
+      "body": "국화 리본에 묶인 이름을 읽자 기억에 없는 장례식장이 떠오른다.",
+      "scene": "park",
+      "tone": "strange",
+      "actions": [
+        "walk",
+        "purify"
+      ],
+      "requires_item": "마른 국화 리본",
+      "weight": 1.8,
+      "options": [
+        {
+          "label": "추모의 자리에 놓는다",
+          "text": "누군가의 슬픔이 조금 가라앉았다.",
+          "fx": {
+            "doom": -2,
+            "mental": 9
+          },
+          "consume_item": "마른 국화 리본"
+        },
+        {
+          "label": "리본을 보관한다",
+          "text": "리본에는 아직 익숙하지 않은 향기가 남아 있다.",
+          "fx": {
+            "omen": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "cat_wall",
+      "title": "벽 속에서 운다",
+      "body": "닫힌 벽장 안에서 분명 고양이 울음이 들린다.",
+      "scene": "rest",
+      "tone": "bad",
+      "actions": [
+        "rest",
+        "sleep"
+      ],
+      "requires_skill": "meow",
+      "weight": 3.5,
+      "options": [
+        {
+          "label": "벽장을 연다",
+          "text": "벽 속에서 운다 · 벽장을 연다",
+          "fx": {
+            "spirit": 5,
+            "mental": -8,
+            "doom": 1
+          }
+        },
+        {
+          "label": "벽을 두드린다",
+          "text": "벽 속에서 운다 · 벽을 두드린다",
+          "fx": {
+            "mental": -5,
+            "doom": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "cat_meal",
+      "title": "빈 밥그릇에 난 털",
+      "body": "음식에 낯선 고양이 털이 가득 붙어 있다.",
+      "scene": "meal",
+      "tone": "bad",
+      "actions": [
+        "meal"
+      ],
+      "requires_skill": "meow",
+      "weight": 3.5,
+      "options": [
+        {
+          "label": "전부 버린다",
+          "text": "빈 밥그릇에 난 털 · 전부 버린다",
+          "fx": {
+            "money": -12500,
+            "mental": -2
+          }
+        },
+        {
+          "label": "털을 골라낸다",
+          "text": "빈 밥그릇에 난 털 · 털을 골라낸다",
+          "fx": {
+            "health": -7,
+            "doom": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "cat_monitor",
+      "title": "검은 창의 발톱 자국",
+      "body": "모니터를 닫은 뒤에도 화면 안쪽에 발톱 자국이 남는다.",
+      "scene": "monitor",
+      "tone": "bad",
+      "actions": [
+        "research"
+      ],
+      "requires_skill": "meow",
+      "weight": 3.5,
+      "options": [
+        {
+          "label": "파일을 삭제한다",
+          "text": "검은 창의 발톱 자국 · 파일을 삭제한다",
+          "fx": {
+            "mental": -7,
+            "spirit": 3
+          }
+        },
+        {
+          "label": "더 살펴본다",
+          "text": "검은 창의 발톱 자국 · 더 살펴본다",
+          "fx": {
+            "clues": 2,
+            "doom": 2,
+            "mental": -5
+          }
+        }
+      ]
+    },
+    {
+      "id": "cat_footstep",
+      "title": "발자국 네 개",
+      "body": "뒤를 돌아보면 어린아이의 신발 옆에 네 발자국이 찍혀 있다.",
+      "scene": "street",
+      "tone": "bad",
+      "actions": [
+        "walk"
+      ],
+      "requires_skill": "meow",
+      "weight": 3.5,
+      "options": [
+        {
+          "label": "빨리 돌아간다",
+          "text": "발자국 네 개 · 빨리 돌아간다",
+          "fx": {
+            "mental": -8
+          }
+        },
+        {
+          "label": "발자국을 따라간다",
+          "text": "발자국 네 개 · 발자국을 따라간다",
+          "fx": {
+            "health": -8,
+            "doom": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "cat_purr",
+      "title": "잠든 뒤의 골골송",
+      "body": "잠결에 가슴 위에서 느린 진동이 울린다.",
+      "scene": "sleep",
+      "tone": "bad",
+      "actions": [
+        "sleep"
+      ],
+      "requires_skill": "meow",
+      "weight": 3.5,
+      "options": [
+        {
+          "label": "눈을 뜬다",
+          "text": "잠든 뒤의 골골송 · 눈을 뜬다",
+          "fx": {
+            "mental": -10,
+            "spirit": 2
+          }
+        },
+        {
+          "label": "계속 듣는다",
+          "text": "잠든 뒤의 골골송 · 계속 듣는다",
+          "fx": {
+            "mental": -6,
+            "doom": 1,
+            "luck": -1
+          }
+        }
+      ]
+    },
+    {
+      "id": "cat_wage",
+      "title": "출근 기록의 털",
+      "body": "출근 카드에 고양이 발바닥 모양 도장이 찍혔다.",
+      "scene": "work",
+      "tone": "bad",
+      "actions": [
+        "work"
+      ],
+      "requires_skill": "meow",
+      "weight": 3.5,
+      "options": [
+        {
+          "label": "기록을 고친다",
+          "text": "출근 기록의 털 · 기록을 고친다",
+          "fx": {
+            "money": -13000,
+            "mental": -3
+          }
+        },
+        {
+          "label": "도장을 남긴다",
+          "text": "출근 기록의 털 · 도장을 남긴다",
+          "fx": {
+            "wealth": 2,
+            "doom": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "cat_mirror",
+      "title": "거울에 고양이 얼굴",
+      "body": "거울 속 얼굴에 고양이 수염이 보인다.",
+      "scene": "rest",
+      "tone": "bad",
+      "actions": [
+        "rest",
+        "purify"
+      ],
+      "requires_skill": "meow",
+      "weight": 3.5,
+      "options": [
+        {
+          "label": "거울을 덮는다",
+          "text": "거울에 고양이 얼굴 · 거울을 덮는다",
+          "fx": {
+            "spirit": -3,
+            "mental": -5
+          }
+        },
+        {
+          "label": "웃어 보인다",
+          "text": "거울에 고양이 얼굴 · 웃어 보인다",
+          "fx": {
+            "doom": 2,
+            "mental": -6
+          }
+        }
+      ]
+    },
+    {
+      "id": "cat_door",
+      "title": "현관 앞의 종이상자",
+      "body": "현관 앞 작은 상자에서 기척이 들린다.",
+      "scene": "home",
+      "tone": "bad",
+      "actions": [
+        "rest",
+        "walk"
+      ],
+      "requires_skill": "meow",
+      "weight": 3.5,
+      "options": [
+        {
+          "label": "상자를 연다",
+          "text": "현관 앞의 종이상자 · 상자를 연다",
+          "fx": {
+            "spirit": 4,
+            "doom": 1
+          }
+        },
+        {
+          "label": "돌려보낸다",
+          "text": "현관 앞의 종이상자 · 돌려보낸다",
+          "fx": {
+            "money": -9000,
+            "mental": -3
+          }
+        }
+      ]
+    },
+    {
+      "id": "cat_ritual",
+      "title": "의식 위의 고양이",
+      "body": "강령진의 가운데에 검은 고양이가 잠깐 웅크린다.",
+      "scene": "ritual",
+      "tone": "bad",
+      "actions": [
+        "ritual"
+      ],
+      "requires_skill": "meow",
+      "weight": 3.5,
+      "options": [
+        {
+          "label": "이름을 부른다",
+          "text": "의식 위의 고양이 · 이름을 부른다",
+          "fx": {
+            "clues": 3,
+            "doom": 2,
+            "spirit": 3
+          }
+        },
+        {
+          "label": "의식을 중지한다",
+          "text": "의식 위의 고양이 · 의식을 중지한다",
+          "fx": {
+            "spirit": -2,
+            "mental": -5
+          }
+        }
+      ]
+    },
+    {
+      "id": "cat_visitor",
+      "title": "밤의 작은 발소리",
+      "body": "귀신보다 낮은 발소리가 안방에서 주방으로 지나간다.",
+      "scene": "home",
+      "tone": "bad",
+      "actions": [
+        "rest",
+        "sleep"
+      ],
+      "requires_skill": "meow",
+      "weight": 3.5,
+      "options": [
+        {
+          "label": "불을 켠다",
+          "text": "밤의 작은 발소리 · 불을 켠다",
+          "fx": {
+            "money": -3000,
+            "mental": -4
+          }
+        },
+        {
+          "label": "이불을 덮는다",
+          "text": "밤의 작은 발소리 · 이불을 덮는다",
+          "fx": {
+            "doom": 1,
+            "mental": -4
+          }
+        }
+      ]
+    },
+    {
+      "id": "cat_sequence_1",
+      "title": "야옹야옹 · 다락의 소리",
+      "body": "종이에 적힌 야옹야옹이 조금씩 글자 수를 늘린다.",
+      "scene": "home",
+      "tone": "bad",
+      "actions": [
+        "rest",
+        "research"
+      ],
+      "requires_skill": "meow",
+      "weight": 3.5,
+      "options": [
+        {
+          "label": "종이를 찢는다",
+          "text": "야옹야옹 · 다락의 소리 · 종이를 찢는다",
+          "fx": {
+            "mental": -3,
+            "doom": 1
+          }
+        },
+        {
+          "label": "단어를 따라 쓴다",
+          "text": "야옹야옹 · 다락의 소리 · 단어를 따라 쓴다",
+          "fx": {
+            "clues": 2,
+            "doom": 2
+          },
+          "follow": "cat_sequence_2",
+          "follow_days": 1
+        }
+      ]
+    },
+    {
+      "id": "cat_sequence_2",
+      "title": "야옹야옹 · 여섯 번째 울음",
+      "body": "어디에도 없는 고양이가 여섯 번째로 울었다.",
+      "scene": "street",
+      "tone": "bad",
+      "actions": [
+        "walk",
+        "rest"
+      ],
+      "requires_skill": "meow",
+      "weight": 3.5,
+      "options": [
+        {
+          "label": "발길을 멈춘다",
+          "text": "야옹야옹 · 여섯 번째 울음 · 발길을 멈춘다",
+          "fx": {
+            "spirit": -3,
+            "mental": -8
+          }
+        },
+        {
+          "label": "그 이름을 다시 부른다",
+          "text": "야옹야옹 · 여섯 번째 울음 · 그 이름을 다시 부른다",
+          "fx": {
+            "doom": 2,
+            "spirit": 5
+          },
+          "follow": "cat_sequence_3",
+          "follow_days": 1
+        }
+      ],
+      "chain_followup": true
+    },
+    {
+      "id": "cat_sequence_3",
+      "title": "야옹야옹 · 끝나지 않은 새벽",
+      "body": "책상 위에는 새벽이 끝나면 주인을 찾겠다는 쪽지가 있다.",
+      "scene": "ritual",
+      "tone": "bad",
+      "actions": [
+        "research",
+        "purify",
+        "ritual"
+      ],
+      "requires_skill": "meow",
+      "weight": 3.5,
+      "options": [
+        {
+          "label": "부적을 붙인다",
+          "text": "야옹야옹 · 끝나지 않은 새벽 · 부적을 붙인다",
+          "fx": {
+            "money": -23000,
+            "doom": -2,
+            "mental": -4
+          }
+        },
+        {
+          "label": "문장을 끝까지 읽는다",
+          "text": "야옹야옹 · 끝나지 않은 새벽 · 문장을 끝까지 읽는다",
+          "fx": {
+            "doom": 3,
+            "clues": 3,
+            "health": -7
+          }
+        }
+      ],
+      "chain_followup": true
+    }
+  ],
+  "relics": [
+    {
+      "id": "r01",
+      "name": "무딘 연필",
+      "desc": "조사 숙련 +3. 매일 정신력 -1.",
+      "bonus": {
+        "study_extra": 3
+      },
+      "daily": {
+        "mental": -1
+      },
+      "special": {
+        "on_research_failure": {
+          "mental": 2
+        }
+      }
+    },
+    {
+      "id": "r02",
+      "name": "유리 목걸이",
+      "desc": "정화 효율 +3. 매일 건강 -1.",
+      "bonus": {
+        "purify_extra": 3
+      },
+      "daily": {
+        "health": -1
+      },
+      "special": {
+        "conditional_daily": [
+          {
+            "stat": "spirit",
+            "min": 40,
+            "fx": {
+              "spirit": -1
+            },
+            "text": "신기 40 이상이면 매일 신기 -1"
+          }
+        ]
+      }
+    },
+    {
+      "id": "r03",
+      "name": "염주",
+      "desc": "정화 효율 +2. 매일 신기 -1.",
+      "bonus": {
+        "purify_extra": 2
+      },
+      "daily": {
+        "spirit": -1
+      },
+      "special": {
+        "remove_bonus": 0.05
+      }
+    },
+    {
+      "id": "r04",
+      "name": "멈춘 손목시계",
+      "desc": "휴식 회복 +3. 매일 정신력 -2.",
+      "bonus": {
+        "rest_extra": 3
+      },
+      "daily": {
+        "mental": -2
+      },
+      "special": {
+        "on_other_removed": {
+          "mental": 4
+        }
+      }
+    },
+    {
+      "id": "r05",
+      "name": "어떤 현관 열쇠",
+      "desc": "아르바이트 수입 +4,000원. 매일 신기 +1.",
+      "bonus": {
+        "job_extra": 4000
+      },
+      "daily": {
+        "spirit": 1
+      },
+      "special": {
+        "on_work": {
+          "wealth": 0.1
+        }
+      }
+    },
+    {
+      "id": "r06",
+      "name": "찢어진 손수건",
+      "desc": "식사 건강 회복 +3. 매일 자금 -1,000원.",
+      "bonus": {
+        "meal_health": 3
+      },
+      "daily": {
+        "money": -1000
+      },
+      "special": {
+        "on_meal": {
+          "mental": 2
+        }
+      }
+    },
+    {
+      "id": "r07",
+      "name": "깨진 손거울",
+      "desc": "강령 성공률 +4%. 매일 신기 +1.",
+      "bonus": {
+        "ritual_bonus": 4
+      },
+      "daily": {
+        "spirit": 1
+      },
+      "special": {
+        "conditional_daily": [
+          {
+            "stat": "doom",
+            "min": 5,
+            "fx": {
+              "omen": 1
+            },
+            "text": "불길한 운명이 짙으면 매일 영감운 +1"
+          }
+        ]
+      }
+    },
+    {
+      "id": "r08",
+      "name": "소리가 나지 않는 방울",
+      "desc": "수면 건강 회복 +1. 매일 정신력 -1.",
+      "bonus": {
+        "sleep_extra": 1
+      },
+      "daily": {
+        "mental": -1
+      },
+      "special": {
+        "conditional_daily": [
+          {
+            "stat": "mental",
+            "max": 40,
+            "fx": {
+              "health": 2
+            },
+            "text": "정신력 40 이하이면 매일 건강 +2"
+          }
+        ]
+      }
+    }
+  ],
+  "questItems": [
+    "명부의 빈 페이지",
+    "녹슨 방 열쇠",
+    "검은 봉투",
+    "낯선 사진",
+    "정화사 연락처",
+    "유리병 속 흙",
+    "주인 없는 승차권",
+    "마른 국화 리본"
+  ]
+};
  for(const key of ['skills','ghosts','meals','encounters']){const known=new Set(C[key].map(x=>x.id||x.name));for(const obj of ext[key]){const id=obj.id||obj.name;if(!known.has(id)){C[key].push(obj);known.add(id);}}}
  C.relics=ext.relics;C.questItems=ext.questItems;
+
+// Unified descriptions are generated from executable data to prevent text/effect drift.
+const statNames={money:'자금',health:'건강',mental:'정신력',spirit:'신기',luck:'행운',wealth:'재물운',bond:'인연운',omen:'영감운',clues:'강령 단서',max_mental:'정신력 최대치'};
+const bonusNames={job_extra:'아르바이트 수입',sleep_extra:'수면 시 건강',rest_extra:'휴식 시 정신력',study_extra:'조사 발견 보정',ritual_bonus:'강령 성공률',purify_extra:'정화 시 신기 감소량',meal_health:'식사 시 건강',meal_mental:'식사 시 정신력'};
+function displayStats(obj){
+ return Object.entries(obj||{}).filter(([,v])=>v!==0).map(([key,val])=>key==='doom'?(val>0?'불길한 운명 증가':'불길한 운명 약화'):`${statNames[key]||key} ${val>0?'+':'−'}${Math.abs(val).toLocaleString('ko-KR')}${key==='money'?'원':''}`).join(', ');
+}
+function specialText(item){
+ const sp=item.special||{},parts=[];
+ if(sp.remove_bonus)parts.push(`문자 제거 성공률 +${Math.round(sp.remove_bonus*100)}%p`);
+ if(sp.on_other_removed)parts.push(`다른 문자 제거 성공 시 ${displayStats(sp.on_other_removed)}`);
+ if(sp.remove_scale_money)parts.push(`문자 제거 성공 누적 수에 비례해 제거마다 자금 보상(회당 ${sp.remove_scale_money.toLocaleString('ko-KR')}원, 최대 24,000원)`);
+ if(sp.on_research_failure)parts.push(`조사 실패 시 ${displayStats(sp.on_research_failure)}`);
+ if(sp.on_work)parts.push(`아르바이트마다 ${displayStats(sp.on_work)}`);
+ if(sp.on_meal)parts.push(`식사마다 ${displayStats(sp.on_meal)}`);
+ for(const rule of sp.conditional_daily||[])parts.push(rule.text||`조건부 매일 ${displayStats(rule.fx)}`);
+ return parts.join('. ');
+}
+function describe(item){
+ if(item.id==='meow')return '야옹야옹';
+ const parts=[];
+ if(item.gain&&Object.keys(item.gain).length)parts.push(`획득 시 ${displayStats(item.gain)}`);
+ if(item.doom_gain)parts.push(item.doom_gain>0?'불길한 운명 증가':'불길한 운명 약화');
+ if(item.daily&&Object.keys(item.daily).length)parts.push(`매일 ${displayStats(item.daily)}`);
+ const bs=Object.entries(item.bonus||{}).map(([key,val])=>`${bonusNames[key]||key} ${val>=0?'+':'−'}${Math.abs(val).toLocaleString('ko-KR')}${key==='job_extra'?'원':key==='ritual_bonus'?'%p':''}`);
+ if(bs.length)parts.push(`지속 ${bs.join(', ')}`);
+ if(item.delay&&Object.keys(item.delay).length)parts.push(`다음 날 ${displayStats(item.delay)}`);
+ if(item.wish)parts.push('소원 1회(자금·건강·정신력 중 하나)');
+ if(item.locked)parts.push('제거할 수 없음');
+ const spec=specialText(item);if(spec)parts.push(spec);
+ return parts.map(s=>s.endsWith('.')?s:s+'.').join(' ');
+}
+for(const item of [...C.skills,...C.ghosts,...C.relics])item.desc=describe(item);
+
  if(typeof module!=='undefined'&&module.exports)module.exports=C;
 })(typeof window!=='undefined'?window:globalThis);

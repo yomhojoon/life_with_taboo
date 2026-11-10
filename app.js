@@ -1,6 +1,6 @@
 (function(){
 'use strict';
-const { Game, CONTENT:C, GRADE_PRICES, STAT_LABELS, moneyText }=window.YGEngine;
+const { Game, CONTENT:C, GRADE_PRICES, skillPrice, STAT_LABELS, moneyText }=window.YGEngine;
 const game=new Game();
 const $=id=>document.getElementById(id);
 const esc=v=>String(v??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#39;');
@@ -129,7 +129,7 @@ function renderTabs(){document.querySelectorAll('.tab').forEach(b=>b.classList.t
  const s=game.s,empty=(glyph,title,desc)=>`<div class="empty-state"><span class="empty-symbol">${glyph}</span><strong>${title}</strong><p>${desc}</p></div>`;
  let html='';
  if(tab==='skills'){
-   html=s.owned_skills.length?s.owned_skills.map(id=>{const x=C.skills.find(x=>x.id===id);if(!x)return '';return `<article class="archive-item"><div class="archive-top"><strong>${esc(x.name)}</strong><span class="grade-badge grade-${x.grade}">${x.grade}등급</span></div><p>${esc(x.desc)}</p><div class="archive-bottom">${x.wish?`<small>소원 ${s.wish_spent.includes('clown')?'0':'1'} / 1</small>`:''}<div style="display:flex;gap:6px">${x.wish?`<button class="button tiny secondary" data-cmd="wish" ${s.phase!=='planning'||s.pending||s.wish_spent.includes('clown')?'disabled':''}>소원 빌기</button>`:''}<button class="button ghost tiny" data-cmd="remove-skill" data-value="${id}" ${s.phase!=='planning'||s.pending?'disabled':''}>해제</button></div></div></article>`;}).join(''):empty('✦','아직 배운 문자가 없습니다.','');
+   html=s.owned_skills.length?s.owned_skills.map(id=>{const x=C.skills.find(x=>x.id===id);if(!x)return '';return `<article class="archive-item"><div class="archive-top"><strong>${esc(x.name)}</strong><span class="grade-badge grade-${x.grade}">${x.grade}등급</span></div><p>${esc(x.desc)}</p><div class="archive-bottom">${x.wish?`<small>소원 ${s.wish_spent.includes('clown')?'0':'1'} / 1</small>`:''}<div style="display:flex;gap:6px">${x.wish?`<button class="button tiny secondary" data-cmd="wish" ${s.phase!=='planning'||s.pending||s.wish_spent.includes('clown')?'disabled':''}>소원 빌기</button>`:''}<button class="button ghost tiny" data-cmd="remove-skill" data-value="${id}" ${s.phase!=='planning'||s.pending||s.remove_attempts_today>=3||x.locked?'disabled':''}>${x.locked?'해제 불가':'해제' }</button></div></div></article>`;}).join(''):empty('✦','아직 배운 문자가 없습니다.','');
  }else if(tab==='ghosts'){
    html=s.ghosts.length?s.ghosts.map(g=>{const x=C.ghosts.find(x=>x.id===g.id);if(!x)return '';const state=g.state==='active'?'해방 가능':g.state==='bound'?'지박':'빙의';return `<article class="archive-item ghost-entry"><img class="ghost-portrait" src="${(window.YG_ART_DATA&&window.YG_ART_DATA.ghost)||'assets/ghost.png'}" alt="${esc(x.name)} 초상화" loading="lazy"><div class="ghost-entry-body"><div class="archive-top"><strong>${esc(x.name)}</strong><span class="ghost-state ${g.state!=='active'?'locked':''}">${state}</span></div><p class="archive-story">${esc(x.story)}</p><p>${esc(x.desc)}</p><div class="archive-bottom">${g.state==='possessed'?'<small>매일 정신력 −2, 신기 +1</small>':''}<button class="button ghost tiny" data-cmd="release" data-value="${g.id}" ${g.state!=='active'||s.phase!=='planning'||s.pending?'disabled':''}>해방 시도</button></div></div></article>`;}).join(''):empty('☽','아직 받아들인 귀신이 없습니다.','');
  }else if(tab==='relics'){
@@ -138,7 +138,7 @@ function renderTabs(){document.querySelectorAll('.tab').forEach(b=>b.classList.t
  }else if(tab==='logs'){
    html=(s.logs.length?s.logs:[]).map(x=>`<div class="log-item">${esc(x)}</div>`).join('')||empty('☷','아직 기록이 없습니다.','일정을 진행하면 기록이 쌓입니다.');
  }else if(tab==='guide'){
-   html=`<div class="guide"><h3>생존 조건</h3><p>건강 또는 정신력이 0이 되면 사망하며, 신기가 100에 도달해도 사망합니다. 우선 7일 생존을 목표로 합니다.</p><h3>24시간 일정</h3><p>행동을 누르면 가장 앞의 빈 시간에 배치됩니다. 비어 있는 시간을 먼저 누르면 특정 시각에 직접 넣을 수 있습니다. 항목을 삭제해도 뒤의 시간이 이동하지 않습니다. 24칸을 모두 채워야 하루를 시작할 수 있습니다. 수면이 4시간 이하이면 하루 종료 시 큰 피해와 신기 증가가 발생합니다. 5~6시간 역시 피로가 누적됩니다.</p><h3>문자스킬</h3><p>발견·구매 시 1~4개 중 최대 1개만 얻습니다. 건너뛸 수 있습니다. 문자스킬은 지속적으로 적용되며, 준비 시간에는 해제할 수 있습니다.</p><h3>문자 해제</h3><p>일정 편성 중 문자스킬의 해제 버튼을 누르면 일일 효과와 행동 보너스를 종료할 수 있습니다. 이미 받은 즉시 효과는 남습니다. 정신력 최대치 증가는 해제와 함께 취소됩니다.</p><h3>인터넷 조사</h3><p>기본 문자 발견률은 1시간당 약 19%이며 하루 최대 한 번만 후보가 나타납니다. 나머지는 해방 정보, 단서, 조사 실패로 나뉩니다. 해방 자료를 찾으면 신기 감소 또는 다음 해방의 위험 감소를 선택할 수 있습니다.</p><h3>강령과 해방</h3><p>성공률: 기본 24% + 신기×0.55%p + 단서×5%p + 영감운×1.8%p + 패시브 (최소 5%, 최대 91%). 해방 실패 확률: 기본 7% + 신기×0.7%p (최대 82%).</p><h3>새벽의 정산</h3><p>수면 부족 → 보유 문자·유령 일일 효과 → 생활비 18,000원 → 운세 사건 → 심야 상점 순서로 진행됩니다.</p><h3>테스트 / 세이브</h3><p>상단 <code>⚙ 테스트</code>를 누르면 수치를 조정하고 스킬·유령·사건을 임의 발생시킬 수 있습니다. 자동 저장이 켜져 있으며 JSON 파일로 복구할 수 있습니다.</p></div>`;
+   html=`<div class="guide"><h3>생존 조건</h3><p>건강 또는 정신력이 0이 되면 사망하며, 신기가 100에 도달해도 사망합니다. 불길한 운명에 의한 즉사도 발생할 수 있습니다. 우선 7일 생존을 목표로 합니다.</p><h3>24시간 일정</h3><p>행동을 누르면 가장 앞의 빈 시간에 배치됩니다. 비어 있는 시간을 먼저 누르면 특정 시각에 직접 넣을 수 있습니다. 항목을 삭제해도 뒤의 시간이 이동하지 않습니다. 24칸을 모두 채워야 하루를 시작할 수 있습니다. 수면이 4시간 이하이면 하루 종료 시 큰 피해와 신기 증가가 발생합니다. 5~6시간 역시 피로가 누적됩니다.</p><h3>문자스킬</h3><p>발견·구매 시 1~4개 중 최대 1개만 얻습니다. 건너뛸 수 있습니다. 문자스킬은 지속적으로 적용됩니다. 제거 시도는 하루 3회이며 등급이 높을수록 성공률이 낮습니다. 야옹야옹은 제거할 수 없습니다.</p><h3>문자 해제</h3><p>일정 편성 중 문자스킬의 해제 버튼을 누르면 제거를 시도할 수 있습니다. 제거 실패 시에도 일일 시도 횟수가 소모됩니다. 이미 받은 즉시 효과는 남습니다. 정신력 최대치 증가는 해제와 함께 취소됩니다.</p><h3>인터넷 조사</h3><p>기본 문자 발견률은 1시간당 약 19%이며 하루 최대 한 번만 후보가 나타납니다. 나머지는 해방 정보, 단서, 조사 실패로 나뉩니다. 해방 자료를 찾으면 신기 감소 또는 다음 해방의 위험 감소를 선택할 수 있습니다.</p><h3>강령과 해방</h3><p>성공률: 기본 24% + 신기×0.55%p + 단서×5%p + 영감운×1.8%p + 패시브 (최소 5%, 최대 91%). 해방 실패 확률: 기본 7% + 신기×0.7%p (최대 82%).</p><h3>새벽의 정산</h3><p>수면 부족 → 보유 문자·유령 일일 효과 → 생활비 18,000원 → 운세 사건 → 심야 상점 순서로 진행됩니다.</p><h3>테스트 / 세이브</h3><p>상단 <code>⚙ 테스트</code>를 누르면 수치를 조정하고 스킬·유령·사건을 임의 발생시킬 수 있습니다. 자동 저장이 켜져 있으며 JSON 파일로 복구할 수 있습니다.</p></div>`;
  }
  $('tabContent').innerHTML=html;
 }
@@ -175,10 +175,10 @@ function renderModal(){const s=game.s,p=s.pending,overlay=$('modalOverlay');over
    html=modalFrame('END OF LIFE · '+s.day+'일차','연명에 실패했다',s.death_reason,`<div class="modal-end">당신은 ${s.day}일차 ${s.hour}시까지 살아남았다.\n어떤 목소리들은 여전히 방 안에 남아 있다.</div>`,`<span class="modal-hint">다음 시도에서 일정을 바꾸거나 실험해 보세요.</span><button class="button danger" data-cmd="restart">새 삶 시작하기</button>`);
  }else if(kind==='encounter'){
    const item=C.encounters.find(x=>x.id===p.id);if(!item){target.innerHTML='';return;}
-   const cards=item.options.map((x,i)=>`<button class="choice-card" data-cmd="event-choice" data-value="${i}"><div class="choice-head"><strong>${esc(x.label)}</strong><span class="choice-title">선택 ${i+1}</span></div></button>`);
+   const cards=item.options.map((x,i)=>`<button class="choice-card" data-cmd="event-choice" data-value="${i}" ${x.minimum_money&&s.money<x.minimum_money?'disabled':''}><div class="choice-head"><strong>${esc(x.label)}</strong><span class="choice-title">${x.minimum_money&&s.money<x.minimum_money?'잔액 부족':'선택 '+(i+1)}</span></div></button>`);
    html=modalFrame('CHOOSE / 이 순간의 선택','','',modalChoices(cards),'');
  }else if(kind==='skills'){
-   const shop=p.source==='shop';const options=p.ids.map((id,i)=>{const x=C.skills.find(x=>x.id===id);if(!x)return '';const price=GRADE_PRICES[x.grade],afford=!shop||s.money>=price;return `<button class="choice-card" data-cmd="skill-choice" data-value="${i}" ${afford?'':'disabled'}><div class="choice-head"><strong>${esc(x.name)}</strong><span class="grade-badge grade-${x.grade}">${x.grade}등급</span></div><div class="choice-description">${esc(x.desc)}</div><div class="choice-cost">${shop?moneyText(price)+'원'+(afford?'':' · 잔액 부족'):'무료로 습득'}</div></button>`;});
+   const shop=p.source==='shop';const options=p.ids.map((id,i)=>{const x=C.skills.find(x=>x.id===id);if(!x)return '';const price=skillPrice(x),afford=!shop||s.money>=price;return `<button class="choice-card" data-cmd="skill-choice" data-value="${i}" ${afford?'':'disabled'}><div class="choice-head"><strong>${esc(x.name)}</strong><span class="grade-badge grade-${x.grade}">${x.grade}등급</span></div><div class="choice-description">${esc(x.desc)}</div><div class="choice-cost">${shop?moneyText(price)+'원'+(afford?'':' · 잔액 부족'):'무료로 습득'}</div></button>`;});
    html=modalFrame(shop?'MIDNIGHT SHOP / 하루 사이의 상점':'ARCHIVED FORMULA / 발견한 문자',shop?'경계의 상점':'잊힌 글귀를 발견했다',shop?'새벽과 아침 사이에만 열리는 상점. 판매자는 끝내 얼굴을 보여주지 않는다.':'검색 기록에 알 수 없는 글귀가 남았다. 기억할 수 있는 문자는 단 하나뿐이다.',modalChoices(options),`<button class="button secondary" data-cmd="skill-choice" data-value="-1">선택하지 않고 지나가기</button>`);
  }else if(kind==='lore'){
    const opts=[['정화 문장을 따라 적는다','정신력 −5, 자금 −3,000원, 신기 −7'],['해방 매듭법을 기록한다','정신력 −4, 다음 해방 시 실패 위험 13%p 감소'],['강령 단서로 활용한다','강령 단서 +1, 신기 +2'],['조사를 종료한다','추가 효과 없음']];
@@ -189,12 +189,12 @@ function renderModal(){const s=game.s,p=s.pending,overlay=$('modalOverlay');over
    html=modalFrame('CLOSING REPORT / 하루의 끝',p.title,p.body,'',`<button class="button primary" data-cmd="open-shop">계속하기</button>`);
  }else if(kind==='remove-skill'){
    const x=C.skills.find(x=>x.id===p.id);
-   html=modalFrame('ERASE THE WORD / 문자 해제','이 글귀를 지울 것인가?',`${x?.name||'문자스킬'}\n\n매일 발생하는 지속 효과와 행동 보너스가 사라집니다. 습득 당시 이미 발생한 즉시 효과는 되돌릴 수 없습니다.${x?.gain?.max_mental?' 정신력 최대치 증가 효과는 함께 사라집니다.':''}`,'',`<button class="button ghost" data-cmd="confirm-remove-skill" data-value="no">취소</button><button class="button danger" data-cmd="confirm-remove-skill" data-value="yes">문자 해제</button>`);
+   html=modalFrame('ERASE THE WORD / 문자 해제','이 글귀를 지울 것인가?',`${x?.name||'문자스킬'}\n\n남은 제거 시도 ${3-s.remove_attempts_today}회. 성공률 ${Math.round(game.removalChance(x)*100)}%. 실패해도 횟수는 소모됩니다. 해제 후 일일 효과와 지속 보너스가 종료되지만 획득 당시의 즉시 효과는 남습니다.${x?.gain?.max_mental?' 정신력 최대치 증가 효과는 함께 사라집니다.':''}`,'',`<button class="button ghost" data-cmd="confirm-remove-skill" data-value="no">취소</button><button class="button danger" data-cmd="confirm-remove-skill" data-value="yes">문자 해제</button>`);
  }else if(kind==='release'){
    const x=C.ghosts.find(x=>x.id===p.id),risk=pct(game.releaseRisk());
    html=modalFrame('RELEASE RITUAL / 해방','이 목소리를 내보내겠는가?',`${x?.name||'귀신'}\n\n성공하면 유령의 보너스와 부작용이 모두 사라지고 신기 −8, 정신력 +4가 적용된다. 시도 자체에 정신력 5가 소모된다.`,`<div class="modal-end">현재 해방 실패 확률 ${risk}%\n실패하면 지박 또는 빙의되어 생존하는 동안 제거할 수 없다.</div>`,`<button class="button ghost" data-cmd="confirm-release" data-value="no">취소</button><button class="button danger" data-cmd="confirm-release" data-value="yes">위험을 감수한다</button>`);
  }else if(kind==='wish'){
-   const options=[['자금 80,000원','주머니에서 처음 보는 지폐가 나온다.'],['건강 +35','몸에서 오래된 상처가 사라진다.'],['정신력 +40','방 안의 목소리가 잠시 멎는다.']];
+   const options=[['돈을 얻는다','주머니에서 처음 보는 지폐가 나온다.'],['건강을 회복한다','몸에서 오래된 상처가 사라진다.'],['정신력을 회복한다','방 안의 목소리가 잠시 멎는다.']];
    html=modalFrame('ONCE ONLY / 노란어릿광대','소원을 하나 말해', '어릿광대가 웃으며 손가락 하나를 편다. 이미 한 번 입 밖으로 낸 소원은 되돌릴 수 없다.',modalChoices(options.map(([name,desc],i)=>`<button class="choice-card" data-cmd="wish-choice" data-value="${i}"><div class="choice-head"><strong>${name}</strong></div><div class="choice-description">${desc}</div></button>`)),`<span class="modal-hint">소원은 게임 내 단 한 번 사용할 수 있습니다.</span>`);
  }
  target.innerHTML=html;
@@ -206,4 +206,3 @@ function renderDebug(){if($('debugDrawer').hidden)return;const s=game.s;$('debug
 init();
 window.YG_APP={game,render,runAuto};
 })();
-

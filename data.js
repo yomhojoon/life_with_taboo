@@ -20,7 +20,7 @@ const CONTENT = {
       "id": "work",
       "name": "아르바이트",
       "short": "알바",
-      "tip": "자금 +12,000원 / 건강 또는 정신력 소모",
+      "tip": "시간당 자금 +5,600원(보너스 별도). 건강 또는 정신력 소모",
       "color": "#9d7a59"
     },
     {
@@ -94,248 +94,247 @@ const CONTENT = {
       "id": "rice",
       "name": "쌀 한 되에 좁쌀 서 말",
       "grade": 0,
-      "desc": "재물운 +10, 행운 -1. 다음 날 행운 +1.",
       "gain": {
-        "wealth": 10,
-        "luck": -1
+        "wealth": 5,
+        "luck": -5
       },
-      "delay": {
-        "luck": 1
-      }
+      "price": 20000
     },
     {
       "id": "snail",
       "name": "다슬기를 담아라",
       "grade": 0,
-      "desc": "매일 재물운 +1. 매일 정신력 -1.",
       "daily": {
         "wealth": 1,
         "mental": -1
-      }
+      },
+      "price": 20000
     },
     {
       "id": "balloon",
       "name": "알록달록 풍선다발",
       "grade": 0,
-      "desc": "행운 +1. 정신력 -1.",
       "gain": {
         "luck": 1,
         "mental": -1
-      }
+      },
+      "price": 15000
     },
     {
       "id": "turtle",
       "name": "도랑치고 거북잡이",
       "grade": 0,
-      "desc": "정신력 5 회복 후 정신력 1 감소. (순회복 +4)",
       "gain": {
-        "mental": 4
-      }
+        "mental": 2
+      },
+      "price": 15000
     },
     {
       "id": "princess",
       "name": "상상나라 상상공주",
       "grade": 0,
-      "desc": "정신력 최대치 +3. 현재 정신력 -3.",
       "gain": {
         "max_mental": 3,
         "mental": -3
-      }
+      },
+      "price": 16000
     },
     {
       "id": "clown",
       "name": "노란어릿광대",
       "grade": 0,
-      "desc": "소원 1/1. 신기 +1. 소원 사용 시 돈/건강/정신력 중 하나 획득.",
       "gain": {
         "spirit": 1
       },
-      "wish": true
+      "wish": true,
+      "price": 20000
     },
     {
       "id": "salt",
       "name": "굵은 소금 세 꼬집",
       "grade": 0,
-      "desc": "매일 신기 -1. 매일 자금 -2,000원.",
       "daily": {
         "spirit": -1,
         "money": -2000
-      }
+      },
+      "price": 12000
     },
     {
       "id": "coin",
       "name": "낡은 동전 던지기",
       "grade": 0,
-      "desc": "재물운 +2. 인연운 -1. 아르바이트 시 추가 수입 1,500원.",
       "gain": {
         "wealth": 2,
         "bond": -1
       },
       "bonus": {
-        "job_extra": 1500
-      }
+        "job_extra": 200
+      },
+      "price": 18000
     },
     {
       "id": "whisper",
-      "name": "벽 너머의 속삭임",
+      "name": "벽 너머 벽 너머 벽",
       "grade": 1,
-      "desc": "조사 시 단서 발견 확률 상승. 매일 정신력 -3.",
       "bonus": {
-        "study_extra": 22
+        "study_extra": 15
       },
       "daily": {
         "mental": -3
-      }
+      },
+      "price": 40000
     },
     {
       "id": "warm",
-      "name": "흰 이불의 무게",
+      "name": "소복눈 흰 이불",
       "grade": 1,
-      "desc": "수면마다 건강 +3 추가. 매일 재물운 -1.",
       "bonus": {
         "sleep_extra": 3
       },
       "daily": {
         "wealth": -1
-      }
+      },
+      "price": 31000
     },
     {
       "id": "receipt",
-      "name": "영수증에 적힌 이름",
+      "name": "영수증에 이름",
       "grade": 1,
-      "desc": "알바 시 추가 수입 5,000원. 매일 신기 +1.",
       "bonus": {
-        "job_extra": 5000
+        "job_extra": 2000
       },
       "daily": {
         "spirit": 1
-      }
+      },
+      "price": 36000
     },
     {
       "id": "catwalk",
       "name": "고양이가 걷는 방향",
       "grade": 1,
-      "desc": "행운 +2, 영감운 +2. 매일 정신력 -2.",
       "gain": {
         "luck": 2,
         "omen": 2
       },
       "daily": {
         "mental": -2
-      }
+      },
+      "price": 32000
     },
     {
       "id": "red_thread",
-      "name": "끊어지지 않는 붉은 실",
+      "name": "붉은 실을 먹습니다",
       "grade": 1,
-      "desc": "인연운 +5. 매일 건강 -2.",
       "gain": {
         "bond": 5
       },
       "daily": {
         "health": -2
-      }
+      },
+      "price": 40000
     },
     {
       "id": "mirror",
-      "name": "새벽 두 시의 거울",
+      "name": "거울 너머 친구",
       "grade": 2,
-      "desc": "강령 성공률 +17%p. 매일 신기 +3, 정신력 -5.",
       "bonus": {
         "ritual_bonus": 17
       },
       "daily": {
         "spirit": 3,
         "mental": -5
-      }
+      },
+      "price": 87000
     },
     {
       "id": "paper_money",
       "name": "젖지 않는 지전",
       "grade": 2,
-      "desc": "알바 수입 +13,000원. 매일 건강 -6.",
       "bonus": {
-        "job_extra": 13000
+        "job_extra": 2500
       },
       "daily": {
         "health": -6
-      }
+      },
+      "price": 95000
     },
     {
       "id": "blue_moon",
-      "name": "푸른 달의 허물",
+      "name": "푸른 달 허물걸이",
       "grade": 2,
-      "desc": "정화 시 신기 추가 -4. 매일 정신력 -5.",
       "bonus": {
         "purify_extra": 4
       },
       "daily": {
-        "mental": -5
-      }
+        "mental": -2
+      },
+      "price": 91000
     },
     {
       "id": "clock",
       "name": "열세 번째 시계바늘",
       "grade": 2,
-      "desc": "휴식 시 정신력 +6 추가. 매일 신기 +2.",
       "bonus": {
-        "rest_extra": 6
+        "rest_extra": 3
       },
       "daily": {
         "spirit": 2
-      }
+      },
+      "price": 86000
     },
     {
       "id": "fortuna",
-      "name": "손바닥에 내려앉은 별",
+      "name": "손바닥에 별님",
       "grade": 2,
-      "desc": "행운 +7, 재물운 +6. 매일 정신력 -4.",
       "gain": {
         "luck": 7,
         "wealth": 6
       },
       "daily": {
         "mental": -4
-      }
+      },
+      "price": 84000
     },
     {
       "id": "meow",
       "name": "야옹야옹",
       "grade": 3,
-      "desc": "야옹야옹",
       "gain": {
         "wealth": 100,
-        "mental": 100
+        "mental": 50
       },
       "daily": {
         "mental": -20,
-        "luck": -1,
-        "spirit": 1
-      }
+        "luck": -10,
+        "spirit": 5
+      },
+      "locked": true,
+      "desc": "야옹야옹",
+      "price": 165000
     },
     {
       "id": "eternal",
-      "name": "죽지 않는 촛농",
+      "name": "죽지 않는 양초",
       "grade": 3,
-      "desc": "매일 건강 +20. 매일 정신력 -13, 신기 +5.",
       "daily": {
         "health": 20,
-        "mental": -13,
-        "spirit": 5
-      }
+        "mental": -11,
+        "spirit": 2
+      },
+      "price": 137000
     },
     {
       "id": "eclipse",
-      "name": "일식의 마지막 문장",
+      "name": "일식에 쓴 문장",
       "grade": 3,
-      "desc": "강령 성공률 +28%p. 매일 정신력 -10, 신기 +6.",
       "bonus": {
         "ritual_bonus": 28
       },
       "daily": {
         "mental": -10,
-        "spirit": 6
-      }
+        "spirit": 3
+      },
+      "price": 133000
     }
   ],
   "ghosts": [
@@ -343,7 +342,6 @@ const CONTENT = {
       "id": "driver",
       "name": "막차의 운전기사",
       "story": "종점이 없는 버스에서 지폐를 세던 기사.",
-      "desc": "알바 수입 +18,000원/시간. 매일 정신력 -7, 건강 -3, 신기 +2.",
       "bonus": {
         "job_extra": 18000
       },
@@ -351,13 +349,25 @@ const CONTENT = {
         "mental": -7,
         "health": -3,
         "spirit": 2
+      },
+      "special": {
+        "conditional_daily": [
+          {
+            "stat": "wealth",
+            "min": 10,
+            "fx": {
+              "doom": 1,
+              "money": 3000
+            },
+            "text": "재물운 10 이상이면 매일 자금 +3,000원, 불길한 운명 증가"
+          }
+        ]
       }
     },
     {
       "id": "nurse",
       "name": "흰 복도의 간호사",
       "story": "누군가의 심박수를 대신 듣는 사람.",
-      "desc": "수면 시 건강 +8/시간. 매일 정신력 -8, 신기 +3.",
       "bonus": {
         "sleep_extra": 8
       },
@@ -370,33 +380,49 @@ const CONTENT = {
       "id": "typist",
       "name": "삭제된 게시글의 작성자",
       "story": "어느 게시판에도 남지 않은 마지막 댓글.",
-      "desc": "조사 단서 획득 확률 크게 상승. 매일 정신력 -9, 신기 +2.",
       "bonus": {
         "study_extra": 38
       },
       "daily": {
         "mental": -9,
         "spirit": 2
+      },
+      "special": {
+        "on_research_failure": {
+          "clues": 1,
+          "mental": -2
+        }
       }
     },
     {
       "id": "bride",
       "name": "거울에만 보이는 신부",
       "story": "사진 속에서는 항상 한 명이 더 찍힌다.",
-      "desc": "강령 성공률 +26%p. 매일 정신력 -10, 신기 +4.",
       "bonus": {
         "ritual_bonus": 26
       },
       "daily": {
         "mental": -10,
         "spirit": 4
+      },
+      "special": {
+        "conditional_daily": [
+          {
+            "stat": "spirit",
+            "min": 65,
+            "fx": {
+              "omen": 2,
+              "doom": 1
+            },
+            "text": "신기 65 이상이면 매일 영감운 +2, 불길한 운명 증가"
+          }
+        ]
       }
     },
     {
       "id": "cook",
       "name": "식탁 아래의 요리사",
       "story": "밤마다 빈 접시를 세 개씩 차린다.",
-      "desc": "식사 회복량 건강 +5, 정신력 +4. 매일 건강 -6, 신기 +2.",
       "bonus": {
         "meal_health": 5,
         "meal_mental": 4
@@ -410,9 +436,8 @@ const CONTENT = {
       "id": "porter",
       "name": "새벽의 짐꾼",
       "story": "열쇠가 없는 건물로 짐을 옮긴다.",
-      "desc": "매일 자금 +50,000원. 매일 건강 -12, 정신력 -6, 신기 +3.",
       "daily": {
-        "money": 50000,
+        "money": 16000,
         "health": -12,
         "mental": -6,
         "spirit": 3
@@ -422,7 +447,6 @@ const CONTENT = {
       "id": "child",
       "name": "계단을 세는 아이",
       "story": "그 아이의 계단은 열네 번째까지 있다.",
-      "desc": "휴식 회복량 +12/시간. 매일 정신력 -6, 신기 +5, 인연운 -2.",
       "bonus": {
         "rest_extra": 12
       },
@@ -436,23 +460,27 @@ const CONTENT = {
       "id": "gardener",
       "name": "무덤지기의 그림자",
       "story": "풀 한 포기를 베면 이름 하나가 지워진다.",
-      "desc": "정화 효과 신기 추가 -6. 매일 건강 -8, 정신력 -5.",
       "bonus": {
         "purify_extra": 6
       },
       "daily": {
         "health": -8,
         "mental": -5
+      },
+      "special": {
+        "on_other_removed": {
+          "spirit": -2,
+          "health": -2
+        }
       }
     },
     {
       "id": "fortune",
       "name": "마지막 손님",
       "story": "돈을 받고 미래의 실패를 알려준다.",
-      "desc": "매일 재물운 +5, 자금 +30,000원. 매일 정신력 -12, 신기 +4.",
       "daily": {
         "wealth": 5,
-        "money": 30000,
+        "money": 13000,
         "mental": -12,
         "spirit": 4
       }
@@ -1661,4 +1689,3 @@ if(typeof module!=="undefined" && module.exports) module.exports=CONTENT;
 ];
   if(root.YG_CONTENT) root.YG_CONTENT.encounters.push(...extraEncounters);
 })(typeof window !== "undefined" ? window : globalThis);
-
