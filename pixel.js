@@ -9,7 +9,7 @@ GHOST_IMAGE.src=(root.YG_ART_DATA&&root.YG_ART_DATA.ghost)||'assets/ghost.png';
 GHOST_IMAGE.onload=()=>{if(last)draw(last);};
 
 let last=null, tick=0,context=null;
-for(const kind of [...new Set([...Object.values(ART),'ghost'])]){
+for(const kind of [...new Set([...Object.values(ART),'ghost','photo_apparition'])]){
  const img=new Image();img.decoding='async';img.src=(root.YG_ART_DATA&&root.YG_ART_DATA[kind])||`assets/${kind}.png`;
  img.onload=()=>{if(last)draw(last);};IMAGES[kind]=img;
 }
