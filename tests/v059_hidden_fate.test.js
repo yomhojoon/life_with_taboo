@@ -1,0 +1,12 @@
+'use strict';
+const assert=require('node:assert/strict');
+const C=require('../expansion.js'),{Game}=require('../engine.js');
+const make=(doom=0)=>{const g=new Game({load:false,storage:null});g.s.doom=doom;g.fillAll('rest');return g;};
+const g=make(100);g.rand=()=>.5;assert(g.start());assert.equal(g.s.fate_death_hour,12);assert.equal(g.s.phase,'running');
+g.beginEncounter=()=>false;for(let i=0;i<12;i++)g.advanceHour();assert.equal(g.s.phase,'running');g.advanceHour();assert.equal(g.s.phase,'dead');assert.match(g.s.death_reason,/불길한 운명/);
+const low=make(0);low.start();assert.equal(low.s.fate_death_hour,null);
+const x=make(2);assert.equal(x.fateTier(),2);x.s.phase='running';x.s.hour=11;assert(x.beginEncounter('v059_fate_paper',true,'research',10));assert.equal(x.s.pending.fate_tier,2);x.chooseEncounter(0);assert.match(x.s.pending.body,/불길한 기운의 대가/);
+const loaded=make();assert(loaded.importJSON(g.exportJSON(),false));assert.equal(loaded.s.fate_death_hour,12);
+const old=JSON.parse(make(100).exportJSON());old.phase='running';delete old.fate_roll_day;delete old.fate_death_hour;const migrated=make();assert(migrated.importJSON(JSON.stringify(old),false));assert.equal(migrated.s.fate_death_hour,null);
+assert.equal(C.encounters.filter(e=>e.fate_event).length,5);assert.equal(C.encounters.length,175);
+console.log('PASS 0/100 doom, scheduled mid-day death, loaded save, escalating event cost and 175 encounters');

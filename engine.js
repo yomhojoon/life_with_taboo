@@ -7,7 +7,7 @@
   const STAT_LABELS = { money:'자금', health:'건강', mental:'정신력', spirit:'신기', luck:'행운', wealth:'재물운', bond:'인연운', omen:'영감운', clues:'강령 단서', max_mental:'정신력 최대치' };
   const GRADE_PRICES = [15000, 36000, 89000, 145000]; // fallback only; each skill uses its own stable price
   const skillPrice = x => Number.isFinite(x?.price) ? x.price : GRADE_PRICES[x.grade];
-  const DOOM_FACTOR = .01; // 1 hidden fate = 1% death chance at the end of each day
+  const DOOM_FACTOR = .01; // Each hidden fate point gives 1% chance, rolled ONCE when a day starts.
   const byId = (items, id) => items.find(x => x.id === id);
   const bounded = (n, lo, hi) => Math.max(lo, Math.min(hi, n));
   const moneyText = n => Math.round(Number(n)||0).toLocaleString('ko-KR');
@@ -30,7 +30,7 @@
         money:200000, health:100, mental:100, mental_max:100, spirit:0, doom:0,
         luck:0, wealth:0, bond:0, omen:0, clues:0, meal_index:0, food_last:null, food_streak:0, food_eaten_today:0, food_last_day:0, food_today_index:null, meal_history:[],
         schedule: Array(24).fill(null), owned_skills:[], ghosts:[], relics:[], quest_items:[], delayed:[], unpaid_days:0,
-        wish_spent:[], remove_attempts_today:0, removed_skills_success:0, logs:['01일 00시 · 새벽. 오늘을 위한 24시간의 빈 일정 큐를 열었다.'],
+        wish_spent:[], remove_attempts_today:0, removed_skills_success:0, fate_roll_day:0, fate_death_hour:null, logs:['01일 00시 · 새벽. 오늘을 위한 24시간의 빈 일정 큐를 열었다.'],
         pending:null, management_backup:null, sleep_today:0, day_start:{money:200000, health:100, mental:100, spirit:0},
         last_encounter:'', milestones:[], event_history:[], event_count_day:0, next_events:[],
         research_found_today:0, research_attempts_today:0, release_wards:0, release_rewards:0, ghostless_check_day:0, spirit_benefits_day:0,
@@ -151,14 +151,62 @@
       return bounded(grades[skill.grade]+bonus,.10,.97);
     }
     fateChance(){return bounded((this.s.doom||0)*DOOM_FACTOR,0,1);}
+    // Previously observed natural runs averaged only 0.07–0.34 fate points.
+    // Consequently a single point is meaningful, two are unusually high, and four severe.
+    fateTier(){const d=Number(this.s.doom)||0;return d>=4?3:d>=2?2:d>=1?1:0;}
+    fateAtmosphere(tier=this.fateTier()){
+      return ['', '괜히 뒤를 돌아보았다. 분명 아무도 없었다.',
+        '어디선가 익숙한 목소리가 이름을 불렀다. 돌아보자 소리는 멎었다.',
+        '눈앞의 사람은 말하는 도중 잠시 멈췄다. 마치 이 자리에 당신이 있어서는 안 되는 사람인 것처럼.'][tier]||'';
+    }
+    // Additional price paid when ominous encounters are resolved. Never show the numeric fate stat.
+    fateEncounterCost(event,tier){
+      if(!event||event.system_event||tier<=0||!['bad','strange','ghost'].includes(event.tone||'strange'))return {};
+      if(tier===1)return {mental:-1};
+      if(tier===2)return {mental:-2,health:-1,money:-1000};
+      return {mental:-4,health:-2,money:-2500,spirit:1};
+    }
+    fateDeathReason(action,h){
+      const when=`${String(h).padStart(2,'0')}:00`;
+      const causes={
+        sleep:'잠결에 누군가 이불을 끌어당겼다. 다시 숨을 들이마시려 했지만 몸은 더 이상 움직이지 않았다.',
+        rest:'익숙한 거실에 한 사람이 더 앉아 있었다. 그를 돌아보는 순간 심장이 멎었다.',
+        work:'근무표에 이름 모를 사람이 한 명 더 적혀 있었다. 매장 뒤편 계단에서 발을 헛디딘 뒤 다시 일어나지 못했다.',
+        meal:'식탁에는 주문하지 않은 그릇이 하나 더 놓여 있었다. 음식을 삼킨 순간 숨이 막혔고 누구도 대답하지 않았다.',
+        research:'모니터에 방금 촬영한 자신의 사진이 떠올랐다. 화면 속 사람은 먼저 쓰러졌고, 잠시 뒤 현실에서도 같은 일이 벌어졌다.',
+        ritual:'의식 도중 촛불이 한꺼번에 꺼졌다. 밖에서 자신의 이름을 듣는 순간 호흡이 멎었다.',
+        walk:'길 건너편에서 자신과 똑같이 생긴 사람이 손짓했다. 발길을 옮긴 순간 보이지 않던 차가 덮쳤다.',
+        purify:'소금을 뿌린 문턱 안쪽에서 젖은 발자국이 나타났다. 돌아서는 순간 의식을 잃고 다시 깨어나지 못했다.'
+      };
+      return `불길한 운명 · ${when}. ${causes[action]||'기척을 느낀 순간 쓰러졌고 다시 깨어나지 못했다.'}`;
+    }
+    triggerFateDeath(h,action){
+      const s=this.s;
+      s.death_reason=this.fateDeathReason(action,h);
+      s.phase='dead';s.pending=null;s.management_backup=null;
+      s.scene={title:'불길한 운명 · 예고된 마지막',body:s.death_reason,action:action||'home',tone:'doom',hour:h,day:s.day};
+      this.log('사망 · '+s.death_reason);
+      this.save();return true;
+    }
     ritualChance() { const s=this.s;return bounded(.21+s.spirit*.0055+s.clues*.05+s.omen*.018+(this.bonuses().ritual_bonus||0)/100,.05,.91); }
     releaseRisk() { return bounded(.07+this.s.spirit*.007-(this.s.release_wards>0?.13:0),.02,.82); }
-    start() { if(!this.canEditSchedule()||this.filledSlots()!==24)return false;this.s.phase='running';this.log('일정 실행. 오늘의 운세가 움직이기 시작했다.');this.save();return true; }
+    start() {
+      if(!this.canEditSchedule()||this.filledSlots()!==24)return false;
+      const s=this.s;
+      // Decide fate exactly once at the beginning of this day; reveal it only when its hour arrives.
+      if(s.fate_roll_day!==s.day){
+        s.fate_roll_day=s.day;
+        s.fate_death_hour=this.rand()<this.fateChance()?this.randInt(0,23):null;
+      }
+      s.phase='running';this.log('일정 실행. 오늘의 운세가 움직이기 시작했다.');this.save();return true;
+    }
     advanceHour() {
       const s=this.s;
       if(s.phase!=='running'||s.pending||s.management_backup)return false;
       if(s.hour>=24){this.finishDay();return true;}
-      const h=s.hour, action=s.schedule[h];s.hour++;
+      const h=s.hour, action=s.schedule[h];
+      if(s.fate_roll_day===s.day&&s.fate_death_hour===h)return this.triggerFateDeath(h,action);
+      s.hour++;
       const name=(byId(C.actions,action)||{}).name||'빈 시간';
       const hourText=this.hourFlavor(action,h);
       s.scene={title:`${String(h).padStart(2,'0')}:00 · ${name}`,body:hourText,action,hour:h,day:s.day};
@@ -178,7 +226,7 @@
         if(!s.pending&&s.event_count_day<7){
           const catActive=s.owned_skills.includes('meow');
           const baseChance=action==='sleep'?(catActive?.22:.025):action==='ritual'?.31:action==='research'?.28:action==='purify'?.24:action==='walk'?.32:.21;
-          if(this.rand()<baseChance)this.beginEncounter(null,false,action,h);
+          if(this.rand()<Math.min(.60,baseChance+[0,.025,.065,.10][this.fateTier()]))this.beginEncounter(null,false,action,h);
         }
       }
       if(s.hour>=24&&!s.pending&&s.phase==='running')this.finishDay();
@@ -197,7 +245,9 @@
         purify:['소금과 향을 정돈한다. 쓴 냄새가 천천히 퍼진다.','물에 손을 씻고 기도문을 다시 읽는다.','방 안에 남은 기운을 하나씩 떨쳐 내려고 한다.']
       };
       const lines=choices[action]||['잠시 시간이 흘러간다.'];
-      return `${period}. ${lines[(h+this.s.day)%lines.length]}`;
+      const tier=this.fateTier();
+      const lingering=tier>0&&(h+this.s.day)%(tier===1?5:tier===2?3:2)===0?` ${this.fateAtmosphere(tier)}`:'';
+      return `${period}. ${lines[(h+this.s.day)%lines.length]}${lingering}`;
     }
     performAction(action) {
       const s=this.s,b=this.bonuses();
@@ -301,6 +351,7 @@
         if(e.requires_no_ghost&&this.s.ghosts.length>0)return false;
         if(e.min_day&&this.s.day<e.min_day)return false;
         if(e.min_spirit&&this.s.spirit<e.min_spirit)return false;
+        if(e.min_doom&&this.s.doom<e.min_doom)return false;
         if(e.id===this.s.last_encounter||e.id===this.s.event_history[1])return false;
         if(e.id.includes('_return')||['umbrella_cafe','coworker_help','coworker_dinner','book_pickup','book_last','cat_again','wallet_thanks'].includes(e.id))return false;
         if(e.actions&&(!action||!e.actions.includes(action)))return false;
@@ -314,25 +365,29 @@
       const pool=C.encounters.filter(allowed);
       const catPool=pool.filter(e=>e.requires_skill==='meow');
       const highSpiritPool=pool.filter(e=>e.spirit_event);
-      const item=id?byId(C.encounters,id):(catPool.length&&this.s.owned_skills.includes('meow')&&this.rand()<.42?this.weightedEncounter(catPool):highSpiritPool.length&&this.s.spirit_benefits_day<2&&this.rand()<.30?this.weightedEncounter(highSpiritPool):this.weightedEncounter(pool));
+      const fatePool=pool.filter(e=>e.fate_event);
+      const fateTier=this.fateTier();
+      const item=id?byId(C.encounters,id):(catPool.length&&this.s.owned_skills.includes('meow')&&this.rand()<.42?this.weightedEncounter(catPool):fatePool.length&&this.rand() < [0,.17,.28,.42][fateTier]?this.weightedEncounter(fatePool):highSpiritPool.length&&this.s.spirit_benefits_day<2&&this.rand()<.30?this.weightedEncounter(highSpiritPool):this.weightedEncounter(pool));
       if(!item)return false;
       if(!forced&&item.requires_skill&&!this.s.owned_skills.includes(item.requires_skill))return false;
       if(item.spirit_event)this.s.spirit_benefits_day++;
       this.s.last_encounter=item.id;
       this.s.event_history.unshift(item.id);this.s.event_history.length=Math.min(4,this.s.event_history.length);
       this.s.event_count_day++;
-      this.s.pending={kind:'encounter',id:item.id};
-      this.s.scene={title:item.title,body:item.body,action:item.scene||action||'rest',hour:h,day:this.s.day,tone:item.tone||'strange'};
+      this.s.pending={kind:'encounter',id:item.id,fate_tier:fateTier};
+      const omen=fateTier>0&&(item.fate_event||['bad','strange','ghost'].includes(item.tone||'strange'))?this.fateAtmosphere(fateTier):'';
+      this.s.scene={title:item.title,body:item.body+(omen?'\n\n'+omen:''),action:item.scene||action||'rest',hour:h,day:this.s.day,tone:item.tone||'strange'};
       this.log(`일상 사건 · ${item.title}`);this.save();return true;
     }
     weightedEncounter(pool){
       if(!pool.length)return null;
       if(!pool.length)return null;
-      const luck=this.s.luck;
+      const luck=this.s.luck,doomTier=this.fateTier();
       const weights=pool.map(e=>{
         const tone=e.tone||'strange';
         const factor=tone==='good'?bounded(1+luck*.11,.2,3.0):tone==='bad'?bounded(1-luck*.11,.2,3.0):1;
-        return (e.weight|| (tone==='strange'?.65:1))*factor;
+        const fateBias=tone==='bad'||tone==='ghost'?[1,1.35,1.8,2.5][doomTier]:tone==='strange'?[1,1.15,1.45,1.85][doomTier]:tone==='good'?[1,.9,.75,.55][doomTier]:1;
+        return (e.weight|| (tone==='strange'?.65:1))*factor*fateBias;
       });
       let r=this.rand()*weights.reduce((a,b)=>a+b,0);
       for(let i=0;i<pool.length;i++){r-=weights[i];if(r<0)return pool[i];}
@@ -340,7 +395,7 @@
     }
     chooseEncounter(index) {
       const s=this.s;if(s.pending?.kind!=='encounter')return false;
-      const evt=byId(C.encounters,s.pending.id),op=evt?.options[index];if(!op)return false;
+      const evt=byId(C.encounters,s.pending.id),op=evt?.options[index],fateTier=s.pending.fate_tier??this.fateTier();if(!op)return false;
       let text=op.text||'',fx=op.fx||{};
       if((op.minimum_money&&s.money<op.minimum_money)||(op.minimum_spirit&&s.spirit<op.minimum_spirit))return false;
       if(op.exorcise){
@@ -375,11 +430,20 @@
         s.next_events.push({id:op.follow,day:Math.floor(due/24)+1,hour:due%24});
         text+=' 이어질 이야기가 남았다.';
       }
+      // Keep authored option results intact; fate adds its own separate, documented consequence.
       this.apply(fx);
       if(s.phase!=='dead'){
-        s.scene.body=text;
-        this.log(text+' · '+this.effectsText(fx));
-        s.pending={kind:'notice',title:'선택의 결과',body:text+'\n\n'+this.effectsText(fx)};
+        const drain=this.fateEncounterCost(evt,fateTier);
+        if(Object.keys(drain).length){
+          this.apply(drain);
+          text+='\n\n'+this.fateAtmosphere(fateTier)+'\n불길한 기운의 대가 · '+this.effectsText(drain);
+          this.log('불길한 운명의 여파 · '+this.effectsText(drain));
+        }
+        if(s.phase!=='dead'){
+          s.scene.body=text;
+          this.log(text+' · '+this.effectsText(fx));
+          s.pending={kind:'notice',title:'선택의 결과',body:text+'\n\n'+this.effectsText(fx)};
+        }
       }
       this.save();return true;
     }
@@ -521,11 +585,7 @@
       if(fortuneEligible&&k>0&&r<bounded(.11+k*.008,.04,.54)){const v=4000+this.randInt(0,14000);this.apply({money:v});this.log(`재물운 발동 · 우연한 횡재 +${moneyText(v)}원.`);}
       else if(fortuneEligible&&k<0&&r<bounded(-k*.055,0,.65)){this.apply({money:-12000,mental:-3});this.log('불운 · 생활 물품 파손 −12,000원, 정신력 −3.');}
       if(s.phase==='dead')return true;
-      if(this.rand()<this.fateChance()){
-        s.death_reason='불길한 운명이 찾아왔다. 그날 밤 이후, 생존 기록은 더 이어지지 않는다.';
-        s.phase='dead';s.pending=null;s.scene={title:'불길한 운명',body:s.death_reason,action:'ghost',tone:'ghost',hour:23,day:s.day};
-        this.log('사망 · 불길한 운명이 마침내 모습을 드러냈다.');this.save();return true;
-      }
+      // The hidden-fate roll is now committed in start() and paid during that day.
       s.phase='night';s.scene={title:'하루의 끝',body:'오늘의 일정을 모두 마쳤다. 거리의 불빛이 하나둘 줄어든다.',action:'home',hour:23,day:s.day};if([3,7,14].includes(s.day)){this.log(`생존 이정표 · ${s.day}일.`);s.milestones.push(s.day);}
       const d=s.day_start;
       const delta=(key,unit='')=>`${s[key]-d[key]>=0?'+':'−'}${moneyText(Math.abs(s[key]-d[key]))}${unit}`;
@@ -536,7 +596,7 @@
     nextDay() {
       const s=this.s;if(s.phase!=='night')return false;
       s.food_eaten_today=0; s.food_today_index=null; s.remove_attempts_today=0;
-      s.day++;s.hour=0;s.sleep_today=0;s.phase='planning';s.pending=null;s.research_found_today=0;s.research_attempts_today=0;s.event_count_day=0;s.spirit_benefits_day=0;
+      s.day++;s.hour=0;s.sleep_today=0;s.fate_roll_day=0;s.fate_death_hour=null;s.phase='planning';s.pending=null;s.research_found_today=0;s.research_attempts_today=0;s.event_count_day=0;s.spirit_benefits_day=0;
       s.scene={title:'새로운 아침',body:'24시간이 다시 시작된다. 어제의 선택은 오늘의 생활에 조금씩 남아 있다.',action:'home',hour:6,day:s.day};
       const later=[];
       for(const queued of s.delayed){if(queued.day<=s.day){this.apply(queued.effects);this.log(`지연 효과 · ${queued.name}: ${this.effectsText(queued.effects)}`);}else later.push(queued);}
@@ -577,6 +637,12 @@
       }
       migrated.meal_catalog_version=2;
       migrated.doom=Math.max(0,Number(migrated.doom)||0);
+      // Old in-progress games already passed their start; do not reroll an unseen death on load.
+      if(!Number.isInteger(x.fate_roll_day))migrated.fate_roll_day=x.phase==='running'?x.day:0;
+      if(x.fate_death_hour===null||x.fate_death_hour===undefined)migrated.fate_death_hour=null;
+      else if(!Number.isInteger(x.fate_death_hour)||x.fate_death_hour<0||x.fate_death_hour>23||
+        x.fate_roll_day!==x.day||x.fate_death_hour<x.hour)migrated.fate_death_hour=null;
+      if(!Number.isInteger(migrated.fate_roll_day)||migrated.fate_roll_day<0||migrated.fate_roll_day>migrated.day)migrated.fate_roll_day=0;
       migrated.remove_attempts_today=Math.max(0,Math.min(3,Number(migrated.remove_attempts_today)||0));
       if(!migrated.management_backup||typeof migrated.management_backup!=='object')migrated.management_backup=null;
       migrated.removed_skills_success=Math.max(0,Number(migrated.removed_skills_success)||0);

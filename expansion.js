@@ -5436,6 +5436,33 @@ const v057Encounters=[
  ]}
 ];
 C.encounters.push(...v057Encounters);
+// These are distinctive, grounded incidents rather than overt fantasy illustrations.
+// Only the existing event system handles their options; minimum hidden-fate values remain invisible to players.
+const v059FateEncounters=[
+ {id:'v059_fate_visitor',title:'두 번째 문 두드림',body:'외출한 적 없는 시간에 현관 센서등이 켜진다. 복도 카메라에는 아무도 찍히지 않았다.',scene:'home',tone:'bad',fate_event:true,min_doom:1,weight:2.0,actions:['rest','research','sleep'],options:[
+  {label:'복도를 확인한다',text:'문틈에 차가운 습기가 맺혀 있다. 복도에는 아무도 없었다.',fx:{mental:-3,health:-1}},
+  {label:'문을 잠그고 비용을 치러 방범 장치를 점검한다',text:'잠금 장치에는 이상이 없었지만 불안은 가시지 않는다.',fx:{money:-6000,mental:-1}}
+ ]},
+ {id:'v059_fate_paper',title:'번호가 없는 고지서',body:'납부처가 지워진 고지서가 우편함에 들어 있다. 거래 내역에는 이미 같은 금액이 빠져나갔다고 적혀 있다.',scene:'desk',tone:'bad',fate_event:true,min_doom:1,weight:2.1,actions:['work','research','rest'],options:[
+  {label:'은행에 내역을 확인한다',text:'계좌는 정상이라지만 잃어버린 시간만큼 피로가 쌓인다.',fx:{mental:-4,money:-3000}},
+  {label:'바로 납부한다',text:'기록은 사라졌다. 지갑만 가벼워졌다.',fx:{money:-11000}}
+ ]},
+ {id:'v059_fate_guest',title:'식탁의 낯선 자리',body:'배달 앱의 사진에 의자가 하나 더 보인다. 문을 열자 실제로도 식탁 옆에 낯선 의자가 놓여 있다.',scene:'meal',tone:'strange',fate_event:true,min_doom:2,weight:2.4,actions:['meal','rest','research'],options:[
+  {label:'의자를 치우고 손을 씻는다',text:'의자는 생각보다 무거웠다. 숨이 가쁘다.',fx:{mental:-5,health:-3}},
+  {label:'식사 대신 밖으로 나간다',text:'빈속으로 돌아오니 의자는 처음부터 없었던 것처럼 보인다.',fx:{health:-5,mental:-2}}
+ ]},
+ {id:'v059_fate_absence',title:'출근하지 않은 자신의 기록',body:'직원 명부에 당신의 이름 옆에는 이미 사망 처리라는 도장이 찍혀 있다. 다른 사람에게 물으면 아무도 그 문서를 기억하지 못한다.',scene:'store',tone:'bad',fate_event:true,min_doom:2,weight:2.3,actions:['work','walk','research'],options:[
+  {label:'관련 서류를 전부 정정한다',text:'점심시간까지 서류를 뒤졌지만 마지막 장이 없어졌다.',fx:{money:-17000,mental:-4}},
+  {label:'명부를 찢어 버린다',text:'서랍을 닫자 손끝이 차갑게 식었다.',fx:{health:-7,spirit:2,doom:1}}
+ ]},
+ {id:'v059_fate_final_notice',title:'아직 오지 않은 장례식',body:'모르는 번호로 부고 문자가 도착했다. 빈소 이름과 날짜는 내일, 상주 이름은 당신이다.',scene:'monitor',tone:'bad',fate_event:true,min_doom:4,weight:3.2,actions:['work','walk','research','ritual','purify','rest'],options:[
+  {label:'문자의 발신처를 찾아 확인한다',text:'전화는 연결되지 않았고 한참 뒤에야 자신의 심장 박동이 정상으로 돌아왔다.',fx:{mental:-10,health:-5}},
+  {label:'전화를 끄고 잠긴 문 뒤에서 버틴다',text:'손안에 남은 진동을 지울 수 없었다.',fx:{mental:-7,money:-14000}},
+  {label:'신기를 소모해 연락을 끊는다 (신기 30 이상)',minimum_spirit:30,text:'휴대전화가 한순간 꺼지고 화면에서 이름이 지워졌다.',fx:{spirit:-20,mental:-3}}
+ ]}
+];
+C.encounters.push(...v059FateEncounters);
+
 for(const item of [...C.skills,...C.ghosts,...C.relics])item.desc=describe(item);
 for(const item of [...C.skills,...C.ghosts,...C.relics])item.desc=describe(item);
 

@@ -9,7 +9,7 @@ const game=()=>new Game({load:false,storage:null});
 const event=id=>C.encounters.find(x=>x.id===id);
 
 test('catalog counts, unique IDs and no gallery',()=>{
- assert.equal(C.skills.length,77);assert.equal(C.ghosts.length,36);assert.equal(C.relics.length,8);assert.equal(C.encounters.length,170);
+ assert.equal(C.skills.length,77);assert.equal(C.ghosts.length,36);assert.equal(C.relics.length,8);assert.equal(C.encounters.length,175);
  for(const list of [C.skills,C.ghosts,C.relics,C.encounters])assert.equal(new Set(list.map(x=>x.id)).size,list.length);
  assert(!fs.readFileSync(path.join(__dirname,'../index.html'),'utf8').includes('gallery.html'));
 });
