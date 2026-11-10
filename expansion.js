@@ -5361,6 +5361,82 @@ for(const item of [...C.skills,...C.ghosts,...C.relics]){
  const change=compactChanges[item.id];if(!change)continue;
  for(const [key,value] of Object.entries(change)){if(value===null)delete item[key];else item[key]=value;}
 }
+// v0.5.7 — purification no longer erases spirit risk with an oversized stacked buff.
+const purificationAdjusted={
+  blue_moon:2,v5_sk_16:1,v5_sk_17:1,v5_sk_34:2,v5_sk_49:2,
+  gardener:3,v5_gh_07:4,v5_gh_14:4,v5_gh_24:5,r02:2,r03:1
+};
+for(const item of [...C.skills,...C.ghosts,...C.relics]){
+ if(item.bonus?.purify_extra!==undefined){
+   const next=purificationAdjusted[item.id];
+   if(next!==undefined)item.bonus.purify_extra=next;
+ }
+}
+// Keep four meaningful traits instead of stacking small modifiers on top of each other.
+function prune(itemId,removeKey,nestedKey){
+ const item=[...C.skills,...C.ghosts,...C.relics].find(x=>x.id===itemId);
+ if(!item)return;
+ if(nestedKey){if(item[removeKey])delete item[removeKey][nestedKey];}
+ else delete item[removeKey];
+}
+prune('v5_gh_06','daily','health');
+C.ghosts.find(x=>x.id==='v5_gh_06').special.conditional_daily[0].fx={clues:2};
+C.ghosts.find(x=>x.id==='v5_gh_06').special.conditional_daily[0].text='불길한 운명이 짙으면 매일 강령 단서 +2';
+prune('v5_gh_26','daily','mental');
+C.ghosts.find(x=>x.id==='v5_gh_26').special.conditional_daily[0].fx={spirit:-4};
+C.ghosts.find(x=>x.id==='v5_gh_26').special.conditional_daily[0].text='불길한 운명이 짙으면 매일 신기 -4';
+prune('v5_gh_27','daily','health');
+C.ghosts.find(x=>x.id==='v5_gh_27').special.on_meal={mental:3};
+prune('v5_sk_45','daily','health');
+C.skills.find(x=>x.id==='v5_sk_51').special.conditional_daily[0].fx={doom:1};
+C.skills.find(x=>x.id==='v5_sk_51').special.conditional_daily[0].text='정신력 35 이하이면 불길한 운명 증가';
+// High spirit becomes an alternative currency in existing eerie encounters.
+const spiritDecisions={
+  phone:{label:'불길한 신호를 거꾸로 읽는다 (신기 30 이상)',minimum_spirit:30,text:'아직 걸려 오지 않은 전화의 발신 번호를 읽었다. 단서와 기운이 남았다.',fx:{clues:2,mental:4,spirit:-10}},
+  door:{label:'신기를 흘려 보내 문을 잠근다 (신기 35 이상)',minimum_spirit:35,text:'문손잡이가 얼어붙고 밖의 발자국이 멀어졌다.',fx:{health:6,mental:7,spirit:-12}},
+  review:{label:'문장 사이의 소리를 듣는다 (신기 40 이상)',minimum_spirit:40,text:'낯선 글자들을 읽는 대신 들었다. 강령 단서가 또렷해진다.',fx:{clues:3,spirit:-10}},
+  archive:{label:'기억의 빈 부분을 채운다 (신기 45 이상)',minimum_spirit:45,text:'삭제된 게시판이 잠시 복구되어 오래된 의식 기록을 받아 적었다.',fx:{clues:3,mental:5,spirit:-12}}
+};
+for(const [id,option] of Object.entries(spiritDecisions)){
+ const event=C.encounters.find(x=>x.id===id);
+ if(event)event.options.push(option);
+}
+const v057Encounters=[
+ {id:'v057_spirit_ledger',title:'신기로 적은 장부',body:'은행의 폐기된 전산 장부에 당신이 쓰지 않은 거래가 남아 있다. 화면의 숫자는 눈을 감아야 또렷해진다.',scene:'monitor',tone:'strange',weight:1.2,actions:['research','rest'],min_spirit:30,spirit_event:true,options:[
+  {label:'장부에서 지워진 돈을 청구한다 (신기 30 이상)',minimum_spirit:30,text:'잊힌 계좌의 잔액이 잠시 현실이 되었다.',fx:{money:24000,spirit:-11,doom:1}},
+  {label:'기록을 강령 단서로 남긴다 (신기 30 이상)',minimum_spirit:30,text:'돈 대신 의식의 거래 내역을 베껴 적었다.',fx:{clues:2,mental:4,spirit:-8}},
+  {label:'계좌를 닫는다',text:'장부를 끄자 방의 온도가 정상으로 돌아왔다.',fx:{mental:-2}}
+ ]},
+ {id:'v057_spirit_bell',title:'벽 속의 종소리',body:'빈 방에서 소리가 울렸다. 평범한 귀에는 들리지 않았을 신호를 이제 분명히 알아들을 수 있다.',scene:'ritual',tone:'strange',weight:1.2,actions:['ritual','purify','rest'],min_spirit:45,spirit_event:true,options:[
+  {label:'종에 응답해 몸을 회복한다 (신기 45 이상)',minimum_spirit:45,text:'마른 손끝에 체온이 돌아오고 종소리가 사라졌다.',fx:{health:16,mental:8,spirit:-17}},
+  {label:'종소리를 기록한다 (신기 45 이상)',minimum_spirit:45,text:'소리의 간격은 강령 주문과 같았다.',fx:{clues:3,spirit:-9,mental:-3}},
+  {label:'귀를 막는다',text:'종소리를 무시했지만 늦은 밤까지 메아리가 남았다.',fx:{mental:-4}}
+ ]},
+ {id:'v057_spirit_toll',title:'검은 다리의 통행료',body:'밤의 횡단보도에 표지판이 나타났다. 보이지 않던 길은 신기가 차오른 사람에게만 열렸다.',scene:'street',tone:'strange',weight:1.15,actions:['walk','work','research'],min_spirit:60,spirit_event:true,options:[
+  {label:'보이지 않는 지름길을 걷는다 (신기 60 이상)',minimum_spirit:60,text:'한참 걸린 줄 알았는데 계좌에 정산되지 않은 수당이 들어와 있었다.',fx:{money:35000,spirit:-15,health:-5}},
+  {label:'길을 따라 의식을 외운다 (신기 60 이상)',minimum_spirit:60,text:'강령진에서 지우지 못한 틈을 메우는 소리를 익혔다.',fx:{clues:4,spirit:-16,mental:-5}},
+  {label:'발걸음을 돌린다',text:'돌아서자 표지판도 거리도 평소와 같았다.',fx:{mental:-3}}
+ ]},
+ // Ordinary safety is no longer a complete defense. These only trigger in the
+ // daily ghostless threat system (not in the ordinary random event pool).
+ {id:'v057_unanswered_door',title:'대답 없는 현관',body:'일주일째 문밖의 존재가 당신을 부른다. 방 안에는 대신 대답해 줄 유령이 없다.',scene:'room',tone:'ghost',system_event:true,requires_no_ghost:true,min_day:7,options:[
+  {label:'퇴마사의 부적을 산다 (45,000원)',minimum_money:45000,text:'방문 앞에 거친 글씨로 쓴 부적을 붙였다. 문은 아침까지 잠잠해졌다.',fx:{money:-45000,mental:-5}},
+  {label:'신기로 문턱을 봉한다 (신기 35 이상)',minimum_spirit:35,text:'손끝의 기운을 문턱에 흘려보냈다. 안쪽 발자국이 사라졌다.',fx:{spirit:-18,mental:-5}},
+  {label:'문밖의 이름을 직접 부른다',chance:.58,good:'잘못된 이름을 부르자 목소리가 멀어졌다.',good_fx:{health:-9,doom:1},bad:'문이 열린 뒤 당신의 이름만 남았다.',bad_fx:{},bad_fatal:true,fatal_reason:'문을 지킬 유령이 없어, 바깥의 존재에게 자리를 빼앗겼다.'}
+ ]},
+ {id:'v057_unclaimed_name',title:'호적에 없는 동거인',body:'관리비 고지서에 거주자가 한 명 늘어 있다. 당신이 아무도 받아들이지 않은 것이 오히려 빈자리를 만들었다.',scene:'home',tone:'ghost',system_event:true,requires_no_ghost:true,min_day:13,options:[
+  {label:'거주자 기록을 지운다 (65,000원)',minimum_money:65000,text:'관리 사무소의 기록을 모두 폐기했다. 밤새 책상 위의 먼지가 뒤집혔다.',fx:{money:-65000,mental:-7}},
+  {label:'신기로 빈자리를 메운다 (신기 45 이상)',minimum_spirit:45,text:'빈 의자 위에 불길한 빛이 잠깐 내려앉았다.',fx:{spirit:-24,health:-6}},
+  {label:'누가 사는지 직접 확인한다',chance:.46,good:'낯선 사람 대신 자기 그림자만 보았다.',good_fx:{mental:-10,doom:1},bad:'거울에는 당신의 그림자가 더 이상 비치지 않았다.',bad_fx:{},bad_fatal:true,fatal_reason:'유령 없는 집에 들어온 새 주인에게 생기를 빼앗겼다.'}
+ ]},
+ {id:'v057_empty_room',title:'계약이 끝난 방',body:'집주인이 한 번도 쓰이지 않은 임대차 계약서를 내민다. 빈방은 오래전부터 누군가의 것이었다.',scene:'ghost',tone:'ghost',system_event:true,requires_no_ghost:true,min_day:20,options:[
+  {label:'값비싼 봉인식을 의뢰한다 (85,000원)',minimum_money:85000,text:'방에 새로운 경계가 세워졌다. 봉인 비용이 통장에서 빠져나갔다.',fx:{money:-85000,mental:-8,health:-3}},
+  {label:'신기를 내어 계약을 연장한다 (신기 60 이상)',minimum_spirit:60,text:'대가를 치른 뒤 사라졌던 문패가 다시 걸렸다.',fx:{spirit:-30,mental:-8}},
+  {label:'계약서에 이름을 적는다',chance:.32,good:'어떻게든 자신의 이름을 지키고 돌아왔다.',good_fx:{health:-18,doom:2},bad:'계약서에는 더 이상 당신의 서명이 필요하지 않았다.',bad_fx:{},bad_fatal:true,fatal_reason:'빈자리를 지켜 줄 유령이 없어 계약의 마지막 대가가 되었다.'}
+ ]}
+];
+C.encounters.push(...v057Encounters);
+for(const item of [...C.skills,...C.ghosts,...C.relics])item.desc=describe(item);
 for(const item of [...C.skills,...C.ghosts,...C.relics])item.desc=describe(item);
 
  if(typeof module!=='undefined'&&module.exports)module.exports=C;

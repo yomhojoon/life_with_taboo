@@ -17,7 +17,7 @@ let tab='skills',autoMode=false,autoTimer=null,queueTarget=null,lastModalKey='',
 
 function toast(message){const e=$('toast');e.textContent=message;e.hidden=false;if(toastTimeout)clearTimeout(toastTimeout);toastTimeout=setTimeout(()=>e.hidden=true,2800);}
 function init(){
-  $('mealChoice').innerHTML=C.meals.map((m,i)=>`<option value="${i}">${esc(m.name)} · ${moneyText(m.price)}원 / 체력 +${m.health} 정신 +${m.mental}${m.spirit?' 신기 +'+m.spirit:''}</option>`).join('');
+  $('mealChoice').innerHTML=C.meals.map((m,i)=>`<option value="${i}">${esc(m.name)} · ${moneyText(m.price)}원 / 체력 +${Math.round(m.health*.85)} 정신 +${Math.round(m.mental*.85)}${m.spirit?' 신기 +'+m.spirit:''}</option>`).join('');
   $('queueFillAction').innerHTML=C.actions.map(a=>`<option value="${esc(a.id)}">${esc(a.name)}</option>`).join('');
   $('queueFillAction').value='sleep';
   $('debugStat').innerHTML=Object.entries(STAT_LABELS).map(([key,label])=>`<option value="${esc(key)}">${esc(label)}</option>`).join('');
@@ -159,7 +159,9 @@ function renderActiveEffects(s){
  if(title==='유령'&&entry.state==='possessed'){daily.mental=(daily.mental||0)-2;daily.spirit=(daily.spirit||0)+1;}
  }}
  const summary=effectStats(daily)||'기본 일일 효과 없음';
- let html=`<div class="effect-overview"><div class="effect-headline">현재 적용 효과</div><p>매일 정산 · ${esc(summary)}</p><small>일정 결과와 조건부 효과는 별도입니다. 알바 계산치는 22% 반영하며 상한이 있습니다.${s.owned_skills.includes('meow')?' 일부 효과는 알 수 없습니다.':''}</small></div>`;
+ let html=`<div class="effect-overview"><div class="effect-headline">현재 적용 효과</div><p>매일 정산 · ${esc(summary)}</p><small>일정 결과와 조건부 효과는 별도입니다. 정화 보너스는 합산 +6까지 적용됩니다. 알바 계산치는 22% 반영하며 상한이 있습니다.${s.owned_skills.includes('meow')?' 일부 효과는 알 수 없습니다.':''}</small></div>`;
+ const companions=s.ghosts.filter(g=>g.state==='active').length;
+ if(companions>0){const regen=s.spirit>=30?Math.min(12,4+Math.floor(s.spirit/15)+Math.min(companions*2,4)):0;html+=`<div class="effect-overview"><strong>유령과의 공명</strong><p>신기 30 이상이면 매일 정신력 회복${regen?' · 현재 +'+whole(regen):' · 현재 조건 미충족'}</p></div>`;}
  for(const [title,entries] of owned){
   html+=`<section class="effect-section"><h3>${title} <span>${entries.length}</span></h3>`;
   if(!entries.length)html+='<p class="effect-muted">적용 중인 항목 없음</p>';
@@ -222,7 +224,7 @@ function renderModal(){const s=game.s,p=s.pending,overlay=$('modalOverlay');over
    html=modalFrame('END OF LIFE · '+s.day+'일차','연명에 실패했다',s.death_reason,`<div class="modal-end">당신은 ${s.day}일차 ${s.hour}시까지 살아남았다.\n어떤 목소리들은 여전히 방 안에 남아 있다.</div>`,`<span class="modal-hint">다음 시도에서 일정을 바꾸거나 실험해 보세요.</span><button class="button danger" data-cmd="restart">새 삶 시작하기</button>`);
  }else if(kind==='encounter'){
    const item=C.encounters.find(x=>x.id===p.id);if(!item){target.innerHTML='';return;}
-   const cards=item.options.map((x,i)=>`<button class="choice-card" data-cmd="event-choice" data-value="${i}" ${x.minimum_money&&s.money<x.minimum_money?'disabled':''}><div class="choice-head"><strong>${esc(x.label)}</strong><span class="choice-title">${x.minimum_money&&s.money<x.minimum_money?'잔액 부족':'선택 '+(i+1)}</span></div></button>`);
+   const cards=item.options.map((x,i)=>{const noMoney=Boolean(x.minimum_money&&s.money<x.minimum_money),noSpirit=Boolean(x.minimum_spirit&&s.spirit<x.minimum_spirit);return `<button class="choice-card" data-cmd="event-choice" data-value="${i}" ${noMoney||noSpirit?'disabled':''}><div class="choice-head"><strong>${esc(x.label)}</strong><span class="choice-title">${noMoney?'잔액 부족':noSpirit?'신기 '+whole(x.minimum_spirit)+' 필요':'선택 '+(i+1)}</span></div></button>`;});
    html=modalFrame('CHOOSE / 이 순간의 선택','','',modalChoices(cards),'');
  }else if(kind==='skills'){
    const shop=p.source==='shop';const options=p.ids.map((id,i)=>{const x=C.skills.find(x=>x.id===id);if(!x)return '';const price=skillPrice(x),afford=!shop||s.money>=price;return `<button class="choice-card" data-cmd="skill-choice" data-value="${i}" ${afford?'':'disabled'}><div class="choice-head"><strong>${esc(x.name)}</strong><span class="grade-badge grade-${x.grade}">${x.grade}등급</span></div><div class="choice-description">${esc(x.desc)}</div><div class="choice-cost">${shop?moneyText(price)+'원'+(afford?'':' · 잔액 부족'):'무료로 습득'}</div></button>`;});

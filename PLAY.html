@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#050505">
   <meta name="description" content="연명 강령 — 24시간을 나누어 살아남는 강령 생존 시뮬레이터. 웹 테스트 버전.">
-  <title>연명 강령 | Life with Taboo v0.5.6</title>
+  <title>연명 강령 | Life with Taboo v0.5.7</title>
   <style>
 :root{color-scheme:dark;--bg:#101417;--panel:#171d20;--panel2:#1d2428;--panel3:#232d30;--border:#344043;--text:#ece6d8;--muted:#9ca8a5;--faint:#6c7776;--gold:#d5ae75;--gold2:#9d7b51;--red:#d98581;--mint:#92bea7;--aqua:#8cbdc3;--purple:#bb9bc6;--rad:15px}
 *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;min-width:320px;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Malgun Gothic","Apple SD Gothic Neo",sans-serif;font-size:14px;line-height:1.5}button,select,input{font:inherit}button{cursor:pointer}button:disabled{opacity:.38;cursor:not-allowed;filter:grayscale(.35)}[hidden]{display:none!important}
@@ -398,28 +398,28 @@ const CONTENT = {
       "id": "sleep",
       "name": "수면",
       "short": "수면",
-      "tip": "건강 +4, 정신력 +2 / 하루 4시간 이하 수면 시 큰 패널티",
+      "tip": "건강 +3, 정신력 +1 / 수면 부족과 지나친 수면 모두 위험",
       "color": "#536a92"
     },
     {
       "id": "rest",
       "name": "휴식",
       "short": "휴식",
-      "tip": "정신력 +7, 신기 -1",
+      "tip": "정신력 +6 / 휴식만으로는 신기를 낮출 수 없음",
       "color": "#538c82"
     },
     {
       "id": "work",
       "name": "아르바이트",
       "short": "알바",
-      "tip": "시간당 자금 +5,600원(보너스 별도). 건강 또는 정신력 소모",
+      "tip": "시간당 자금 약 +5,200원(보너스 별도). 건강 또는 정신력 소모",
       "color": "#9d7a59"
     },
     {
       "id": "meal",
       "name": "식사",
       "short": "식사",
-      "tip": "선택한 식사를 주문해 건강과 정신력을 회복",
+      "tip": "선택한 식사를 주문. 기본 회복량은 표시치의 85%(연속 식사 페널티 별도)",
       "color": "#a38454"
     },
     {
@@ -440,14 +440,14 @@ const CONTENT = {
       "id": "walk",
       "name": "산책",
       "short": "산책",
-      "tip": "정신력 +4, 신기 -2 / 인연운을 얻을 수도 있음",
+      "tip": "정신력 +3, 신기 -1 / 낮은 확률로 인연운 증가",
       "color": "#638c6c"
     },
     {
       "id": "purify",
       "name": "정화",
       "short": "정화",
-      "tip": "자금 -15,000원, 신기 -7 / 정신력·건강 소폭 소모",
+      "tip": "자금 -17,000원, 신기 -4(지속 보너스 최대 +6) / 정신력·건강 소모",
       "color": "#507e91"
     }
   ],
@@ -7447,6 +7447,82 @@ for(const item of [...C.skills,...C.ghosts,...C.relics]){
  const change=compactChanges[item.id];if(!change)continue;
  for(const [key,value] of Object.entries(change)){if(value===null)delete item[key];else item[key]=value;}
 }
+// v0.5.7 — purification no longer erases spirit risk with an oversized stacked buff.
+const purificationAdjusted={
+  blue_moon:2,v5_sk_16:1,v5_sk_17:1,v5_sk_34:2,v5_sk_49:2,
+  gardener:3,v5_gh_07:4,v5_gh_14:4,v5_gh_24:5,r02:2,r03:1
+};
+for(const item of [...C.skills,...C.ghosts,...C.relics]){
+ if(item.bonus?.purify_extra!==undefined){
+   const next=purificationAdjusted[item.id];
+   if(next!==undefined)item.bonus.purify_extra=next;
+ }
+}
+// Keep four meaningful traits instead of stacking small modifiers on top of each other.
+function prune(itemId,removeKey,nestedKey){
+ const item=[...C.skills,...C.ghosts,...C.relics].find(x=>x.id===itemId);
+ if(!item)return;
+ if(nestedKey){if(item[removeKey])delete item[removeKey][nestedKey];}
+ else delete item[removeKey];
+}
+prune('v5_gh_06','daily','health');
+C.ghosts.find(x=>x.id==='v5_gh_06').special.conditional_daily[0].fx={clues:2};
+C.ghosts.find(x=>x.id==='v5_gh_06').special.conditional_daily[0].text='불길한 운명이 짙으면 매일 강령 단서 +2';
+prune('v5_gh_26','daily','mental');
+C.ghosts.find(x=>x.id==='v5_gh_26').special.conditional_daily[0].fx={spirit:-4};
+C.ghosts.find(x=>x.id==='v5_gh_26').special.conditional_daily[0].text='불길한 운명이 짙으면 매일 신기 -4';
+prune('v5_gh_27','daily','health');
+C.ghosts.find(x=>x.id==='v5_gh_27').special.on_meal={mental:3};
+prune('v5_sk_45','daily','health');
+C.skills.find(x=>x.id==='v5_sk_51').special.conditional_daily[0].fx={doom:1};
+C.skills.find(x=>x.id==='v5_sk_51').special.conditional_daily[0].text='정신력 35 이하이면 불길한 운명 증가';
+// High spirit becomes an alternative currency in existing eerie encounters.
+const spiritDecisions={
+  phone:{label:'불길한 신호를 거꾸로 읽는다 (신기 30 이상)',minimum_spirit:30,text:'아직 걸려 오지 않은 전화의 발신 번호를 읽었다. 단서와 기운이 남았다.',fx:{clues:2,mental:4,spirit:-10}},
+  door:{label:'신기를 흘려 보내 문을 잠근다 (신기 35 이상)',minimum_spirit:35,text:'문손잡이가 얼어붙고 밖의 발자국이 멀어졌다.',fx:{health:6,mental:7,spirit:-12}},
+  review:{label:'문장 사이의 소리를 듣는다 (신기 40 이상)',minimum_spirit:40,text:'낯선 글자들을 읽는 대신 들었다. 강령 단서가 또렷해진다.',fx:{clues:3,spirit:-10}},
+  archive:{label:'기억의 빈 부분을 채운다 (신기 45 이상)',minimum_spirit:45,text:'삭제된 게시판이 잠시 복구되어 오래된 의식 기록을 받아 적었다.',fx:{clues:3,mental:5,spirit:-12}}
+};
+for(const [id,option] of Object.entries(spiritDecisions)){
+ const event=C.encounters.find(x=>x.id===id);
+ if(event)event.options.push(option);
+}
+const v057Encounters=[
+ {id:'v057_spirit_ledger',title:'신기로 적은 장부',body:'은행의 폐기된 전산 장부에 당신이 쓰지 않은 거래가 남아 있다. 화면의 숫자는 눈을 감아야 또렷해진다.',scene:'monitor',tone:'strange',weight:1.2,actions:['research','rest'],min_spirit:30,spirit_event:true,options:[
+  {label:'장부에서 지워진 돈을 청구한다 (신기 30 이상)',minimum_spirit:30,text:'잊힌 계좌의 잔액이 잠시 현실이 되었다.',fx:{money:24000,spirit:-11,doom:1}},
+  {label:'기록을 강령 단서로 남긴다 (신기 30 이상)',minimum_spirit:30,text:'돈 대신 의식의 거래 내역을 베껴 적었다.',fx:{clues:2,mental:4,spirit:-8}},
+  {label:'계좌를 닫는다',text:'장부를 끄자 방의 온도가 정상으로 돌아왔다.',fx:{mental:-2}}
+ ]},
+ {id:'v057_spirit_bell',title:'벽 속의 종소리',body:'빈 방에서 소리가 울렸다. 평범한 귀에는 들리지 않았을 신호를 이제 분명히 알아들을 수 있다.',scene:'ritual',tone:'strange',weight:1.2,actions:['ritual','purify','rest'],min_spirit:45,spirit_event:true,options:[
+  {label:'종에 응답해 몸을 회복한다 (신기 45 이상)',minimum_spirit:45,text:'마른 손끝에 체온이 돌아오고 종소리가 사라졌다.',fx:{health:16,mental:8,spirit:-17}},
+  {label:'종소리를 기록한다 (신기 45 이상)',minimum_spirit:45,text:'소리의 간격은 강령 주문과 같았다.',fx:{clues:3,spirit:-9,mental:-3}},
+  {label:'귀를 막는다',text:'종소리를 무시했지만 늦은 밤까지 메아리가 남았다.',fx:{mental:-4}}
+ ]},
+ {id:'v057_spirit_toll',title:'검은 다리의 통행료',body:'밤의 횡단보도에 표지판이 나타났다. 보이지 않던 길은 신기가 차오른 사람에게만 열렸다.',scene:'street',tone:'strange',weight:1.15,actions:['walk','work','research'],min_spirit:60,spirit_event:true,options:[
+  {label:'보이지 않는 지름길을 걷는다 (신기 60 이상)',minimum_spirit:60,text:'한참 걸린 줄 알았는데 계좌에 정산되지 않은 수당이 들어와 있었다.',fx:{money:35000,spirit:-15,health:-5}},
+  {label:'길을 따라 의식을 외운다 (신기 60 이상)',minimum_spirit:60,text:'강령진에서 지우지 못한 틈을 메우는 소리를 익혔다.',fx:{clues:4,spirit:-16,mental:-5}},
+  {label:'발걸음을 돌린다',text:'돌아서자 표지판도 거리도 평소와 같았다.',fx:{mental:-3}}
+ ]},
+ // Ordinary safety is no longer a complete defense. These only trigger in the
+ // daily ghostless threat system (not in the ordinary random event pool).
+ {id:'v057_unanswered_door',title:'대답 없는 현관',body:'일주일째 문밖의 존재가 당신을 부른다. 방 안에는 대신 대답해 줄 유령이 없다.',scene:'room',tone:'ghost',system_event:true,requires_no_ghost:true,min_day:7,options:[
+  {label:'퇴마사의 부적을 산다 (45,000원)',minimum_money:45000,text:'방문 앞에 거친 글씨로 쓴 부적을 붙였다. 문은 아침까지 잠잠해졌다.',fx:{money:-45000,mental:-5}},
+  {label:'신기로 문턱을 봉한다 (신기 35 이상)',minimum_spirit:35,text:'손끝의 기운을 문턱에 흘려보냈다. 안쪽 발자국이 사라졌다.',fx:{spirit:-18,mental:-5}},
+  {label:'문밖의 이름을 직접 부른다',chance:.58,good:'잘못된 이름을 부르자 목소리가 멀어졌다.',good_fx:{health:-9,doom:1},bad:'문이 열린 뒤 당신의 이름만 남았다.',bad_fx:{},bad_fatal:true,fatal_reason:'문을 지킬 유령이 없어, 바깥의 존재에게 자리를 빼앗겼다.'}
+ ]},
+ {id:'v057_unclaimed_name',title:'호적에 없는 동거인',body:'관리비 고지서에 거주자가 한 명 늘어 있다. 당신이 아무도 받아들이지 않은 것이 오히려 빈자리를 만들었다.',scene:'home',tone:'ghost',system_event:true,requires_no_ghost:true,min_day:13,options:[
+  {label:'거주자 기록을 지운다 (65,000원)',minimum_money:65000,text:'관리 사무소의 기록을 모두 폐기했다. 밤새 책상 위의 먼지가 뒤집혔다.',fx:{money:-65000,mental:-7}},
+  {label:'신기로 빈자리를 메운다 (신기 45 이상)',minimum_spirit:45,text:'빈 의자 위에 불길한 빛이 잠깐 내려앉았다.',fx:{spirit:-24,health:-6}},
+  {label:'누가 사는지 직접 확인한다',chance:.46,good:'낯선 사람 대신 자기 그림자만 보았다.',good_fx:{mental:-10,doom:1},bad:'거울에는 당신의 그림자가 더 이상 비치지 않았다.',bad_fx:{},bad_fatal:true,fatal_reason:'유령 없는 집에 들어온 새 주인에게 생기를 빼앗겼다.'}
+ ]},
+ {id:'v057_empty_room',title:'계약이 끝난 방',body:'집주인이 한 번도 쓰이지 않은 임대차 계약서를 내민다. 빈방은 오래전부터 누군가의 것이었다.',scene:'ghost',tone:'ghost',system_event:true,requires_no_ghost:true,min_day:20,options:[
+  {label:'값비싼 봉인식을 의뢰한다 (85,000원)',minimum_money:85000,text:'방에 새로운 경계가 세워졌다. 봉인 비용이 통장에서 빠져나갔다.',fx:{money:-85000,mental:-8,health:-3}},
+  {label:'신기를 내어 계약을 연장한다 (신기 60 이상)',minimum_spirit:60,text:'대가를 치른 뒤 사라졌던 문패가 다시 걸렸다.',fx:{spirit:-30,mental:-8}},
+  {label:'계약서에 이름을 적는다',chance:.32,good:'어떻게든 자신의 이름을 지키고 돌아왔다.',good_fx:{health:-18,doom:2},bad:'계약서에는 더 이상 당신의 서명이 필요하지 않았다.',bad_fx:{},bad_fatal:true,fatal_reason:'빈자리를 지켜 줄 유령이 없어 계약의 마지막 대가가 되었다.'}
+ ]}
+];
+C.encounters.push(...v057Encounters);
+for(const item of [...C.skills,...C.ghosts,...C.relics])item.desc=describe(item);
 for(const item of [...C.skills,...C.ghosts,...C.relics])item.desc=describe(item);
 
  if(typeof module!=='undefined'&&module.exports)module.exports=C;
@@ -7488,7 +7564,7 @@ for(const item of [...C.skills,...C.ghosts,...C.relics])item.desc=describe(item)
         wish_spent:[], remove_attempts_today:0, removed_skills_success:0, logs:['01일 00시 · 새벽. 오늘을 위한 24시간의 빈 일정 큐를 열었다.'],
         pending:null, management_backup:null, sleep_today:0, day_start:{money:200000, health:100, mental:100, spirit:0},
         last_encounter:'', milestones:[], event_history:[], event_count_day:0, next_events:[],
-        research_found_today:0, research_attempts_today:0, release_wards:0, release_rewards:0,
+        research_found_today:0, research_attempts_today:0, release_wards:0, release_rewards:0, ghostless_check_day:0, spirit_benefits_day:0,
         scene:{title:'불 꺼진 방',body:'아직 오늘의 첫 시간을 시작하지 않았다. 벽 너머로 평범한 하루의 소리가 들린다.',action:'rest',hour:0,day:1},
         scene_history:[]
       };
@@ -7499,7 +7575,7 @@ for(const item of [...C.skills,...C.ghosts,...C.relics])item.desc=describe(item)
       for (let i=0;i<24;i++) {
         let a;
         if (preset==='safe') a=i<8?'sleep':i===8||i===19?'meal':i<17?'work':i<19?'research':i===20?'purify':'rest';
-        else if (preset==='risky') a=i<6?'sleep':i===6||i===18?'meal':i<11?'work':i<16?'research':i<20?'ritual':i<22?'purify':'rest';
+        else if (preset==='risky') a=i<6?'sleep':i===6||i===18?'meal':i<12?'work':i<15?'research':i===16||i===17?'ritual':i===19?'purify':'rest';
         else a=i<7?'sleep':i===7||i===12?'meal':i<16?'work':i<19?'research':i===20?'ritual':i===22?'walk':'rest';
         list.push(a);
       }
@@ -7606,7 +7682,7 @@ for(const item of [...C.skills,...C.ghosts,...C.relics])item.desc=describe(item)
       return bounded(grades[skill.grade]+bonus,.10,.97);
     }
     fateChance(){return bounded((this.s.doom||0)*DOOM_FACTOR,0,1);}
-    ritualChance() { const s=this.s;return bounded(.24+s.spirit*.0055+s.clues*.05+s.omen*.018+(this.bonuses().ritual_bonus||0)/100,.05,.91); }
+    ritualChance() { const s=this.s;return bounded(.21+s.spirit*.0055+s.clues*.05+s.omen*.018+(this.bonuses().ritual_bonus||0)/100,.05,.91); }
     releaseRisk() { return bounded(.07+this.s.spirit*.007-(this.s.release_wards>0?.13:0),.02,.82); }
     start() { if(!this.canEditSchedule()||this.filledSlots()!==24)return false;this.s.phase='running';this.log('일정 실행. 오늘의 운세가 움직이기 시작했다.');this.save();return true; }
     advanceHour() {
@@ -7624,7 +7700,13 @@ for(const item of [...C.skills,...C.ghosts,...C.relics])item.desc=describe(item)
       if(!s.pending){
         const due=s.next_events.findIndex(q=>{const e=byId(C.encounters,q.id);return e&&(q.day<s.day||(q.day===s.day&&q.hour<=s.hour))&&(!e.actions||e.actions.includes(action));});
         if(due>=0){const e=s.next_events.splice(due,1)[0];this.beginEncounter(e.id,true,action,h);}
-        else if(s.event_count_day<7){
+        // A life with no spirits eventually attracts threats with a severe cost or a lethal failure.
+        if(!s.pending&&s.ghosts.length===0&&s.day>=7&&s.ghostless_check_day!==s.day&&h>=10&&action!=='sleep'){
+          s.ghostless_check_day=s.day;
+          const risk=bounded(.10+(s.day-7)*.009,.10,.30);
+          if(this.rand()<risk){const danger=s.day>=20?'v057_empty_room':s.day>=13?'v057_unclaimed_name':'v057_unanswered_door';this.beginEncounter(danger,true,action,h);}
+        }
+        if(!s.pending&&s.event_count_day<7){
           const catActive=s.owned_skills.includes('meow');
           const baseChance=action==='sleep'?(catActive?.22:.025):action==='ritual'?.31:action==='research'?.28:action==='purify'?.24:action==='walk'?.32:.21;
           if(this.rand()<baseChance)this.beginEncounter(null,false,action,h);
@@ -7651,10 +7733,10 @@ for(const item of [...C.skills,...C.ghosts,...C.relics])item.desc=describe(item)
     performAction(action) {
       const s=this.s,b=this.bonuses();
       switch(action){
-        case 'sleep':s.sleep_today++;this.apply({health:4+(b.sleep_extra||0),mental:s.sleep_today>=12?-4:2});break;
-        case 'rest':this.apply({mental:7+(b.rest_extra||0),spirit:-1});break;
+        case 'sleep':s.sleep_today++;this.apply({health:3+(b.sleep_extra||0),mental:s.sleep_today>=12?-4:1});break;
+        case 'rest':this.apply({mental:6+(b.rest_extra||0)});break;
         case 'work':{
-          const base=5600+Math.min(4400,Math.max(-2000,(b.job_extra||0)*.22)),pay=Math.max(1800,Math.round(base*(1+bounded(s.wealth*.005,-.20,.28))));
+          const base=5200+Math.min(4400,Math.max(-2000,(b.job_extra||0)*.22)),pay=Math.max(1800,Math.round(base*(1+bounded(s.wealth*.005,-.20,.28))));
           this.apply(this.rand()<.5?{money:pay,health:-4}:{money:pay,mental:-5});
           if(s.phase!=='dead')this.specialEffect('on_work');
           this.log(`아르바이트. 자금 +${moneyText(pay)}원.`);break;
@@ -7668,7 +7750,7 @@ for(const item of [...C.skills,...C.ghosts,...C.relics])item.desc=describe(item)
               s.food_last=s.meal_index;s.food_last_day=s.day;s.food_today_index=s.meal_index;
             }
             s.food_eaten_today=(s.food_eaten_today||0)+1;
-            const factor=s.food_streak<=1?1:Math.max(.3,Math.pow(.8,s.food_streak-1));
+            const factor=.85*(s.food_streak<=1?1:Math.max(.3,Math.pow(.8,s.food_streak-1)));
             const health=Math.round((food.health+(b.meal_health||0))*factor);
             const mental=Math.round((food.mental+(b.meal_mental||0))*factor);
             this.apply({money:-food.price,health,mental,spirit:food.spirit});
@@ -7681,17 +7763,17 @@ for(const item of [...C.skills,...C.ghosts,...C.relics])item.desc=describe(item)
         case 'research':{
           s.research_attempts_today++;
           this.apply({mental:-3,health:-1});if(s.phase==='dead')break;
-          const skillChance=s.research_found_today>=1?0:bounded(.19+(b.study_extra||0)*.003+s.omen*.005,.05,.35);
+          const skillChance=s.research_found_today>=1?0:bounded(.17+(b.study_extra||0)*.003+s.omen*.005+Math.min(.09,s.spirit*.0015),.04,.38);
           const r=this.rand();
           if(r<skillChance){
             const ids=this.drawSkills(this.randInt(1,4));
             s.research_found_today++;
             if(ids.length){s.pending={kind:'skills',source:'research',ids};s.scene.action='monitor';s.scene.body='검색 중 원문이 일부 복구되었다. 오늘 발견할 수 있는 유일한 문자 후보들이다. 하나만 기억할 수 있다.';this.log('인터넷 조사 · 문자 후보 발견 (오늘 1회 제한).');}
             else{this.apply({clues:1});s.scene.body='이미 본 문자뿐이다. 강령 단서 하나를 다시 정리했다.';}
-          }else if(r<skillChance+.22){
+          }else if(r<skillChance+.18){
             s.pending={kind:'lore'};s.scene.action='monitor';s.scene.body='해방 의식에 관한 글을 찾았다. 글쓴이는 위험을 감수하고 자신을 정화하는 방법까지 남겼다.';
             this.log('인터넷 조사 · 해방 관련 자료 발견.');
-          }else if(r<skillChance+.17+.22){
+          }else if(r<skillChance+.12+.18){
             this.apply({clues:1});s.scene.body='기록에서 유효한 강령 단서를 하나 얻었다. 아직 문자의 원문은 찾지 못했다.';
             this.log('인터넷 조사 · 강령 단서 +1.');
           }else{
@@ -7705,12 +7787,12 @@ for(const item of [...C.skills,...C.ghosts,...C.relics])item.desc=describe(item)
         }
         case 'ritual':this.performRitual();break;
         case 'walk':{
-          this.apply({mental:4,spirit:-2});
-          if(this.rand()<bounded(.12+s.bond*.02+s.luck*.006,.02,.38)){this.apply({bond:1});this.log('산책 중 아는 사람을 만났다. 인연운 +1.');}
+          this.apply({mental:3,spirit:-1});
+          if(this.rand()<bounded(.07+s.bond*.015+s.luck*.005,.01,.30)){this.apply({bond:1});this.log('산책 중 아는 사람을 만났다. 인연운 +1.');}
           break;
         }
         case 'purify':{
-          if(s.money>=15000){this.apply({money:-15000,spirit:-7-(b.purify_extra||0),mental:-2,health:-1});this.log('소금과 향을 태웠다. 신기 정화 −15,000원.');}
+          if(s.money>=17000){const bonus=Math.min(6,Math.max(0,b.purify_extra||0));this.apply({money:-17000,spirit:-4-bonus,mental:-3,health:-1});this.log(`소금과 향을 태웠다. 정화 −17,000원, 신기 −${4+bonus}.`);}
           else{this.apply({mental:-3});this.log('정화 비용이 부족하다.');}
           break;
         }
@@ -7746,7 +7828,10 @@ for(const item of [...C.skills,...C.ghosts,...C.relics])item.desc=describe(item)
       const h=hour===null?Math.max(0,this.s.hour-1):hour;
       const allowed=e=>{
         if(forced)return true;
-        if(e.chain_followup)return false;
+        if(e.chain_followup||e.system_event)return false;
+        if(e.requires_no_ghost&&this.s.ghosts.length>0)return false;
+        if(e.min_day&&this.s.day<e.min_day)return false;
+        if(e.min_spirit&&this.s.spirit<e.min_spirit)return false;
         if(e.id===this.s.last_encounter||e.id===this.s.event_history[1])return false;
         if(e.id.includes('_return')||['umbrella_cafe','coworker_help','coworker_dinner','book_pickup','book_last','cat_again','wallet_thanks'].includes(e.id))return false;
         if(e.actions&&(!action||!e.actions.includes(action)))return false;
@@ -7759,9 +7844,11 @@ for(const item of [...C.skills,...C.ghosts,...C.relics])item.desc=describe(item)
       };
       const pool=C.encounters.filter(allowed);
       const catPool=pool.filter(e=>e.requires_skill==='meow');
-      const item=id?byId(C.encounters,id):(catPool.length&&this.s.owned_skills.includes('meow')&&this.rand()<.42?this.weightedEncounter(catPool):this.weightedEncounter(pool));
+      const highSpiritPool=pool.filter(e=>e.spirit_event);
+      const item=id?byId(C.encounters,id):(catPool.length&&this.s.owned_skills.includes('meow')&&this.rand()<.42?this.weightedEncounter(catPool):highSpiritPool.length&&this.s.spirit_benefits_day<2&&this.rand()<.30?this.weightedEncounter(highSpiritPool):this.weightedEncounter(pool));
       if(!item)return false;
       if(!forced&&item.requires_skill&&!this.s.owned_skills.includes(item.requires_skill))return false;
+      if(item.spirit_event)this.s.spirit_benefits_day++;
       this.s.last_encounter=item.id;
       this.s.event_history.unshift(item.id);this.s.event_history.length=Math.min(4,this.s.event_history.length);
       this.s.event_count_day++;
@@ -7786,7 +7873,7 @@ for(const item of [...C.skills,...C.ghosts,...C.relics])item.desc=describe(item)
       const s=this.s;if(s.pending?.kind!=='encounter')return false;
       const evt=byId(C.encounters,s.pending.id),op=evt?.options[index];if(!op)return false;
       let text=op.text||'',fx=op.fx||{};
-      if(op.minimum_money&&s.money<op.minimum_money)return false;
+      if((op.minimum_money&&s.money<op.minimum_money)||(op.minimum_spirit&&s.spirit<op.minimum_spirit))return false;
       if(op.exorcise){
         const {cost,chance}=op.exorcise;
         if(s.money<cost)return false;
@@ -7806,6 +7893,7 @@ for(const item of [...C.skills,...C.ghosts,...C.relics])item.desc=describe(item)
       if(typeof op.chance==='number'){
         const chance=bounded(op.chance+s.luck*.015+s.omen*.01+s.bond*.003,.08,.90);
         const good=this.rand()<chance;text=good?op.good:op.bad;fx=good?op.good_fx:op.bad_fx;
+        if(!good&&op.bad_fatal){s.death_reason=op.fatal_reason||'영혼을 대신할 이가 없어 존재가 지워졌다.';s.phase='dead';s.pending=null;s.scene={title:'귀신 없는 집의 대가',body:text+'\n\n'+s.death_reason,action:'ghost',tone:'ghost',hour:s.hour,day:s.day};this.log('사망 · '+s.death_reason);this.save();return true;}
       }
       s.pending=null;
       if(op.consume_item){const i=s.quest_items.indexOf(op.consume_item);if(i>=0)s.quest_items.splice(i,1);}
@@ -7948,6 +8036,9 @@ for(const item of [...C.skills,...C.ghosts,...C.relics])item.desc=describe(item)
       else if(s.sleep_today>=12){const penalty=24+(s.sleep_today-11)*7;this.apply({mental:-penalty});sleepNote+=` · 과수면: 정신력 −${penalty}`;}
       else sleepNote+=' · 충분한 수면';
       this.log(sleepNote);if(s.phase==='dead')return true;
+      // Spirit resonance: only players bearing a spirit can convert occult exposure into stamina.
+      const companions=s.ghosts.filter(g=>g.state==='active').length;
+      if(companions>0&&s.spirit>=30){const recovery=Math.min(12,4+Math.floor(s.spirit/15)+Math.min(companions*2,4));this.apply({mental:recovery});this.log(`유령과의 공명 · 신기 ${Math.round(s.spirit)}에 반응해 정신력 +${recovery}.`);if(s.phase==='dead')return true;}
       for(const id of s.owned_skills){const x=byId(C.skills,id);this.apply(x?.daily);if(s.phase==='dead')return true;this.conditionalDaily(x);if(s.phase==='dead')return true;}
       for(const g of s.ghosts){const x=byId(C.ghosts,g.id);this.apply(x?.daily);if(s.phase==='dead')return true;this.conditionalDaily(x);if(s.phase==='dead')return true;if(g.state==='possessed'){this.apply({mental:-2,spirit:1});if(s.phase==='dead')return true;}}
       for(const id of s.relics||[]){const x=byId(C.relics||[],id);this.apply(x?.daily);if(s.phase==='dead')return true;this.conditionalDaily(x);if(s.phase==='dead')return true;}
@@ -7958,7 +8049,7 @@ for(const item of [...C.skills,...C.ghosts,...C.relics])item.desc=describe(item)
       if(s.phase==='dead')return true;
       const r=this.rand(),k=s.wealth+s.luck;
       const fortuneEligible=s.sleep_today<12&&s.schedule.some(a=>['work','walk','meal','research','purify'].includes(a));
-      if(fortuneEligible&&k>0&&r<bounded(.16+k*.012,.05,.72)){const v=7000+this.randInt(0,21000);this.apply({money:v});this.log(`재물운 발동 · 우연한 횡재 +${moneyText(v)}원.`);}
+      if(fortuneEligible&&k>0&&r<bounded(.11+k*.008,.04,.54)){const v=4000+this.randInt(0,14000);this.apply({money:v});this.log(`재물운 발동 · 우연한 횡재 +${moneyText(v)}원.`);}
       else if(fortuneEligible&&k<0&&r<bounded(-k*.055,0,.65)){this.apply({money:-12000,mental:-3});this.log('불운 · 생활 물품 파손 −12,000원, 정신력 −3.');}
       if(s.phase==='dead')return true;
       if(this.rand()<this.fateChance()){
@@ -7976,7 +8067,7 @@ for(const item of [...C.skills,...C.ghosts,...C.relics])item.desc=describe(item)
     nextDay() {
       const s=this.s;if(s.phase!=='night')return false;
       s.food_eaten_today=0; s.food_today_index=null; s.remove_attempts_today=0;
-      s.day++;s.hour=0;s.sleep_today=0;s.phase='planning';s.pending=null;s.research_found_today=0;s.research_attempts_today=0;s.event_count_day=0;
+      s.day++;s.hour=0;s.sleep_today=0;s.phase='planning';s.pending=null;s.research_found_today=0;s.research_attempts_today=0;s.event_count_day=0;s.spirit_benefits_day=0;
       s.scene={title:'새로운 아침',body:'24시간이 다시 시작된다. 어제의 선택은 오늘의 생활에 조금씩 남아 있다.',action:'home',hour:6,day:s.day};
       const later=[];
       for(const queued of s.delayed){if(queued.day<=s.day){this.apply(queued.effects);this.log(`지연 효과 · ${queued.name}: ${this.effectsText(queued.effects)}`);}else later.push(queued);}
@@ -8022,7 +8113,7 @@ for(const item of [...C.skills,...C.ghosts,...C.relics])item.desc=describe(item)
       migrated.removed_skills_success=Math.max(0,Number(migrated.removed_skills_success)||0);
       // Older saves had no scene or research/branching counters.
       for(const k of ['relics','quest_items','event_history','next_events','scene_history'])if(!Array.isArray(migrated[k]))migrated[k]=[];
-      for(const k of ['research_found_today','research_attempts_today','release_wards','event_count_day'])if(!Number.isFinite(migrated[k]))migrated[k]=0;
+      for(const k of ['research_found_today','research_attempts_today','release_wards','event_count_day','ghostless_check_day','spirit_benefits_day'])if(!Number.isFinite(migrated[k]))migrated[k]=0;
       if(!Number.isInteger(migrated.unpaid_days))migrated.unpaid_days=0;
       if(!Number.isInteger(migrated.food_streak))migrated.food_streak=0;
       if(!Number.isInteger(migrated.food_eaten_today))migrated.food_eaten_today=0;
@@ -8129,7 +8220,7 @@ let tab='skills',autoMode=false,autoTimer=null,queueTarget=null,lastModalKey='',
 
 function toast(message){const e=$('toast');e.textContent=message;e.hidden=false;if(toastTimeout)clearTimeout(toastTimeout);toastTimeout=setTimeout(()=>e.hidden=true,2800);}
 function init(){
-  $('mealChoice').innerHTML=C.meals.map((m,i)=>`<option value="${i}">${esc(m.name)} · ${moneyText(m.price)}원 / 체력 +${m.health} 정신 +${m.mental}${m.spirit?' 신기 +'+m.spirit:''}</option>`).join('');
+  $('mealChoice').innerHTML=C.meals.map((m,i)=>`<option value="${i}">${esc(m.name)} · ${moneyText(m.price)}원 / 체력 +${Math.round(m.health*.85)} 정신 +${Math.round(m.mental*.85)}${m.spirit?' 신기 +'+m.spirit:''}</option>`).join('');
   $('queueFillAction').innerHTML=C.actions.map(a=>`<option value="${esc(a.id)}">${esc(a.name)}</option>`).join('');
   $('queueFillAction').value='sleep';
   $('debugStat').innerHTML=Object.entries(STAT_LABELS).map(([key,label])=>`<option value="${esc(key)}">${esc(label)}</option>`).join('');
@@ -8271,7 +8362,9 @@ function renderActiveEffects(s){
  if(title==='유령'&&entry.state==='possessed'){daily.mental=(daily.mental||0)-2;daily.spirit=(daily.spirit||0)+1;}
  }}
  const summary=effectStats(daily)||'기본 일일 효과 없음';
- let html=`<div class="effect-overview"><div class="effect-headline">현재 적용 효과</div><p>매일 정산 · ${esc(summary)}</p><small>일정 결과와 조건부 효과는 별도입니다. 알바 계산치는 22% 반영하며 상한이 있습니다.${s.owned_skills.includes('meow')?' 일부 효과는 알 수 없습니다.':''}</small></div>`;
+ let html=`<div class="effect-overview"><div class="effect-headline">현재 적용 효과</div><p>매일 정산 · ${esc(summary)}</p><small>일정 결과와 조건부 효과는 별도입니다. 정화 보너스는 합산 +6까지 적용됩니다. 알바 계산치는 22% 반영하며 상한이 있습니다.${s.owned_skills.includes('meow')?' 일부 효과는 알 수 없습니다.':''}</small></div>`;
+ const companions=s.ghosts.filter(g=>g.state==='active').length;
+ if(companions>0){const regen=s.spirit>=30?Math.min(12,4+Math.floor(s.spirit/15)+Math.min(companions*2,4)):0;html+=`<div class="effect-overview"><strong>유령과의 공명</strong><p>신기 30 이상이면 매일 정신력 회복${regen?' · 현재 +'+whole(regen):' · 현재 조건 미충족'}</p></div>`;}
  for(const [title,entries] of owned){
   html+=`<section class="effect-section"><h3>${title} <span>${entries.length}</span></h3>`;
   if(!entries.length)html+='<p class="effect-muted">적용 중인 항목 없음</p>';
@@ -8334,7 +8427,7 @@ function renderModal(){const s=game.s,p=s.pending,overlay=$('modalOverlay');over
    html=modalFrame('END OF LIFE · '+s.day+'일차','연명에 실패했다',s.death_reason,`<div class="modal-end">당신은 ${s.day}일차 ${s.hour}시까지 살아남았다.\n어떤 목소리들은 여전히 방 안에 남아 있다.</div>`,`<span class="modal-hint">다음 시도에서 일정을 바꾸거나 실험해 보세요.</span><button class="button danger" data-cmd="restart">새 삶 시작하기</button>`);
  }else if(kind==='encounter'){
    const item=C.encounters.find(x=>x.id===p.id);if(!item){target.innerHTML='';return;}
-   const cards=item.options.map((x,i)=>`<button class="choice-card" data-cmd="event-choice" data-value="${i}" ${x.minimum_money&&s.money<x.minimum_money?'disabled':''}><div class="choice-head"><strong>${esc(x.label)}</strong><span class="choice-title">${x.minimum_money&&s.money<x.minimum_money?'잔액 부족':'선택 '+(i+1)}</span></div></button>`);
+   const cards=item.options.map((x,i)=>{const noMoney=Boolean(x.minimum_money&&s.money<x.minimum_money),noSpirit=Boolean(x.minimum_spirit&&s.spirit<x.minimum_spirit);return `<button class="choice-card" data-cmd="event-choice" data-value="${i}" ${noMoney||noSpirit?'disabled':''}><div class="choice-head"><strong>${esc(x.label)}</strong><span class="choice-title">${noMoney?'잔액 부족':noSpirit?'신기 '+whole(x.minimum_spirit)+' 필요':'선택 '+(i+1)}</span></div></button>`;});
    html=modalFrame('CHOOSE / 이 순간의 선택','','',modalChoices(cards),'');
  }else if(kind==='skills'){
    const shop=p.source==='shop';const options=p.ids.map((id,i)=>{const x=C.skills.find(x=>x.id===id);if(!x)return '';const price=skillPrice(x),afford=!shop||s.money>=price;return `<button class="choice-card" data-cmd="skill-choice" data-value="${i}" ${afford?'':'disabled'}><div class="choice-head"><strong>${esc(x.name)}</strong><span class="grade-badge grade-${x.grade}">${x.grade}등급</span></div><div class="choice-description">${esc(x.desc)}</div><div class="choice-cost">${shop?moneyText(price)+'원'+(afford?'':' · 잔액 부족'):'무료로 습득'}</div></button>`;});
