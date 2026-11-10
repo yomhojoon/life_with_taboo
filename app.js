@@ -161,7 +161,7 @@ function renderActiveEffects(s){
  const summary=effectStats(daily)||'기본 일일 효과 없음';
  let html=`<div class="effect-overview"><div class="effect-headline">현재 적용 효과</div><p>매일 정산 · ${esc(summary)}</p><small>일정 결과와 조건부 효과는 별도입니다. 정화 보너스는 합산 +6까지 적용됩니다. 알바 계산치는 22% 반영하며 상한이 있습니다.${s.owned_skills.includes('meow')?' 일부 효과는 알 수 없습니다.':''}</small></div>`;
  const companions=s.ghosts.filter(g=>g.state==='active').length;
- if(companions>0){const regen=s.spirit>=30?Math.min(12,4+Math.floor(s.spirit/15)+Math.min(companions*2,4)):0;html+=`<div class="effect-overview"><strong>유령과의 공명</strong><p>신기 30 이상이면 매일 정신력 회복${regen?' · 현재 +'+whole(regen):' · 현재 조건 미충족'}</p></div>`;}
+ if(companions>0){const regen=s.spirit>=30?Math.min(20,3+Math.floor(s.spirit/12)+Math.min(companions*4,12)):0;html+=`<div class="effect-overview"><strong>유령과의 공명</strong><p>신기 30 이상이면 매일 정신력 회복${regen?' · 현재 +'+whole(regen):' · 현재 조건 미충족'}</p></div>`;}
  for(const [title,entries] of owned){
   html+=`<section class="effect-section"><h3>${title} <span>${entries.length}</span></h3>`;
   if(!entries.length)html+='<p class="effect-muted">적용 중인 항목 없음</p>';
