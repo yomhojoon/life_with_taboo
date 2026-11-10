@@ -1,12 +1,13 @@
-// 480×270 monochrome documentary-pixel cutscenes. All artworks stay local / first-party.
+// 480x270 photobased monochrome pixel cutscenes, including user-provided photographic reference crops. No anime/illustration.
 (function(root){
 'use strict';
-const ART={room:'room',sleep:'room',rest:'room',meal:'meal',home:'room',work:'desk',store:'desk',research:'monitor',desk:'monitor',monitor:'monitor',shop:'monitor',ritual:'ritual',purify:'ritual',shaman:'ritual',ghost:'ritual',street:'street',walk:'street',park:'park',cafe:'meal',city:'city',terminal:'terminal',alley:'alley',shrine:'shrine',temple:'temple',window:'window',apartment:'apartment'};
+const ART={room:'room',sleep:'room',rest:'room',meal:'meal',home:'room',work:'desk',store:'desk',research:'photo_research',desk:'photo_research',monitor:'photo_research',shop:'photo_terminal_detail',ritual:'ritual',purify:'ritual',shaman:'ritual',ghost:'photo_abandoned_apartment',street:'street',walk:'street',park:'park',cafe:'meal',city:'photo_urban_night',terminal:'photo_terminal_detail',alley:'alley',shrine:'shrine',temple:'temple',window:'window',apartment:'apartment'};
 const IMAGES={};
 const GHOST_IMAGE=new Image();
 GHOST_IMAGE.decoding='async';
 GHOST_IMAGE.src=(root.YG_ART_DATA&&root.YG_ART_DATA.ghost)||'assets/ghost.png';
 GHOST_IMAGE.onload=()=>{if(last)draw(last);};
+
 let last=null, tick=0,context=null;
 for(const kind of [...new Set([...Object.values(ART),'ghost'])]){
  const img=new Image();img.decoding='async';img.src=(root.YG_ART_DATA&&root.YG_ART_DATA[kind])||`assets/${kind}.png`;
@@ -16,7 +17,7 @@ const rectangle=(c,x,y,w,h,color)=>{c.fillStyle=color;c.fillRect(Math.round(x),M
 function vignette(c){const w=480,h=270;const g=c.createRadialGradient(240,124,35,240,130,295);g.addColorStop(0,'rgba(0,0,0,0)');g.addColorStop(.7,'rgba(0,0,0,.03)');g.addColorStop(1,'rgba(0,0,0,.8)');c.fillStyle=g;c.fillRect(0,0,w,h);}
 function ghost(c,id,phase=0){
  const g=GHOST_IMAGE;
- // Portraits use reference-quality photographic grayscale artwork, never polygon faces.
+ // All ghosts deliberately share the original unmodified monochrome portrait.
  c.save(); c.globalAlpha=.82+(Math.sin(phase/3)*.04);
  c.fillStyle='#030303';c.fillRect(279,20,184,223);
  if(g?.complete&&g.naturalWidth)c.drawImage(g,293,28,159,204);
@@ -39,20 +40,20 @@ function draw(s){
  last=s;const c=el.getContext('2d',{alpha:false});c.imageSmoothingEnabled=false;
  const scene=s.scene||{}, hour=scene.hour??s.hour??0;
  let kind=ART[scene.action]||'room';
- if(s.pending?.kind==='skills'&&s.pending.source==='shop')kind='monitor';
- if(scene.tone==='ghost')kind='ritual';
+ if(s.pending?.kind==='skills'&&s.pending.source==='shop')kind='photo_terminal_detail';
+ if(scene.tone==='ghost')kind=(s.ghosts?.length? 'photo_abandoned_apartment':'photo_apparition');
  if(scene.action==='shaman'||scene.action==='purify')kind='shrine';
- if(scene.action==='walk'){const day=s.day||1;kind=(hour>=18||hour<6)?(day%2?'alley':'street'):(day%3?'park':'temple');}
- if(scene.action==='rest'&&hour>=17&&hour<=21)kind='window';
+ if(scene.action==='walk'){const day=s.day||1;kind=(hour>=18||hour<6)?(day%2?'photo_urban_night':'alley'):(day%3?'park':'temple');}
+ if(scene.action==='rest'&&hour>=17&&hour<=21)kind='photo_urban_night';
  const img=IMAGES[kind];
  if(img?.complete&&img.naturalWidth){c.drawImage(img,0,0,480,270);}else if(IMAGES.room?.complete&&IMAGES.room.naturalWidth){c.drawImage(IMAGES.room,0,0,480,270);}else{c.fillStyle='#050505';c.fillRect(0,0,480,270);}
  // Darkness follows the hour, while morning remains cold grayscale.
  if(hour>=21||hour<=4){rectangle(c,0,0,480,270,'rgba(0,0,0,.28)');}
  else if(hour>=18){rectangle(c,0,0,480,270,'rgba(0,0,0,.13)');}
  if(['ritual','shrine'].includes(kind))ritualMark(c);
- if(scene.tone==='ghost'||scene.action==='ghost'||(scene.action==='shaman'&&s.ghosts?.some(x=>x.state!=='active'))){
+ if((scene.tone==='ghost'&&s.ghosts?.length)||((scene.action==='ghost'&&s.ghosts?.length))||(scene.action==='shaman'&&s.ghosts?.some(x=>x.state!=='active'))){
   const found=s.ghosts?.find(g=>g.id===scene.ghost_id) || s.ghosts?.[s.ghosts.length-1];
-  ghost(c,scene.ghost_id||found?.id||'original',tick);
+  ghost(c,scene.ghost_id||found?.id||"original",tick);
  }
  if((kind==='monitor'||kind==='desk')&&tick%3===0)screenFlicker(c);
  vignette(c);
@@ -63,4 +64,3 @@ function animate(){tick=(tick+1)%48;if(last&&document.visibilityState!=='hidden'
 if(typeof window!=='undefined')setInterval(animate,530);
 root.YGPixel={draw};
 })(typeof window!=='undefined'?window:globalThis);
-
