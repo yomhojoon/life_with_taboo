@@ -154,14 +154,32 @@
     // Previously observed natural runs averaged only 0.07–0.34 fate points.
     // Consequently a single point is meaningful, two are unusually high, and four severe.
     fateTier(){const d=Number(this.s.doom)||0;return d>=4?3:d>=2?2:d>=1?1:0;}
-    fateAtmosphere(tier=this.fateTier()){
-      return ['', '괜히 뒤를 돌아보았다. 분명 아무도 없었다.',
-        '어디선가 익숙한 목소리가 이름을 불렀다. 돌아보자 소리는 멎었다.',
-        '눈앞의 사람은 말하는 도중 잠시 멈췄다. 마치 이 자리에 당신이 있어서는 안 되는 사람인 것처럼.'][tier]||'';
+    // Each observation refers to what the player is actually doing. Do not reuse a
+    // conversational omen in unrelated actions or authored encounters (especially meow).
+    fateAtmosphere(tier=this.fateTier(),action='rest'){
+      if(tier<=0)return '';
+      const byAction={
+        sleep:['베개 옆에 두지 않은 머리카락이 놓여 있었다.','잠결에 현관문 잠금쇠가 움직이는 소리가 났다.','눈을 뜨자 침대 곁 바닥에 젖은 발자국이 남아 있었다.'],
+        rest:['방 안의 시계가 한 박자 늦게 움직였다.','빈 의자 쪽에서 나무가 삐걱거리는 소리가 들렸다.','꺼 둔 방의 전등이 혼자 켜졌다가 꺼졌다.'],
+        work:['계산대 밑에 모르는 영수증이 끼어 있었다.','퇴근한 직원의 출근 기록이 방금 추가되었다.','비어 있던 근무표에 자신의 이름이 두 번 적혀 있었다.'],
+        meal:['먹지 않은 반찬 접시가 조금 옮겨져 있었다.','배달 봉투 안에 주문하지 않은 젓가락이 한 벌 더 들어 있었다.','식탁 아래에서 의자가 끌리는 소리가 났지만 아무도 없었다.'],
+        research:['찾지 않은 검색어가 잠깐 자동 완성되었다.','닫았던 게시판 글의 열람 기록이 새로 남았다.','화면에 자신의 방을 찍은 듯한 사진이 스쳤다가 사라졌다.'],
+        ritual:['촛불의 그림자가 잠깐 엇갈렸다.','강령진 바깥에서 낮은 기침 소리가 들렸다.','입 밖에 내지 않은 이름이 방 안에서 들려왔다.'],
+        walk:['뒤에서 발소리가 들렸지만 골목은 비어 있었다.','정류장 유리창에 자신의 모습이 잠깐 늦게 비쳤다.','횡단보도 반대편에서 누군가 자신을 똑바로 바라보고 있었다.'],
+        purify:['소금 위에 작은 손자국이 생겨 있었다.','향 연기가 바람이 없는 쪽으로 흘렀다.','닦아 낸 문턱에 검은 물자국이 다시 번졌다.']
+      };
+      return (byAction[action]||byAction.rest)[Math.min(tier,3)-1];
     }
-    // Additional price paid when ominous encounters are resolved. Never show the numeric fate stat.
+    // Extra fate loss is NEVER automatic: at one fate point it is rare, and
+    // the probability increases with actual hidden fate points (capped at 45%).
+    fateCostChance(event,doom=this.s.doom){
+      if(!event||event.system_event||event.requires_skill==='meow'||
+         !['bad','strange','ghost'].includes(event.tone||''))return 0;
+      const d=Math.max(0,Number(doom)||0);
+      return d<1?0:bounded(.05+.06*d,0,.45);
+    }
     fateEncounterCost(event,tier){
-      if(!event||event.system_event||tier<=0||!['bad','strange','ghost'].includes(event.tone||'strange'))return {};
+      if(tier<=0||this.fateCostChance(event,1)===0)return {};
       if(tier===1)return {mental:-1};
       if(tier===2)return {mental:-2,health:-1,money:-1000};
       return {mental:-4,health:-2,money:-2500,spirit:1};
@@ -246,7 +264,7 @@
       };
       const lines=choices[action]||['잠시 시간이 흘러간다.'];
       const tier=this.fateTier();
-      const lingering=tier>0&&(h+this.s.day)%(tier===1?5:tier===2?3:2)===0?` ${this.fateAtmosphere(tier)}`:'';
+      const lingering=tier>0&&(h+this.s.day)%(tier===1?16:tier===2?12:8)===0?` ${this.fateAtmosphere(tier,action)}`:'';
       return `${period}. ${lines[(h+this.s.day)%lines.length]}${lingering}`;
     }
     performAction(action) {
@@ -374,9 +392,9 @@
       this.s.last_encounter=item.id;
       this.s.event_history.unshift(item.id);this.s.event_history.length=Math.min(4,this.s.event_history.length);
       this.s.event_count_day++;
-      this.s.pending={kind:'encounter',id:item.id,fate_tier:fateTier};
-      const omen=fateTier>0&&(item.fate_event||['bad','strange','ghost'].includes(item.tone||'strange'))?this.fateAtmosphere(fateTier):'';
-      this.s.scene={title:item.title,body:item.body+(omen?'\n\n'+omen:''),action:item.scene||action||'rest',hour:h,day:this.s.day,tone:item.tone||'strange'};
+      this.s.pending={kind:'encounter',id:item.id,fate_tier:fateTier,fate_doom:Math.max(0,Number(this.s.doom)||0)};
+      // Authored event descriptions must not receive unrelated generic dialogue.
+      this.s.scene={title:item.title,body:item.body,action:item.scene||action||'rest',hour:h,day:this.s.day,tone:item.tone||'strange'};
       this.log(`일상 사건 · ${item.title}`);this.save();return true;
     }
     weightedEncounter(pool){
@@ -395,7 +413,7 @@
     }
     chooseEncounter(index) {
       const s=this.s;if(s.pending?.kind!=='encounter')return false;
-      const evt=byId(C.encounters,s.pending.id),op=evt?.options[index],fateTier=s.pending.fate_tier??this.fateTier();if(!op)return false;
+      const evt=byId(C.encounters,s.pending.id),op=evt?.options[index],fateTier=s.pending.fate_tier??this.fateTier(),fateDoom=s.pending.fate_doom??this.s.doom;if(!op)return false;
       let text=op.text||'',fx=op.fx||{};
       if((op.minimum_money&&s.money<op.minimum_money)||(op.minimum_spirit&&s.spirit<op.minimum_spirit))return false;
       if(op.exorcise){
@@ -430,13 +448,16 @@
         s.next_events.push({id:op.follow,day:Math.floor(due/24)+1,hour:due%24});
         text+=' 이어질 이야기가 남았다.';
       }
-      // Keep authored option results intact; fate adds its own separate, documented consequence.
+      // Keep authored option results intact. Secondary fate loss is an explicit
+      // probability check based on fate at encounter start, never every choice.
       this.apply(fx);
       if(s.phase!=='dead'){
-        const drain=this.fateEncounterCost(evt,fateTier);
+        const extraChance=this.fateCostChance(evt,fateDoom);
+        const hasFateLoss=extraChance>0&&this.rand()<extraChance;
+        const drain=hasFateLoss?this.fateEncounterCost(evt,fateTier):{};
         if(Object.keys(drain).length){
           this.apply(drain);
-          text+='\n\n'+this.fateAtmosphere(fateTier)+'\n불길한 기운의 대가 · '+this.effectsText(drain);
+          text+='\n\n불길한 운명의 여파 · '+this.effectsText(drain);
           this.log('불길한 운명의 여파 · '+this.effectsText(drain));
         }
         if(s.phase!=='dead'){
