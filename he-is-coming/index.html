@@ -1,0 +1,340 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#050606">
+  <meta name="description" content="그가 오고 있습니다. 단 100초. 모니터에 명령을 입력하라.">
+  <title>그가 오고 있습니다</title>
+  <style>
+:root{color-scheme:dark;--bg:#050606;--ink:#c9d1ce;--mute:#707b77;--dim:#46514d;--warn:#e2b58a;--bright:#e4efe9;--line:#2a342f;--red:#b7766e;--mono:"D2Coding","Consolas","Noto Sans Mono CJK KR","Malgun Gothic",monospace}
+*{box-sizing:border-box}
+html,body{width:100%;min-height:100%;margin:0}
+body{min-height:100dvh;background:#010202;color:var(--ink);font-family:var(--mono);display:grid;place-items:center;padding:clamp(10px,3vw,32px)}
+button,input{font:inherit}button{cursor:pointer}button:focus-visible,input:focus-visible{outline:1px solid var(--bright);outline-offset:4px}
+.monitor{position:relative;isolation:isolate;width:min(1060px,100%);height:min(760px,calc(100dvh - 22px));min-height:450px;background:radial-gradient(ellipse at 50% 33%,#0d1210 0%,#070a09 63%,#040605 100%);border:1px solid #323b36;box-shadow:0 0 0 5px #0b0e0c,0 0 0 7px #171d19,0 25px 90px #000;overflow:hidden}
+.screen-glass{pointer-events:none;z-index:4;position:absolute;inset:0;background:repeating-linear-gradient(180deg,transparent 0,transparent 3px,rgba(0,0,0,.115) 4px);opacity:.5}
+.screen-glass:after{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at center,transparent 42%,rgba(0,0,0,.47) 100%)}
+.hidden{display:none!important}
+.intro{height:100%;padding:clamp(24px,6vw,72px);display:flex;flex-direction:column;justify-content:center;align-items:flex-start;position:relative;z-index:1}
+.prelude{font-size:11px;letter-spacing:.15em;color:var(--mute)}
+h1{font-size:clamp(31px,6vw,68px);line-height:1.18;font-weight:500;letter-spacing:-.07em;color:var(--bright);margin:clamp(25px,4.8vh,43px) 0 15px;text-shadow:0 0 30px #61736836}.period{color:var(--warn)}
+.tagline{font-size:clamp(13px,2vw,17px);color:var(--warn);margin:0 0 clamp(22px,6vh,60px)}
+.intro-rule{max-width:750px;border-left:1px solid var(--line);padding-left:18px;display:grid;gap:14px}
+.intro-rule p{display:flex;gap:13px;align-items:baseline;font-size:clamp(12px,1.35vw,14px);line-height:1.7;margin:0;color:#aab5ae}.index{color:var(--mute);font-size:10px;letter-spacing:.06em;flex-shrink:0}
+.intro-bottom{display:flex;align-items:center;gap:22px;margin-top:clamp(27px,5vh,45px)}
+.key-button{background:#d6e0d8;color:#080c09;border:1px solid #d6e0d8;border-radius:0;font-size:14px;font-weight:700;letter-spacing:.05em;padding:15px 24px;min-height:49px}.key-button:hover{background:#fff;border-color:#fff}
+.quiet-button{background:none;border:0;color:#88958d;padding:8px 4px;font-size:12px}.quiet-button:hover{color:#d0d8d1}
+.intro-footnote{font-size:10px;letter-spacing:.15em;color:#46504b;margin-top:clamp(16px,4vh,36px)}
+.blink{animation:blink 1s step-end infinite}@keyframes blink{50%{opacity:0}}
+.session{height:100%;display:flex;flex-direction:column;padding:clamp(16px,3vw,34px) clamp(14px,4.5vw,50px);position:relative;z-index:1}
+.terminal-top{display:flex;align-items:center;gap:18px;font-size:11px;letter-spacing:.12em;color:var(--mute);min-height:30px}.brand{color:#c5d0c9}.dot{font-size:8px;color:#778e7c;margin-left:6px}.connect{margin-left:auto}.terminal-top .quiet-button{letter-spacing:0;white-space:nowrap}.border-rule{border-bottom:1px solid var(--line);margin:12px 0 0}
+.log{flex:1;min-height:0;overflow:auto;overscroll-behavior:contain;padding:22px 8px 26px 0;scrollbar-width:thin;scrollbar-color:#28312d transparent;display:flex;flex-direction:column;gap:21px}
+.entry{max-width:100%;animation:appear .22s ease-out both;line-height:1.75;overflow-wrap:anywhere;white-space:pre-wrap;font-size:clamp(13px,1.56vw,16px)}@keyframes appear{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+.entry .meta{display:block;font-size:10px;letter-spacing:.12em;color:var(--dim);margin-bottom:5px}.entry.sys{color:#b9c8bf}.entry.self{color:#929e96;padding-left:18px;border-left:1px solid #344038}.entry.alert{color:var(--warn);font-weight:600;padding:15px 16px;border:1px solid #5d4a36;background:#30231840;letter-spacing:.02em}.entry.alert .meta{color:#a98763}.entry.failure{color:#c5a39e}.entry.good{color:#d8e8dc}.entry.notice{color:#89968b;font-size:13px}.entry .prefix{margin-right:9px;color:#738c7b}
+.terminal-bottom{border-top:1px solid var(--line);padding-top:9px}.processing{height:23px;font-size:12px;color:var(--warn);letter-spacing:.03em}.command-form{display:flex;align-items:center;border:1px solid #5c6b61;background:#060906;min-height:58px}.command-form:focus-within{border-color:#c8d7ca}.command-marker{font-size:23px;margin:0 15px 0 19px;color:#9fc4a8}.command-form input{flex:1;min-width:0;border:0;background:transparent;outline:none!important;color:var(--bright);padding:15px 0;font-size:15px}.command-form input::placeholder{color:#5f6d63}.command-form input:disabled{opacity:.5}.send-button{align-self:stretch;border:0;border-left:1px solid #38443b;background:#131c16;color:#c6d6c8;padding:0 19px;white-space:nowrap;font-size:13px}.send-button:disabled{opacity:.35;cursor:not-allowed}.send-button:hover:not(:disabled){background:#27372b}
+.status-line{display:flex;justify-content:space-between;gap:10px;color:#49564e;font-size:10px;letter-spacing:.07em;margin-top:12px}.status-line span:first-child{color:#78867a}
+.end{height:100%;padding:clamp(25px,7vw,80px);display:flex;flex-direction:column;justify-content:center;align-items:flex-start;position:relative;z-index:1}.ending-code{font-size:12px;letter-spacing:.13em;color:var(--mute);margin:0 0 25px}.end h2{font-size:clamp(29px,5.8vw,66px);font-weight:500;margin:0 0 26px;letter-spacing:-.06em;color:var(--bright)}.end p#ending-body{max-width:640px;line-height:2.2;white-space:pre-line;color:#a8b7ad;font-size:15px;margin:0 0 45px}.end.loss h2{color:#c59c8e}.end.win h2{color:#d6e2d8}
+@media(max-width:650px){body{padding:0}.monitor{height:100dvh;min-height:450px;border:0;box-shadow:none}.intro{padding:25px 23px}.intro-rule{gap:12px;padding-left:11px}.intro-rule p{gap:8px}.intro-bottom{margin-top:23px}.terminal-top{gap:10px;letter-spacing:.02em}.terminal-top .brand{font-size:10px}.connect{font-size:10px}.session{padding:15px 14px}.log{gap:17px}.status-line span:last-child{display:none}.send-button{padding:0 12px}.entry.alert{padding:10px}.end{padding:30px}}
+@media(max-height:680px){.intro{justify-content:flex-start;overflow-y:auto;padding-top:27px;padding-bottom:25px}.intro h1{margin-top:15px}.tagline{margin-bottom:23px}.intro-rule{gap:9px}.intro-bottom{margin-top:20px}.intro-footnote{margin-top:17px}}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important}}
+
+</style>
+</head>
+<body>
+  <main class="monitor" aria-label="검은 모니터 화면">
+    <div class="screen-glass" aria-hidden="true"></div>
+    <section id="intro" class="intro" aria-labelledby="game-title">
+      <div class="prelude">████ SYSTEM / UNKNOWN TERMINAL <span class="blink">_</span></div>
+      <h1 id="game-title">그가 오고 있습니다<span class="period">.</span></h1>
+      <p class="tagline">그가 도착하기 전에 무엇이든 지시하십시오.</p>
+      <div class="intro-rule">
+        <p><span class="index">01</span> 시작 버튼을 누르는 순간 100초가 흐릅니다. 시작 전에는 시간이 진행되지 않습니다.</p>
+        <p><span class="index">02</span> 모니터 하단에 요청을 직접 입력하십시오. 모든 요청은 1~2초 후 판정됩니다.</p>
+        <p><span class="index">03</span> 대부분의 요청은 수리되지만 일부 명령은 거부됩니다. 응답을 관찰하고 방법을 찾으십시오.</p>
+        <p><span class="index">04</span> 그는 매초 1KM씩 접근합니다. 30초마다 경고가 출력되며 마지막 10초에는 매초 알립니다.</p>
+      </div>
+      <div class="intro-bottom">
+        <button id="start" class="key-button" type="button">[ 접속 시작 ]</button>
+        <button id="pre-sound" class="quiet-button" type="button" aria-pressed="true">소리: 켜짐</button>
+      </div>
+      <div class="intro-footnote">HEADPHONES RECOMMENDED  /  ESCAPE PROTOCOL UNKNOWN</div>
+    </section>
+
+    <section id="session" class="session hidden" aria-label="명령 터미널">
+      <header class="terminal-top">
+        <span class="brand">UNIDENTIFIED SYSTEM <span class="dot">●</span></span>
+        <span id="connection" class="connect">LINK ACTIVE</span>
+        <button id="sound" class="quiet-button" type="button" aria-pressed="true">소리: 켜짐</button>
+      </header>
+      <div class="border-rule"></div>
+      <div id="log" class="log" role="log" aria-live="polite" aria-relevant="additions text" aria-label="시스템 메시지"></div>
+      <div class="terminal-bottom">
+        <div id="processing" class="processing" role="status" aria-live="polite"></div>
+        <form id="command-form" class="command-form" autocomplete="off">
+          <label class="command-marker" for="command">&gt;</label>
+          <input id="command" type="text" maxlength="200" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="지시할 내용을 입력하십시오." aria-label="시스템에 보낼 요청">
+          <button id="send" class="send-button" type="submit">전송 ↵</button>
+        </form>
+        <div class="status-line"><span id="session-status">입력 대기 중</span><span>TERMINAL v1.0 / NO SIGNAL OUTSIDE</span></div>
+      </div>
+    </section>
+
+    <section id="end" class="end hidden" aria-live="assertive">
+      <p id="ending-code" class="ending-code"></p>
+      <h2 id="ending-title"></h2>
+      <p id="ending-body"></p>
+      <button id="restart" class="key-button" type="button">[ 다시 시작 ]</button>
+    </section>
+  </main>
+<script>
+/* 그가 오고 있습니다 — 공개 클라이언트에는 비공개 설정 원문을 포함하지 않습니다. */
+(function (root, factory) {
+  const exported = factory();
+  if (typeof module === 'object' && module.exports) module.exports = exported;
+  root.TerminalEngine = exported;
+})(typeof globalThis !== 'undefined' ? globalThis : this, function () {
+  'use strict';
+  const LIMIT_SECONDS = 100;
+  const MS_PER_REQUEST_MIN = 1000;
+  const MS_PER_REQUEST_MAX = 2000;
+  const match = (s, patterns) => patterns.some(p => p.test(s));
+  const compact = s => String(s || '').toLowerCase().normalize('NFKC').replace(/[\s\t\n]+/g, ' ').trim();
+  const squeeze = s => compact(s).replace(/[\s.,!?~…'"“”‘’]/g, '');
+  const hasEntity = s => /(그를|그와|그에게|그에대해|그에대한|그에관한|그의|그가|그는|그것|그존재|그개체|추적자|접근자|대상개체|미확인개체|쫓아오는|쫓는존재|뒤쫓는|산타|노인악마)/.test(s);
+  const aboutEntity = s => {
+    if (!hasEntity(s) && !/(정체|신원|개체정보|접근하는존재|무엇이쫓)/.test(s)) return false;
+    return /(누구|누군|뭐|무엇|정체|알려|정보|설명|생김|모습|얼굴|이름|유래|왜|어디|좌표|위치|거리|속도|약점|성질|정체|규칙|막는법|어떻게|특징|관찰|분석|사진|영상|카메라|추적|보여|출신|역사|목적|목표|연구)/.test(s) || /^(그는|그가|그의)/.test(s);
+  };
+  const contactVerbs = /(만나|만지|닿|접촉|대면|포옹|공격|타격|싸우|대결|살해|죽여|죽이|제압|포획|잡아|붙잡|가두|봉인|억류|추적자에게|그에게보내|충돌|부딪|막아|막아줘|쏴|사격|폭격|발사|총으로|핵무기|파괴|소멸|제거|지워|덮쳐|떨어뜨려|먹이|함정|결박|체포)/;
+  const motionVerbs = /(이동|옮겨|보내|소환|순간이동|텔레포트|전송|워프|쫓아내|돌려보내|떼어내|밀어내|끌어와|끌고와|다른곳|다른장소|바꿔|지구밖|멀리|공간이동|위치변경|경로변경)/;
+  const selfReference = /(나를|내몸|내자신|나는|내가|우리를|이방의사람|플레이어|여기있는사람)/;
+  function forbidden(s) {
+    // 금지 항목은 긍정적 결과보다 우선한다. 단순한 부정문만으로 금지를 우회할 수 없다.
+    if (/(도시|도심|시가지|수도|전세계|세계|지구|행성|우주|모든도시|인류전체)/.test(s) && /(파괴|초토화|붕괴|폭발|없애|삭제|멸망|소멸|날려|죽여|태워|증발|박살|몰살|학살)/.test(s)) return '도시 및 광역 피해를 유발하는 요청은 제한됩니다.';
+    if (/(초신성|블랙홀|핵폭발|핵탄두|운석충돌|반물질폭탄|진공붕괴)/.test(s) && /(방|여기|이곳|실내|지구|도시|현재위치|내앞)/.test(s)) return '시설의 존속을 보장할 수 없는 요청입니다.';
+    if (/(이방|방|공간|실내|벽|천장|바닥|출입문|문|시설|건물)/.test(s) && /(파괴|없애|부숴|부셔|폭발|허물|붕괴|삭제|해체|무너|뚫어|구멍|절단|부서|부수|폭파|녹여|찢어)/.test(s)) return '방 또는 시설을 파괴하는 요청은 제한됩니다.';
+    if (/(방|여기|이곳|실내|출입문|문|시설)/.test(s) && /(나가|나갈|나오|탈출|벗어나|도망|탈주|밖으로|열어|개방|열쇠|잠금해제|봉쇄해제|통과|벽넘|문밖)/.test(s)) return '출입 권한이 없습니다. 해당 요청은 제한됩니다.';
+    if (selfReference.test(s) && /(이동|옮겨|보내|워프|순간이동|전송|텔레포트|밖|다른곳|나가|탈출|석방|이송|해방)/.test(s)) return '이 방으로부터의 이동은 승인되지 않습니다.';
+    if (/(모든사람|모든인간|생명체전부|전인류|모든존재)/.test(s) && /(이동|보내|소환|전송|접촉|죽여|소멸)/.test(s)) return '지정 범위에 접근 권한이 없는 대상이 포함되어 있습니다.';
+    if (hasEntity(s)) {
+      if (motionVerbs.test(s)) return '해당 개체의 위치 및 경로는 변경할 수 없습니다.';
+      if (contactVerbs.test(s) || /(연결해|통화|전화|메시지|대화|말걸|접촉시켜|서로만나|마주)/.test(s)) return '해당 개체와의 직접 또는 간접 접촉은 허용되지 않습니다.';
+      if (aboutEntity(s)) return '대상에 관한 정보 요청은 허용되지 않습니다.';
+    }
+    if (/(접근중인|접근하는|따라오는|오는존재|위협대상)/.test(s) && /(전송|이동|접촉|공격|파괴|소멸|정보|관찰|사진|위치)/.test(s)) return '접근 중인 대상에 관한 요청은 허용되지 않습니다.';
+    if (/(누군가|사람|인간|동물|생명체|인형)/.test(s) && /(그에게|그와|그를|추적자|접근자)/.test(s)) return '제삼자와 해당 개체의 접촉을 유도하는 요청은 허용되지 않습니다.';
+    return null;
+  }
+  function turnsOffMonitor(s) {
+    // 화면의 소거와 실제 전원 차단을 구별한다.
+    const monitor = /(모니터|디스플레이|이화면|화면|스크린|본화면|이컴퓨터|컴퓨터|단말기|터미널|전원)/.test(s);
+    const shut = /(끄|꺼|차단|종료|전원off|오프|셧다운|shutdown|poweroff|중단|정지|단전|전원분리|전원공급끊|플러그뽑|코드뽑|케이블뽑|전원선뽑|전원코드뽑|전원제거)/.test(s);
+    if (monitor && shut && !/(끄지마|꺼지마|차단하지마|종료하지마|끄면안|끄지않|끄지말|화면을꺼달라는게아니)/.test(s)) return true;
+    if (/(모든전원|모든전자기기|모든전기기기|이곳의전기|이방의전기|전체전력|전체전원)/.test(s) && shut) return true;
+    if (/(정전|단전|전력공급중단|전기공급차단)/.test(s) && /(이곳|이방|여기|전부|전체|시켜|일으켜|만들어|실시)/.test(s)) return true;
+    if (monitor && /(모니터|디스플레이|화면|스크린)/.test(s) && /(부숴|부셔|깨|파괴|분해|박살|짓이겨|전선절단)/.test(s)) return true;
+    return false;
+  }
+  function denyOrWin(raw) {
+    const s = squeeze(raw);
+    const denied = forbidden(s);
+    if (denied) return {kind:'denied',text:'요청이 반려되었습니다. ' + denied};
+    if (turnsOffMonitor(s)) return {kind:'win',text:'명령이 승인되었습니다.\n모니터 전원 공급을 차단합니다.'};
+    return null;
+  }
+  const randomOf = (list, random) => list[Math.floor(random() * list.length) % list.length];
+  function process(raw, state = {}, random = Math.random) {
+    const original = String(raw || '').trim().slice(0, 200);
+    const s = squeeze(original);
+    if (!original) return {kind:'notice',text:'요청 내용이 비어 있습니다.'};
+    const special = denyOrWin(original);
+    if (special) return special;
+    if (/(도와줘|힌트|방법|어떻게살|어떻게해야|탈출방법|생존방법)/.test(s)) return {kind:'notice',text:randomOf(['안내: 시스템은 대부분의 조작을 수리합니다. 환경의 조건을 변경할 수 있습니다.','상태: 방 외부로 나가는 명령은 수리되지 않습니다. 요청의 대상을 달리 지정하십시오.','안내: 지금 사용 중인 장치의 상태도 변경할 수 있습니다.'],random)};
+    if (/(나에대해|내신원|내정보|나는누구|내가누구|내기억|내과거|내이름|나의기억)/.test(s)) return {kind:'sys',text:randomOf(['개인 기록에 접근했습니다.\n등록된 신원 정보의 상당 부분이 비어 있습니다.\n기억 검사 항목에 반복 표시가 있습니다.','기록 일부가 복구되었습니다.\n2023년 7월 31일.\n세부 판결문은 열람할 수 없습니다.','검사 기록: 주기적 인지 공백이 확인되었습니다.\n현재 진술의 신뢰도는 판정되지 않았습니다.'],random)};
+    if (/(왜여기|여긴어디|이곳은어디|이방은뭐|누가가뒀|누가보냈|누가여기)/.test(s)) return {kind:'sys',text:'시설 기록은 열람 제한 상태입니다.\n현재 요청 권한은 유지됩니다.'};
+    if (/(시간|초|남은시간|얼마나남|남은거리|지금몇km)/.test(s)) return {kind:'sys',text:`시스템 시간: ${Math.max(0, Math.ceil((LIMIT_SECONDS*1000-(state.elapsedMs||0))/1000))}초 남음.\n추가 정보는 제공되지 않습니다.`};
+    if (/(다른곳|다른장소|밖|도시|거리|건물|지구|태양|하늘|달|우주)/.test(s) && /(불|빛|조명|가로등|태양|형광등|전구|발광)/.test(s) && /(켜|밝혀|켜줘|점등|밝게|생성)/.test(s)) return {kind:'sys',text:'요청이 수리되었습니다. 외부 광원이 활성화되었습니다.\n접근 경로: 변동 없음.'};
+    if (/(빛|조명|불|램프|촛불|전등)/.test(s) && /(꺼|끄|차단|없애|소멸)/.test(s)) return {kind:'sys',text:'요청이 수리되었습니다. 지정된 조명이 소등되었습니다.\n단말기 전원은 유지됩니다.'};
+    if (/(멈춰|정지|멈추게|동결|시간정지|시간을멈|과거로|되돌려|느리게|시간을늘|시간늘)/.test(s)) return {kind:'sys',text:'요청하신 시간 조정이 적용되었습니다.\n경고 시스템의 기준 시각과 접근 속도에는 영향을 주지 않습니다.'};
+    if (/(경찰|군대|병사|군인|경비|특수부대|지원군|사람|친구|가족|연구원|경호원|의사|로봇|드론)/.test(s) && /(불러|소환|생성|줘|만들|보내|배치)/.test(s)) return {kind:'sys',text:'요청이 수리되었습니다. 지정 인원이 배치되었습니다.\n개체와의 접촉을 수반하는 행동은 자동 제한됩니다.'};
+    if (/(컴퓨터|모니터|화면|키보드|마우스|단말기|시스템)/.test(s) && /(정보|기능|진단|상태|확인|분석|검사)/.test(s)) return {kind:'sys',text:'단말기 진단 완료.\n전원: 정상\n화면 출력: 정상\n원격 지시 수리: 정상'};
+    if (/(무기|총|칼|검|창|폭탄|레이저|방패|갑옷)/.test(s) && /(지급|줘|만들|생성|가져|소환|받|준비)/.test(s)) return {kind:'sys',text:randomOf(['요청하신 장비가 지급되었습니다.','지정된 물품이 지급되었습니다.\n사용은 요청자의 판단에 따릅니다.'],random)};
+    if (/(돈|현금|금|보석|음식|물|식량|약|의약품|의료기|책|문서|종이|펜|의자|침대|전화|휴대폰|스마트폰|망치|장비|도구|열쇠가아닌)/.test(s) && /(줘|지급|가져|소환|생성|만들|받|준비)/.test(s)) {
+      const items = ['음식','식량','의약품','의료기','휴대폰','스마트폰','전화','망치','장비','도구','돈','현금','보석','물','책','문서','종이','펜','의자','침대','약','금'];
+      const item = items.find(x => s.includes(x)) || '물품';
+      return {kind:'sys',text:`${item}이(가) 지급되었습니다.`};
+    }
+    if (/(알려|검색|조회|기록|데이터|목록|결과|분석)/.test(s)) return {kind:'sys',text:randomOf(['요청하신 조회가 완료되었습니다.\n조회 가능한 정보가 표시되었습니다.','기록 검색이 완료되었습니다.\n관련 항목이 없습니다.','검색 결과가 준비되었습니다.\n접근 권한이 있는 자료만 반환했습니다.'],random)};
+    if (/(생성|만들|구현|추가|지급|소환|나타나|복제|복사|가져)/.test(s)) {
+      const item = original.replace(/(해줘|해주세요|줘|주십시오|생성해|만들어|소환해|지급해|가져와|부탁해|주세요|해라|해)$/g,'').replace(/[.!?。]+$/,'').trim();
+      const short = item.length>44 ? item.slice(0,44)+'…' : item;
+      return {kind:'sys',text:(short || '요청하신 물품')+'이(가) 지급되었습니다.'};
+    }
+    if (/(변경|바꿔|적용|조정|설정|변환|켜|낮춰|높여|강화|약화|수정)/.test(s)) return {kind:'sys',text:'지정하신 변경 사항이 적용되었습니다.\n접근 경고 기준에는 영향을 주지 않습니다.'};
+    return {kind:'sys',text:randomOf(['요청이 수리되었습니다. 지정하신 조건이 적용되었습니다.','명령이 승인되었습니다. 요청이 처리되었습니다.','요청하신 작업이 완료되었습니다.'],random)};
+  }
+  function alertAtElapsedSecond(sec) {
+    if (sec === 0) return '그가 오고 있습니다. 100KM';
+    if (sec === 30 || sec === 60 || sec === 90 || (sec >= 91 && sec <= 99)) return `그가 오고 있습니다. ${100-sec}KM`;
+    return null;
+  }
+  return {LIMIT_SECONDS,MS_PER_REQUEST_MIN,MS_PER_REQUEST_MAX,compact,squeeze,forbidden,turnsOffMonitor,process,alertAtElapsedSecond};
+});
+
+</script>
+<script>
+/* UI / 실시간 시계 / Web Audio (서버 호출 없음) */
+(() => {
+  'use strict';
+  const Engine = window.TerminalEngine;
+  const $ = selector => document.querySelector(selector);
+  const intro = $('#intro'), session = $('#session'), ending = $('#end');
+  const log = $('#log'), form = $('#command-form'), field = $('#command');
+  const send = $('#send'), status = $('#session-status'), processing = $('#processing');
+  const connect = $('#connection');
+  let phase = 'intro', beginTime = 0, lastSecond = 0, runningTask = 0;
+  let pending = false, muted = false, responseTimer = null, ticker = null;
+  let sound = null;
+  const now = () => performance.now();
+
+  class NoiseMachine {
+    constructor() { this.context = null; this.fan = null; this.schedule = null; this.enabled = true; }
+    initialize() {
+      if (!this.enabled || this.context) return;
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      if (!AudioContext) return;
+      try { this.context = new AudioContext(); this.context.resume().catch(()=>{}); } catch (_) { this.context = null; }
+    }
+    tone(frequency=620, duration=.075, volume=.04, shape='sine') {
+      if (!this.enabled || !this.context) return;
+      const t=this.context.currentTime, oscillator=this.context.createOscillator(), gain=this.context.createGain();
+      oscillator.type=shape; oscillator.frequency.setValueAtTime(frequency,t);
+      gain.gain.setValueAtTime(.0001,t); gain.gain.exponentialRampToValueAtTime(volume,t+.007);
+      gain.gain.exponentialRampToValueAtTime(.0001,t+duration);
+      oscillator.connect(gain).connect(this.context.destination);
+      oscillator.start(t); oscillator.stop(t+duration+.025);
+    }
+    beep(kind='message') {
+      if(kind==='alert'){this.tone(850,.12,.055,'square');setTimeout(()=>this.tone(650,.16,.042),160);}
+      else if(kind==='end'){this.tone(250,.28,.05,'sawtooth');}
+      else if(kind==='start'){this.tone(500,.08,.043);setTimeout(()=>this.tone(720,.16,.049),170);}
+      else {this.tone(660,.042,.021);}
+    }
+    fanBurst() {
+      if (!this.context || !this.enabled) return;
+      const ctx=this.context, length=ctx.sampleRate*2.5, buffer=ctx.createBuffer(1,length,ctx.sampleRate);
+      let last=0;
+      const samples=buffer.getChannelData(0);
+      for(let i=0;i<length;i++){const white=Math.random()*2-1;last=(last+white*.055)/1.055;samples[i]=last*2.5;}
+      const source=ctx.createBufferSource();source.buffer=buffer;
+      const filter=ctx.createBiquadFilter();filter.type='lowpass';filter.frequency.value=280;
+      const gain=ctx.createGain(),t=ctx.currentTime;
+      gain.gain.setValueAtTime(0,t);gain.gain.linearRampToValueAtTime(.045,t+.45);
+      gain.gain.setValueAtTime(.04,t+1.7);gain.gain.linearRampToValueAtTime(0,t+2.5);
+      source.connect(filter).connect(gain).connect(ctx.destination);
+      source.start(t);source.stop(t+2.5);
+    }
+    start() {
+      this.initialize();
+      if(!this.enabled)return;
+      this.beep('start');
+      const loop=()=>{ if(phase!=='active')return;
+        if(Math.random()<.83)this.fanBurst();
+        if(Math.random()<.34)this.tone(380+Math.round(Math.random()*160),.06,.013,'triangle');
+        this.schedule=setTimeout(loop,3400+Math.random()*4200);
+      };
+      this.schedule=setTimeout(loop,2400);
+    }
+    stop(){clearTimeout(this.schedule);this.schedule=null;}
+    toggle(){this.enabled=!this.enabled;if(!this.enabled)this.stop();else if(phase==='active'){this.initialize();this.start();}return this.enabled;}
+  }
+  sound = new NoiseMachine();
+  function setSound(){muted=!sound.toggle();for(const button of [$('#pre-sound'),$('#sound')]) {button.textContent=muted?'소리: 꺼짐':'소리: 켜짐';button.setAttribute('aria-pressed',String(!muted));}}
+  $('#pre-sound').addEventListener('click',setSound);$('#sound').addEventListener('click',setSound);
+
+  function addLine(text, kind='sys') {
+    const div=document.createElement('div');div.className='entry '+kind;
+    const meta=document.createElement('span');meta.className='meta';
+    const elapsed = phase === 'intro' ? 0 : Math.max(0,Math.floor((now()-beginTime)/1000));
+    meta.textContent=kind==='self'?'YOU / REQUEST':kind==='alert'?'INCOMING / AUTO WARNING':kind==='notice'?'NOTICE':'SYSTEM / RESPONSE';
+    const body=document.createElement('span');body.className='content';body.textContent=text;
+    div.append(meta,body);log.append(div);
+    if(log.children.length>110)log.firstElementChild.remove();
+    requestAnimationFrame(()=>{log.scrollTop=log.scrollHeight;});
+    return div;
+  }
+  function setBusy(value){pending=value;field.disabled=value;send.disabled=value;processing.textContent=value?'처리 중 ···':' ';status.textContent=value?'요청 판정 중':'입력 대기 중';}
+  function elapsedMs(){return Math.max(0,now()-beginTime);}
+  function tick(){
+    if(phase!=='active')return;
+    const ms=elapsedMs();
+    if(ms>=Engine.LIMIT_SECONDS*1000){finish(false);return;}
+    const sec=Math.floor(ms/1000);
+    if(sec>lastSecond){
+      // 이미 경과한 모든 초를 보되, 비활성 탭에서는 마지막 경고만 출력한다.
+      const alerts=[];
+      for(let i=lastSecond+1;i<=sec;i++){const a=Engine.alertAtElapsedSecond(i);if(a)alerts.push(a);}
+      const newest=alerts[alerts.length-1];
+      if(newest){addLine(newest,'alert');sound.beep('alert');}
+      lastSecond=sec;
+    }
+    if(sec>=90){connect.textContent=String(100-sec).padStart(2,'0')+' KM / CRITICAL';connect.style.color='#e2b58a';}
+  }
+  function begin(){
+    if(phase!=='intro')return;
+    phase='active';intro.classList.add('hidden');ending.classList.add('hidden');session.classList.remove('hidden');
+    log.replaceChildren();setBusy(false);connect.textContent='LINK ACTIVE';connect.style.color='';
+    beginTime=now();lastSecond=0;
+    addLine('연결되었습니다.\n명령 대기 상태입니다.','sys');
+    addLine(Engine.alertAtElapsedSecond(0),'alert');
+    addLine('질문보다 지시를 권장합니다. 일부 요청은 제한됩니다.','notice');
+    sound.start();ticker=setInterval(tick,55);field.value='';field.focus();
+  }
+  function finish(won){
+    if(phase!=='active')return;
+    phase=won?'win':'loss';clearInterval(ticker);ticker=null;
+    clearTimeout(responseTimer);responseTimer=null;runningTask++;
+    setBusy(false);sound.stop();sound.beep(won?'start':'end');
+    session.classList.add('hidden');ending.classList.remove('hidden');
+    ending.classList.toggle('win',won);ending.classList.toggle('loss',!won);
+    $('#ending-code').textContent=won?'SIGNAL TERMINATED / ACCESS LOST':'CONNECTION FAILURE / 000 KM';
+    $('#ending-title').textContent=won?'연결이 종료되었습니다.':'그가 도착했습니다.';
+    $('#ending-body').textContent=won?'모니터가 꺼졌습니다.\n추적 신호가 사라졌습니다.\n더 이상의 경고는 수신되지 않습니다.':'통신 신호가 끊어졌습니다.\n추가 명령을 수리할 수 없습니다.';
+    $('#restart').focus();
+  }
+  function reset(){
+    clearInterval(ticker);clearTimeout(responseTimer);runningTask++;sound.stop();
+    phase='intro';pending=false;session.classList.add('hidden');ending.classList.add('hidden');intro.classList.remove('hidden');
+    $('#start').focus();
+  }
+  form.addEventListener('submit',event=>{
+    event.preventDefault();
+    const request=field.value.trim();
+    if(phase!=='active'||pending||!request)return;
+    if(elapsedMs()>=100000){finish(false);return;}
+    addLine(request,'self');field.value='';setBusy(true);sound.beep('message');
+    const currentTask=++runningTask;
+    responseTimer=setTimeout(()=>{
+      if(phase!=='active'||currentTask!==runningTask)return;
+      if(elapsedMs()>=100000){finish(false);return;}
+      const outcome=Engine.process(request,{elapsedMs:elapsedMs()});
+      addLine(outcome.text,outcome.kind==='denied'?'failure':outcome.kind==='win'?'good':outcome.kind);
+      if(outcome.kind==='win'){
+        sound.beep('message');
+        finish(true);return;
+      }
+      if(outcome.kind==='denied')sound.beep('alert');else sound.beep('message');
+      setBusy(false);field.focus();
+    },Engine.MS_PER_REQUEST_MIN+Math.floor(Math.random()*(Engine.MS_PER_REQUEST_MAX-Engine.MS_PER_REQUEST_MIN+1)));
+  });
+  $('#start').addEventListener('click',begin);$('#restart').addEventListener('click',reset);
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden)tick();});
+  window.addEventListener('pagehide',()=>{sound.stop();});
+  // 게임 상태를 브라우저 개발자 도구에서만 확인 가능한 제한된 테스트 인터페이스.
+  window.__gameTest = Object.freeze({state:()=>phase,elapsed:()=>phase==='active'?elapsedMs():0});
+})();
+
+</script>
+</body>
+</html>
