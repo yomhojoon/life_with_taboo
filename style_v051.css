@@ -106,3 +106,9 @@
 #modalOverlay[hidden]{display:none!important}
 #modalOverlay .modal-card{max-width:560px;border-radius:3px;border:1px solid #ddd;background:#080808;color:#eee;box-shadow:0 25px 90px #000e}
 #modalOverlay .modal-card .modal-intro{color:#ccc}
+
+/* Approved grayscale photo-pixel UI visuals · November 2026 */
+.chronicle-art{background-image:linear-gradient(90deg,rgba(0,0,0,.05),rgba(0,0,0,.28)),url("assets/ui_skyline.png")!important;background-position:center 75%!important;background-size:cover!important;}
+.topbar{background-image:linear-gradient(90deg,#050505 5%,rgba(0,0,0,.95) 55%,rgba(0,0,0,.75)),url("assets/ui_skyline.png");background-size:cover;background-position:center 75%;}
+.main-grid .panel,.chronicle-panel{border-color:#777!important;box-shadow:inset 0 0 0 1px rgba(255,255,255,.045);}
+.top-navigation a{background:rgba(0,0,0,.62)}

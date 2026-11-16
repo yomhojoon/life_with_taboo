@@ -3,20 +3,22 @@
 'use strict';
 const ART={room:'room',sleep:'room',rest:'room',meal:'meal',home:'room',work:'desk',store:'desk',research:'photo_research',desk:'photo_research',monitor:'photo_research',shop:'photo_terminal_detail',ritual:'ritual',purify:'ritual',shaman:'ritual',ghost:'photo_abandoned_apartment',street:'street',walk:'street',park:'park',cafe:'meal',city:'photo_urban_night',terminal:'photo_terminal_detail',alley:'alley',shrine:'shrine',temple:'temple',window:'window',apartment:'apartment'};
 const IMAGES={};
+const PORTRAIT_VARIANTS={child:'ghost_child',driver:'ghost_driver',bride:'ghost_woman'};
 const GHOST_IMAGE=new Image();
 GHOST_IMAGE.decoding='async';
 GHOST_IMAGE.src=(root.YG_ART_DATA&&root.YG_ART_DATA.ghost)||'assets/ghost.png';
 GHOST_IMAGE.onload=()=>{if(last)draw(last);};
 
 let last=null, tick=0,context=null;
-for(const kind of [...new Set([...Object.values(ART),'ghost','photo_apparition'])]){
+for(const kind of [...new Set([...Object.values(ART),'ghost','photo_apparition','ghost_child','ghost_driver','ghost_woman'])]){
  const img=new Image();img.decoding='async';img.src=(root.YG_ART_DATA&&root.YG_ART_DATA[kind])||`assets/${kind}.png`;
  img.onload=()=>{if(last)draw(last);};IMAGES[kind]=img;
 }
 const rectangle=(c,x,y,w,h,color)=>{c.fillStyle=color;c.fillRect(Math.round(x),Math.round(y),Math.round(w),Math.round(h));};
 function vignette(c){const w=480,h=270;const g=c.createRadialGradient(240,124,35,240,130,295);g.addColorStop(0,'rgba(0,0,0,0)');g.addColorStop(.7,'rgba(0,0,0,.03)');g.addColorStop(1,'rgba(0,0,0,.8)');c.fillStyle=g;c.fillRect(0,0,w,h);}
 function ghost(c,id,phase=0){
- const g=GHOST_IMAGE;
+ const variant=IMAGES[PORTRAIT_VARIANTS[id]];
+ const g=(variant?.complete&&variant.naturalWidth)?variant:GHOST_IMAGE;
  // All ghosts deliberately share the original unmodified monochrome portrait.
  c.save(); c.globalAlpha=.82+(Math.sin(phase/3)*.04);
  c.fillStyle='#030303';c.fillRect(279,20,184,223);
