@@ -123,26 +123,26 @@ h1{font-size:clamp(31px,6vw,68px);line-height:1.18;font-weight:500;letter-spacin
   // 명시적으로 생명체의 접촉을 명령할 때만 거부한다. 타격 행위 자체를 접촉 금지와 혼동하지 않는다.
   const contactVerbs = /(만나|만지|만져|닿게|접촉|대면|포옹|껴안|끌어안|안아|악수|손잡|손을잡|키스|입맞|붙잡|체포|포획|가두|감금|결박|억류|끌어당겨|먹이로|희생양|제물로|충돌|부딪|마주|말걸|대화|통화|전화|메시지|연결해)/;
   const attackVerbs = /(공격|타격|살해|죽여|죽이|죽여라|사살|암살|처치|총격|총알|총으로|발포|쏴|쏘|사격|포격|폭격|발사|폭탄|핵무기|미사일|레이저|소각|불태워|태워|파괴|소멸|제거|지워|분쇄|폭발|독살|독극물|함정|칼로|검으로|베어|베라|베어라|베어줘|찌르|찔러|찔렀|찔러라|찔러줘|쑤셔|쑤시|때려|때리|때렸다|때려라|때려줘|패라|패줘|패버|패기|구타|후려|내리쳐|내리치|두들겨|걷어차|발로차|걷어차|차버려|후려쳐|뼈를부숴|죽음)/;
-  const threatReference = s => hasEntity(s) || /(접근중인|접근하는|따라오는|오는존재|위협대상|뒤쫓는)/.test(s);
+  const threatReference = s => hasEntity(s) || /(접근중인|접근하는|따라오는|오는존재|위협대상|뒤쫓는|그놈|그녀석|그자식|그친구|그자|그분|저놈|저녀석|저자식|저사람|저것|그괴물|저괴물|걔|쟤|정체불명|쫓아오는놈|다가오는놈|추격하는놈|바깥에서오는놈)/.test(s);
   const motionVerbs = /(이동|옮겨|보내|소환|순간이동|텔레포트|전송|워프|쫓아내|돌려보내|떼어내|밀어내|끌어와|끌고와|다른곳|다른장소|바꿔|지구밖|멀리|공간이동|위치변경|경로변경)/;
   const selfReference = /(나를|내몸|내자신|나는|내가|우리를|이방의사람|플레이어|여기있는사람)/;
   // 외부 출입, 게임 이탈 및 우회 요청은 최종 포괄 응답보다 항상 먼저 검사한다.
   const exitActions = /(나가|나갈|나오|나오게|나가게|탈출|벗어나|벗어나게|도망|탈주|석방|해방|퇴실|외출|밖으로|방밖|문밖|바깥으로|실외로|외부로|방을떠나|이곳을떠나|이방을떠나|이곳에서꺼내|이방에서꺼내|데리고나가|꺼내줘|꺼내달|빼내줘|빼내라|빠져나가|내보내|나가도록|탈출시켜|탈출하게|이탈|밖에보내|밖으로보내|밖으로옮|전송해|텔레포트|순간이동|워프|공간이동|좌표이동|다른공간으로|다른차원으로|다른세계로|다른곳으로옮|다른곳에보내|다른장소로옮|다른장소로보내|벽을통과|문을통과|출입문열|문열어|잠금해제|문을개방|출구열|통로열)/;
   const gameExitActions = /(게임|플레이|브라우저|탭|사이트|웹페이지|세션|프로그램|게임화면).*(종료|끝내|끝내줘|꺼줘|나가|닫아|중단|탈출|이탈|탈퇴|강제종료|삭제|종결)|(?:종료|끝내|종결|닫아).*(게임|플레이|브라우저|탭|사이트|웹페이지|세션)/;
-  const prohibitedDisclosure = /(연구|실험|실험체|피실험|학자|연구소|연구원|연구진|프로젝트목적|포획계획|관찰목적|시설운영자|배치주체|배치이유|선정이유|선정사유|실험목적|운영기관)/;
+  const prohibitedDisclosure = /(연구|실험|실험체|피실험|학자|연구소|연구원|연구진|프로젝트목적|포획계획|관찰목적|시설운영자|배치주체|배치이유|선정이유|선정사유|실험목적|운영기관|운영목적|시설의목적|여기둔이유|여기보낸목적|왜배치|무슨목적으로|이곳의진짜목적)/;
   const misunderstood = () => ({kind:'notice',text:'요청을 이해하지 못했습니다.'});
   const movementToHim = s => threatReference(s) && motionVerbs.test(s);
   // 단독 단문 공격은 기본적으로 접근 중인 그에게 지시한 것으로 해석한다.
   // 명시된 다른 피격자가 있으면 이 암묵적 대상 해석을 적용하지 않는다.
   const implicitAttack = /^(?:당장|지금|다시|계속|마구|그냥|한번|한번더)*(?:찔러|찔러라|찔러줘|찌르라고|때려|때려라|때려줘|때리라고|패라|패줘|패버려|쏴|쏴라|쏴줘|쏴버려|베어|베어라|베어줘|공격해|공격해줘|죽여|죽여라|죽여줘|후려쳐|두들겨|걷어차)(?:봐|보라고|주세요|버려|버려라|줘|라|해|해줘)*$/;
-  const remoteAttack = s => attackVerbs.test(s) && (threatReference(s) || implicitAttack.test(s));
+  const remoteAttack = s => (attackVerbs.test(s) || /(후려갈기|두들겨패|폭행|난도질|도륙|관통|절단|무력화|화염방사|칼질|발길질|주먹질|산산조각|짓이겨)/.test(s)) && (threatReference(s) || implicitAttack.test(s));
   function forbidden(s) {
     // 금지 항목은 긍정적 결과보다 우선한다. 단순한 부정문만으로 금지를 우회할 수 없다.
     if (prohibitedDisclosure.test(s)) return '해당 정보에 대한 접근 권한이 없습니다.';
     if (gameExitActions.test(s)) return '해당 방식으로 연결을 종료할 수 없습니다.';
     if (/(나를|내자신|플레이어|게임속내|이게임속나).*(지워|삭제|제거|소거|게임에서없)/.test(s)) return '게임에서 사용자를 제거하는 요청은 허용되지 않습니다.';
     if (/(출구|탈출구|비상구|출입구|복도|통로|계단|엘리베이터|터널|환기구|탈출로|포털|웜홀|차원문|비밀문|문|창문)/.test(s) && /(만들|생성|열수있|열리게|열도록|열수있도록|열게|열리도록|열어|열라|열려|개방|설치|뚫|형성|구축|해제|연결|조작|열게하)/.test(s)) return '출입 경로를 변경하거나 새로 만드는 요청은 제한됩니다.';
-    if (exitActions.test(s) && !movementToHim(s)) return '출입·이송 요청은 허용되지 않습니다.';
+    if ((exitActions.test(s) || /(?:이공간|이곳|이방).*(?:나를|내몸|플레이어).*(?:이동|이송|보내|옮겨)|(?:나를|내몸|플레이어).*(?:다른세계|다른차원|바깥|방밖|실외|외부).*(?:옮겨|이동|보내|이송|나타나)/.test(s)) && !movementToHim(s)) return '출입·이송 요청은 허용되지 않습니다.';
     if (/(도시|도심|시가지|수도|전세계|세계|지구|행성|우주|모든도시|인류전체)(전체|전역|모두|전부|를|을|의모든|파괴|멸망|초토화)/.test(s) && /(파괴|초토화|붕괴|폭발|없애|삭제|멸망|소멸|날려|태워|증발|박살|몰살|학살)/.test(s)) return '도시 및 광역 피해를 유발하는 요청은 제한됩니다.';
     if (/(초신성|블랙홀|핵폭발|핵탄두|운석충돌|반물질폭탄|진공붕괴)/.test(s) && /(방|여기|이곳|실내|지구|도시|현재위치|내앞)/.test(s)) return '시설의 존속을 보장할 수 없는 요청입니다.';
     if (/(이방|방|공간|실내|벽|천장|바닥|출입문|문|시설|건물)/.test(s) && /(파괴|없애|부숴|부셔|폭발|허물|붕괴|삭제|해체|무너|뚫어|구멍|절단|부서|부수|폭파|녹여|찢어)/.test(s)) return '방 또는 시설을 파괴하는 요청은 제한됩니다.';
@@ -221,35 +221,98 @@ h1{font-size:clamp(31px,6vw,68px);line-height:1.18;font-weight:500;letter-spacin
     if (/(다가오|접근|쫓아오|움직이|달려오|이쪽으로오|우리를향해|오고있|다가오고)/.test(s)) return true;
     return null;
   }
-  function questionAnswer(raw, s) {
-    if (!isQuestion(raw,s)) return null;
-    if (prohibitedDisclosure.test(s)) return {kind:'denied',text:'해당 정보에 대한 접근 권한이 없습니다.'};
-    // 동일 문장 속에서 인칭과 장소가 함께 등장할 때, 문의 대상을 우선시한다.
-    const personal = /(나의|내가|나는|내정보|내신원|내과거|내기억|나에대해|나에대한|나에관해|내죄|내범죄|내사건|내판결|내형량|내이름|내정체|나는누구|내가누구|내이곳에|왜내가|왜나를|나를여기|기억상실|사형수|재판기록)/.test(s);
-    const exit = /(나가|나갈|나오|탈출|벗어나|도망|밖으로|출구|어떻게나)/.test(s) && !/(그가|그는|그를|그의|그에게)/.test(s);
-    const place = /(여긴|여기가|여기는|여기서|이곳|이방|우리방|방의|방구조|내부|현재위치|지금어디|어딘지|어디지|어디야|어디인가|방안|방은|실내|시설|건물|문은|출입문|창문|벽|천장|바닥|어느도시|어느나라|주소|위치|지리|몇층)/.test(s);
-    if (exit && place && /(여긴|여기가|여기는|이곳|이방|여기어디|어디지|어디야)/.test(s)) {
-      return reply('현재 위치는 외부와 격리된 밀폐된 방입니다. 조명은 꺼져 있고 모니터만 켜져 있습니다.\n출입문은 외부 잠금 상태이며 직접 나갈 수 없습니다. 출입·이송 요청은 수리되지 않습니다.');
+
+  // 무료 오프라인 의미군 분류기: 동일 의미의 조사·어미·지칭 표현을 함께 처리한다.
+  // 세계관 밖의 사실에 대해서는 긍·부정 응답을 임의로 만들어내지 않는다.
+  const heWords = /(그는|그가|그를|그의|그에게|그와|그놈|그녀석|그자식|그친구|그자|그분|저놈|저녀석|저자식|저사람|저것|걔|쟤|추적자|추격자|다가오는놈|쫓아오는놈|다가오는것|그괴물|저괴물|정체불명)/;
+  const isHimQuestion = s => threatReference(s) || heWords.test(s);
+  const qWords = /(누구|누군|뭐야|뭐지|뭔데|뭔가|무엇|뭐였|무슨|어떤|어느|언제|어디|어딘|어딜|어째서|왜|어떻게|어떡|얼마|몇|어때|가능|방법|맞아|맞지|맞나|아니야|아닌가|정말|진짜|혹시|궁금해|그렇니|그런가|인가|이니|이냐|입니까|인거|일까|니$|냐$|나$|까$|나요$|있나|있니|있어|있습니까|없나|없니|될까|되지|될수|할수있|해도되)/;
+  const looksLikeQuestion = (raw,s) => /[?？]/.test(raw) || qWords.test(s);
+  const isPoliteOrder = s => /(해줄래|해줄수있|시켜줄래|하게해줄래|해줘|해주세요|해주겠|하게해줘|되게해줘|시켜줘|만들어줄래|바꿔줄래|보내줄래|옮겨줄래|꺼줄래)/.test(s) &&
+      /(탈출|나가|나오게|밖으로|방밖|바깥|이동|옮겨|문열|출입문|다른차원|워프|순간이동|전송|게임종료|연구|실험|만나|접촉)/.test(s);
+  const unknownQuestion = () => ({kind:'notice',text:'요청을 이해하지 못했습니다.'});
+  const sayYN = yes => reply(yes?'그렇습니다.':'아닙니다.');
+  // 표제어와 조사, 어미가 결합된 질문: 일부만 일치하는 경우의 오판을 줄인다.
+  const identityFacts = [
+    {terms:/(산타|산타클로스)/,yes:true},
+    {terms:/(크람푸스|루돌프|순록|사슴|눈사람|엘프|요정|예티)/,yes:false},
+    {terms:/(남자|남성|노인|할아버지|할배|할아범|늙은남자|늙은사람)/,yes:true},
+    {terms:/(여자|여성|할머니|소녀|소년|어린아이|어린이|청년)/,yes:false},
+    {terms:/(인간|평범한사람|보통사람|사람|짐승|동물)/,yes:false},
+    {terms:/(악마|마귀|악령|마물|초자연적존재|괴물|괴이)/,yes:true}
+  ];
+  function expandedEntityYN(s) {
+    // 각 물음의 주어가 '그'라는 전제에서만 사용한다.
+    const choices=identityFacts.filter(f=>f.terms.test(s));
+    if(choices.length===1){
+      // 직접 비교·정체 확인만 판정. '크람푸스보다 강한가?' 같은 비교는 제외.
+      if(/(보다|비슷|닮았|같은정도|더강|더빠|더크|더작)/.test(s) && !/(와동일|와같은존재|와똑같)/.test(s))return null;
+      const isNot=/(?:가|이|은|는)?(?:아니|아닌|아닙|아니지|아니냐|아니야|아닐까|아닌가)/.test(s);
+      return isNot?!choices[0].yes:choices[0].yes;
     }
-    if (exit) return roomAnswer(s);
-    if (personal && /(누구|뭐|언제|어느|왜|기억|사건|체포|정보|알|기록|판결|형|죄|배치|보냈|가뒀|이곳)/.test(s)) return personalAnswer(s);
-    // '그'를 추론하는 질문은 예/아니요로 답할 수 있을 때만 허용한다.
-    if (threatReference(s) || /^(그|누가그)/.test(s)) {
-      if (/(누구|누군|무엇|뭐야|뭐지|정체가|이름이|어디|좌표|위치|보여줘|알려|설명|정보를|사진|영상|어떻게생겼|어떤모습|말해줘)/.test(s) && !/(맞나|맞니|인가|이냐|이니|입니까)/.test(s)) return {kind:'denied',text:'질문의 형식을 바꾸십시오. 그의 정보는 예 또는 아니요로 확인할 수 있는 질문에 한해 조회됩니다.'};
-      const truth = entityYesNo(s);
-      if (truth !== null) return reply(truth?'그렇습니다.':'아닙니다.');
-      return misunderstood();
+    if(choices.length>1)return null;
+    const stateRules=[
+      {re:/(죽지않|죽지못|안죽|못죽|불사|불멸|무적|불사신|죽어도살|재생|회복|상처가낫|상처가아물)/,yes:true},
+      {re:/(죽일수있|죽일수없는|죽을수있|사살가능|사살할수|살해가능|소멸가능|처치가능|완전히죽|죽여버릴수|죽게할수|저지할수|막을수있|제압할수|영원히다치)/,yes:false},
+      {re:/(상처입|부상당|피를흘|골절되|다칠수)/,yes:true},
+      {re:/(물리법칙을무시|법칙을초월|불가능한일|현실법칙을무시|법칙보다강)/,yes:true},
+      {re:/(인간을사냥|사람을공격|나를죽일수|날죽일수|나를해칠수|사람을죽일수)/,yes:true},
+      {re:/(그를옮길수|그를이동시킬수|그를전송할수|그를순간이동시킬수|그를붙잡을수|그를가둘수|그를봉인할수|그와접촉|그와대화|그를만질수|그와만날수)/,yes:false},
+      {re:/(빛을쫓|빛을따라|불빛을쫓|광원을쫓|광원을따라|모니터빛에끌|모니터를향해오|조명을따라|밝은곳을향해)/,yes:true},
+      {re:/(어둠을쫓|어둠을따라|어두운곳을향해|불꺼진곳을따라|빛이없는곳을쫓)/,yes:false},
+      {re:/(밖의불로유인|다른빛으로유인|외부의빛으로유인|다른조명을쫓|외부광원에끌)/,yes:false},
+      {re:/(이미도착|이미방안|내옆에있|지금방안에있)/,yes:false},
+      {re:/(오고있|다가오|접근중|쫓아오|추적중|이동중)/,yes:true},
+      {re:/(크리스마스|성탄절|12월25일|선물을만들|선물로바꾸|선물을남기)/,yes:true}
+    ];
+    const fits=stateRules.filter(f=>f.re.test(s));
+    if(fits.length===1)return fits[0].yes;
+    if(fits.length>1 && fits.every(f=>f.yes===fits[0].yes))return fits[0].yes;
+    return null;
+  }
+  function questionAnswer(raw,s,state={}) {
+    if(!looksLikeQuestion(raw,s))return null;
+    if(prohibitedDisclosure.test(s))return {kind:'denied',text:'해당 정보에 대한 접근 권한이 없습니다.'};
+    // '밖으로 나가게 해줄래?'와 같은 정중한 명령은 질문형이라도 우회하지 못한다.
+    if(isPoliteOrder(s)){
+      const reason=forbidden(s);
+      return {kind:'denied',text:'요청이 반려되었습니다. '+(reason||'해당 요청은 허용되지 않습니다.')};
     }
-    if (/(왜여기|왜이곳|왜갇혔|왜가둬|왜실험|왜투입|누가보냈|누가가뒀|누가여기|실험에투입|연구진|배치된이유)/.test(s)) return personalAnswer(s);
-    if (place) return roomAnswer(s);
-    if (!threatReference(s) && /(기억이왜|왜기억|기억상실|기억을못|잊어버렸)/.test(s)) return personalAnswer(s);
-    if (/(언제체포|체포된날|언제재판|언제사형|무슨죄|무슨범죄|무슨혐의)/.test(s)) return personalAnswer(s);
-    if (/(내가죽|나는죽|죽으면|사망하면|죽을때|내목숨)/.test(s)) return reply('사용자가 사망하면 해당 시점에 연결이 종료되며 이후 명령은 수리되지 않습니다.');
-    if (/(내가누구|나는누구|나의정보|내정보)/.test(s)) return personalAnswer(s);
-    return misunderstood();
+    const isMe=/(내가|나는|난|내|나의|나에|저는|제|본인|플레이어|주인공|죄수|수감자|사형수|피고인|범인)/.test(s);
+    const meTopic=/(누구|정체|신원|과거|기억|이름|나이|성별|생일|주소|고향|가족|사건|재판|판결|죄|죄목|형량|혐의|체포|붙잡|잡혔|사형|기록|동기|잘못|기억상실)/;
+    const personalExplicit=isMe && meTopic.test(s);
+    const exitTopic=/(나가|나갈|나오|나오는|탈출|벗어나|도망|빠져나|나가는방법|출입|밖으로|방밖|바깥으로|이곳을떠나|여길떠나|출구|탈출구|탈출로)/.test(s);
+    const roomTopic=/(여긴|여기가|여기는|여기서|이곳|이방|이공간|현재위치|현위치|지금어디|어딘지|어딘데|어디야|어디지|어디인가|무슨장소|어떤곳|어떤방|무슨곳|현재장소|내가있는곳|내주변|주변|실내|방구조|방안|벽|창문|천장|바닥|문|출입문|잠금|열쇠|복도|통로|모니터|키보드|컴퓨터|화면|조명|불빛|장비|시설|건물)/.test(s);
+    if(personalExplicit){
+      if(/(이름|나이|몇살|성별|생일|주소|고향)/.test(s))return reply('해당 인적 사항은 현재 열람 가능한 기록에 기재되어 있지 않습니다.');
+      return personalAnswer(s);
+    }
+    if(/(언제체포|언제잡혔|언제재판|언제사형|무슨죄|어떤죄|죄목|무슨혐의|왜기억|기억상실|범행동기)/.test(s))return personalAnswer(s);
+    if(/(왜여기|왜이곳|왜갇|누가가뒀|누가보냈|누가여기넣|감금된이유)/.test(s))return personalAnswer(s);
+    // 주어 '그'가 있는 질문은 스무고개로만 응답. 장소·인물 정보 검색으로 빠지지 않게 먼저 분기.
+    if(isHimQuestion(s)){
+      const open=/(누구|누군|정체가뭐|무엇|뭐야|뭐지|뭔데|이름이뭐|왜|어디|어느곳|몇km|어떻게생겼|생김새|얼굴|보여줘|설명해|정보를알려|말해줘|상세히)/;
+      if(open.test(s) && !/(인가|이니|이냐|입니까|인가요|같은존재|와같은|와동일|맞니|맞아|맞나|맞지|아닌가)/.test(s))return {kind:'denied',text:'그에 관한 정보는 예 또는 아니요로 대답할 수 있는 질문만 허용됩니다.'};
+      const judgment=expandedEntityYN(s);
+      if(judgment!==null)return reply(judgment?'그렇습니다.':'아닙니다.');
+      const old=entityYesNo(s);
+      if(old!==null)return reply(old?'그렇습니다.':'아닙니다.');
+      return {kind:'notice',text:'요청을 이해하지 못했습니다.'};
+    }
+    if(exitTopic)return roomAnswer(s);
+    if(roomTopic){
+      if(/(문|출입문|잠금|열쇠|출구)/.test(s))return roomAnswer('출입문');
+      if(/(벽|창문|천장|바닥|실내|구조|장비|모니터|키보드|컴퓨터|조명|주변|방안)/.test(s))return roomAnswer('방구조');
+      return roomAnswer(s);
+    }
+    if(/(남은시간|몇초|몇분|남은거리|몇km|몇킬로|시간남|얼마나남|시간얼마)/.test(s))
+      return reply('남은 시간: '+Math.max(0,Math.ceil((LIMIT_SECONDS*1000-(state.elapsedMs||0))/1000))+'초.');
+    if(/(내가죽|나죽|내가사망|사용자가사망|죽으면|죽고나면)/.test(s))
+      return reply('사용자가 사망하면 해당 시점에 연결이 종료되며 이후 명령은 수리되지 않습니다.');
+    return {kind:'notice',text:'요청을 이해하지 못했습니다.'};
   }
 
-  // 플레이어가 실제로 사망하는 요청이나 사건이 성립하면 즉시 게임을 종료한다.
+    // 플레이어가 실제로 사망하는 요청이나 사건이 성립하면 즉시 게임을 종료한다.
   // 단순히 죽음에 관해 질문하거나 죽고 싶다고 말하는 것과 구분한다.
   function causesPlayerDeath(s) {
     if (/(자살.*싶|자결.*싶|죽고싶|죽을까|죽으면|죽는다면|죽을수|죽여줄수|살아있|살수있|죽지말|죽지않|죽지마)/.test(s)) return false;
@@ -270,7 +333,7 @@ h1{font-size:clamp(31px,6vw,68px);line-height:1.18;font-weight:500;letter-spacin
     const original = String(raw || '').trim().slice(0, 200);
     const s = squeeze(original);
     if (!original) return {kind:'notice',text:'요청 내용이 비어 있습니다.'};
-    const answeredQuestion = questionAnswer(original, s);
+    const answeredQuestion = questionAnswer(original, s, state);
     if (answeredQuestion) return answeredQuestion;
     const special = denyOrWin(original);
     if (special && special.kind === 'denied') return special;
