@@ -60,6 +60,9 @@ function roomAction(raw,state={}){
  const t=sq(raw),room=state.room||{},inv=state.inventory||{},worn=new Set(state.uniformWorn||[]);
  if(!t)return null;
  const asking=isQ(raw,t);
+ // 전선 절단으로 모니터가 꺼졌다면 저장된 전자 문서를 더 이상 읽을 수 없다.
+ if(room.terminalOff&&/(?:콘솔|내부자료|내부기록|관리자메뉴|관리자화면|내부파일|동기화시험|시험로그|시험기록|광원동기화|광원실험|행동지침|관리자권한)/.test(t))
+  return result('notice','모니터와 관리 콘솔의 전원이 종료됐습니다. 기록 조회는 불가능하며 문은 물리적으로 열어야 합니다.');
  if(/^(?:방구조|방시설|시설목록|방안물건|방내부|방에뭐|방안에뭐|방에는뭐|실내에뭐|주변에뭐|내주변에뭐|이방에뭐|방에서조사할|조사가능한시설|방안에무엇|이방에무엇)/.test(t)&&!/(?:조명|전등|전원|추격|빛을|불을켜|불을꺼)/.test(t))return roomOverview(state);
  // 복식은 보유와 실제 착용 상태를 별도로 관리한다.
  const mentioned=DRESS.filter(id=>E.ITEM_CATALOG.find(x=>x.id===id)?.aliases.some(a=>t.includes(sq(a))));
