@@ -561,9 +561,10 @@ h1{font-size:clamp(31px,6vw,68px);line-height:1.18;font-weight:500;letter-spacin
       if(elsewhere.test(t)&&/(유인|따라|쫓|이끌|돌리|유도|켜|밝혀|점등|꺼|끄|소등|차단)/.test(t))return yesNo(false);
       if(attack.test(t))return yesNo(false);
       if(/(?:아무것도안|아무행동도안|가만히있|기다리|내버려두|시간만지나|방치)/.test(t))return yesNo(false);
-      if(/(?:안멈추|멈출수없|막지못|저지할수없|끝낼수없|멈추지않|못막)/.test(t))return yesNo(!chase.test(t));
+      const directEntity=/(?:그를|그놈을|그녀석을|그자체|그본체|그몸|저놈을|저녀석을|저자식을|그괴물을|그개체를|추격자를|추적자를)/.test(t);
+      if(/(?:안멈추|멈출수없|막지못|저지할수없|끝낼수없|멈추지않|못막)/.test(t))return yesNo(directEntity||!chase.test(t));
+      if(directEntity)return yesNo(false);
       if(chase.test(t))return yesNo(true);
-      if(/(?:그를|그놈을|그녀석을|그자체|그본체|그몸|저놈을)/.test(t))return yesNo(false);
       return yesNo(true);
     }
     // 성공 여부만 확인하는 단문 가정.
