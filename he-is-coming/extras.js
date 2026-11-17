@@ -35,13 +35,16 @@ function useItem(raw,state={}){
  // 질문 속의 가정은 실제 물건 사용 명령으로 실행하지 않는다.
  if(/[?？]/.test(raw)&&/(끄면|켜면|켜면|먹으면|마시면|사용하면|쓰면|작동하면|전원을끄면|꺼지면|차단하면|되면|한다면|어떻게)/.test(s))return null;
  const it=locate(raw);if(!it)return null;
+ const aliases=it.aliases.map(a=>E.squeeze(a)).sort((a,b)=>b.length-a.length);
+ const chosen=aliases.find(a=>s.includes(a))||E.squeeze(it.id);
+ const actionText=s.replace(chosen,'');
  const actions=recipes.filter(a=>a.item===it.id);
- const found=actions.find(a=>new RegExp(a.verbs).test(s));
+ const found=actions.find(a=>new RegExp(a.verbs).test(actionText));
  const generic=/(사용해|사용하|사용할|써봐|써줘|활용|작동해)/.test(s);
  const act=found||(generic?actions[0]:null);
  if(!act)return null;
  if(/(줘|주세요|주십시오|줄래|지급|배달|가져와|소환|생성|만들어줘|얻고싶|가지고싶|필요해|필요하|갖고싶|건네|제공|달라|내놔)/.test(s)&&!/(사용|써|꺼|켜|먹|마셔|마시|섭취|작동|정리|놓아)/.test(s))return null;
- const deny=E.forbidden(s);
+ const deny=E.forbidden(actionText);
  if(deny)return {kind:'denied',text:'요청이 반려되었습니다. '+deny};
  if(!(stock[it.id]>0))return {kind:'notice',text:it.name+'을(를) 소지하고 있지 않습니다. 먼저 물품을 요청하십시오.'};
  return {kind:'sys',text:it.name+': '+act.text,usedItem:it.id,actionId:act.id,consumeItem:act.consume?it.id:null};
