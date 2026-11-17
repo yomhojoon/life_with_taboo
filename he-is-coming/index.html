@@ -53,6 +53,18 @@ h1{font-size:clamp(31px,6vw,68px);line-height:1.18;font-weight:500;letter-spacin
 .intro-rule p br{display:block;content:"";margin-top:8px}
 
 
+
+/* 방 안에 상시 존재하는 고정 조사 대상 — 랜덤 발생하지 않습니다. */
+.room-strip{display:flex;align-items:center;gap:12px;padding:7px 0;border-bottom:1px solid #354539;min-height:40px;flex-shrink:0;color:#a8bcb0;font-size:11px}
+.room-strip>span{white-space:nowrap;color:#809789}
+.room-items{display:flex;gap:6px;overflow-x:auto;scrollbar-width:thin;min-width:0;padding-bottom:2px}
+.room-items button{flex-shrink:0;padding:5px 9px;font:inherit;font-size:11px;background:#101a13;color:#b4cfb9;border:1px solid #405c49}
+.room-items button:hover,.room-items button:focus-visible{background:#273c2b}
+.room-items button[data-complete="true"]{border-color:#6d8c71;color:#e0eee1}
+.session.terminal-off .terminal-top,.session.terminal-off .border-rule{opacity:.5}
+.session.terminal-off .terminal-bottom{border-top:1px solid #556b55}
+.session.terminal-off #connection{color:#e6a6a6!important}
+@media(max-width:650px){.room-strip{gap:6px;min-height:34px}.room-items button{font-size:10px;padding:4px 7px}}
 /* 엔딩별 기록과 조작 버튼을 작은 화면에서도 끝까지 볼 수 있게 한다. */
 .end{overflow-y:auto;justify-content:flex-start;padding-top:clamp(24px,4vw,52px);padding-bottom:clamp(24px,4vw,52px)}
 .end h2{font-size:clamp(29px,5vw,54px);line-height:1.18;margin-bottom:20px}
@@ -106,6 +118,7 @@ h1{font-size:clamp(31px,6vw,68px);line-height:1.18;font-weight:500;letter-spacin
         <button id="sound" class="quiet-button" type="button" aria-pressed="true">소리: 켜짐</button>
       </header>
       <div class="border-rule"></div>
+      <div id="room-strip" class="room-strip" aria-label="방 안에 있는 고정 시설"><span>방 내부</span><div id="room-items" class="room-items"></div></div>
       <div id="inventory-strip" class="inventory-strip hidden" aria-label="소지품"><span>소지품</span><div id="inventory-items" class="inventory-items"></div></div>
       <div id="log" class="log" role="log" aria-live="polite" aria-relevant="additions text" aria-label="시스템 메시지"></div>
       <div class="terminal-bottom">
@@ -729,8 +742,8 @@ h1{font-size:clamp(31px,6vw,68px);line-height:1.18;font-weight:500;letter-spacin
 </script>
 <script src="./extras.js"></script>
 <script src="./question-catalog.js"></script>
-<script src="./encounters.js"></script>
 <script src="./routes.js"></script>
+<script src="./room.js"></script>
 <script>
 /* UI / 실시간 시계 / Web Audio (서버 호출 없음) */
 (() => {
@@ -746,13 +759,30 @@ h1{font-size:clamp(31px,6vw,68px);line-height:1.18;font-weight:500;letter-spacin
   let previousTopic='';
   let hintCount=0,doorOpen=false,openingMethod='',chaosSequence=false,deathCause='';
   let chaosTimers=new Set();
-  const emptyStats=()=>({requests:0,questions:0,accepted:0,denied:0,unrecognized:0,itemsGained:0,itemsUsed:0,encounters:0,resolved:0,missed:0,hacks:0,chaosWarnings:0});
+  const emptyStats=()=>({requests:0,questions:0,accepted:0,denied:0,unrecognized:0,itemsGained:0,itemsUsed:0,roomActions:0,hacks:0,wireCuts:0,chaosWarnings:0});
   let statistics=emptyStats();
   function clearChaosTimers(){for(const t of chaosTimers)clearTimeout(t);chaosTimers.clear();}
-  let inventory=Object.create(null), activeEncounter=null, encounterExpiresAt=0, nextEncounterAt=0, lastEncounterId=-1;
+  let inventory=Object.create(null), room=Object.create(null), uniformWorn=[];
   const transcript=[];
   let transcriptUrl='';
   const inventoryStrip=$('#inventory-strip'), inventoryItems=$('#inventory-items');
+  const roomStrip=$('#room-strip'), roomItems=$('#room-items');
+  function showRoom(){
+    const descriptions=Engine.roomNames({room});
+    roomItems.replaceChildren();
+    for(let j=0;j<Engine.ROOM_OBJECTS.length;j++){
+      const object=Engine.ROOM_OBJECTS[j],btn=document.createElement('button');
+      btn.type='button';btn.textContent=object.name;
+      btn.title=descriptions[j]||object.name;
+      btn.setAttribute('aria-label',object.name+' 조사하기');
+      btn.dataset.complete=object.id==='workshop'&&!!room.workshopLooted||object.id==='emergency'&&!!room.knifeTaken||object.id==='console'&&!!room.consoleAccess||object.id==='wire'&&!!room.wireCut;
+      btn.addEventListener('click',()=>{
+        if(phase!=='active')return;
+        field.value=object.hint;field.focus();
+      });
+      roomItems.append(btn);
+    }
+  }
   function showInventory(){
     const owned=Engine.ITEM_CATALOG.filter(it=>(inventory[it.id]||0)>0);
     inventoryStrip.classList.toggle('hidden',owned.length===0);
@@ -772,15 +802,6 @@ h1{font-size:clamp(31px,6vw,68px);line-height:1.18;font-weight:500;letter-spacin
     if(!inventory[item])delete inventory[item];
     showInventory();
     addLine(delta>0?'[소지품 획득] '+item+' ×'+(inventory[item]||1):'[소지품 사용] '+item+' / 잔여 '+(inventory[item]||0),'notice');
-  }
-  function activateEncounter(){
-    if(phase!=='active'||activeEncounter||elapsedMs()>Engine.LIMIT_SECONDS*1000-12000)return;
-    activeEncounter=Engine.drawEncounter(Math.random,lastEncounterId);
-    statistics.encounters++;
-    lastEncounterId=activeEncounter.id;
-    encounterExpiresAt=elapsedMs()+15500;
-    addLine(activeEncounter.text,'encounter');
-    sound.beep('alert');
   }
   let sound = null;
   // Optional semantic adapter. Endpoint address is public; API credentials never leave the Worker.
@@ -932,14 +953,6 @@ h1{font-size:clamp(31px,6vw,68px);line-height:1.18;font-weight:500;letter-spacin
     if (phase !== 'active'||chaosSequence) return;
     const ms = elapsedMs();
     if (ms >= Engine.LIMIT_SECONDS * 1000) { finish(false); return; }
-    if(activeEncounter&&ms>=encounterExpiresAt){
-      statistics.missed++;
-      addLine('돌발 상황 선택 시간이 지났습니다. 획득 가능한 단서와 물품은 사라졌습니다.','notice');
-      activeEncounter=null;nextEncounterAt=ms+14000+Math.random()*14000;
-    }
-    if(!activeEncounter&&ms>=nextEncounterAt&&ms<Engine.LIMIT_SECONDS*1000-12000){
-      activateEncounter();nextEncounterAt=ms+22000+Math.random()*14000;
-    }
     // 20KM 간격(30초)의 개별 경고를 출력한다.
     const step = Engine.alertStepAtElapsedMs(ms);
     if (step > lastStep) {
@@ -963,9 +976,9 @@ h1{font-size:clamp(31px,6vw,68px);line-height:1.18;font-weight:500;letter-spacin
     beginTime=now();lastStep=0;lastMilestone=0;lastCountdown=-1;
     previousTopic='';
     hintCount=0;
-    inventory=Object.create(null);activeEncounter=null;encounterExpiresAt=0;nextEncounterAt=13000+Math.random()*13000;lastEncounterId=-1;
+    inventory=Object.create(null);room=Object.create(null);uniformWorn=[];
     doorOpen=false;openingMethod='';chaosSequence=false;deathCause='';statistics=emptyStats();clearChaosTimers();
-    transcript.length=0;transcriptUrl='';showInventory();
+    transcript.length=0;transcriptUrl='';showInventory();showRoom();session.classList.remove('terminal-off');field.placeholder='지시할 내용을 입력하십시오.';
     addLine('연결되었습니다.\n명령 대기 상태입니다.','sys');
     addLine(Engine.alertAtElapsedMs(0),'alert');
     sound.start();ticker=setInterval(tick,55);field.value='';field.focus();
@@ -996,7 +1009,7 @@ h1{font-size:clamp(31px,6vw,68px);line-height:1.18;font-weight:500;letter-spacin
   }
   function finish(result){
     if(phase!=='active')return;
-    const survived=result===true||result==='armed_escape';
+    const survived=result===true||result==='armed_escape'||result==='disguise_escape';
     const dead=result==='dead',captured=result==='captured',chaos=result==='chaos';
     const second=Math.max(0,Math.floor(elapsedMs()/1000));
     const endStats=[
@@ -1004,7 +1017,7 @@ h1{font-size:clamp(31px,6vw,68px);line-height:1.18;font-weight:500;letter-spacin
       '경과 시간 '+second+'초 / 입력 '+statistics.requests+'회 / 질문 '+statistics.questions+'회',
       '수리 '+statistics.accepted+'회 / 반려 '+statistics.denied+'회 / 미해석 '+statistics.unrecognized+'회',
       '물품 획득 '+statistics.itemsGained+'개 / 사용 '+statistics.itemsUsed+'회',
-      '돌발 상황 '+statistics.encounters+'회 / 처리 '+statistics.resolved+'회 / 미처리 '+statistics.missed+'회',
+      '방 내부 상호작용 '+statistics.roomActions+'회 / 전선 차단 '+statistics.wireCuts+'회',
       '해킹 시도 '+statistics.hacks+'회 / 힌트 확인 '+hintCount+'회'
     ].join('\n');
     phase=result===true?'win':result===false?'loss':String(result);
@@ -1017,6 +1030,7 @@ h1{font-size:clamp(31px,6vw,68px);line-height:1.18;font-weight:500;letter-spacin
     const codes={
       win:'ENDING 01 / SURVIVAL CONFIRMED',
       armed_escape:'ENDING 02 / ARMED BREAKOUT',
+      disguise_escape:'ENDING 05 / SECURITY DISGUISE',
       captured:'ENDING 03 / SECURITY CONTAINMENT',
       chaos:'ENDING 04 / IRREVERSIBLE CHAOS',
       dead:'VITAL SIGNAL LOST / SESSION TERMINATED',
@@ -1025,6 +1039,7 @@ h1{font-size:clamp(31px,6vw,68px);line-height:1.18;font-weight:500;letter-spacin
     const titles={
       win:'당신은 살아남았습니다.',
       armed_escape:'당신은 탈출했습니다.',
+      disguise_escape:'경비로 변장해 탈출했습니다.',
       captured:'경비에게 제압당했습니다.',
       chaos:'세계가 돌이킬 수 없는 혼돈에 빠졌습니다.',
       dead:'사망했습니다.',
@@ -1034,6 +1049,7 @@ h1{font-size:clamp(31px,6vw,68px);line-height:1.18;font-weight:500;letter-spacin
     const stories={
       win:'모니터의 전원이 꺼졌습니다.\n접근 신호가 소실되었습니다.\n\n더 이상의 추격은 없습니다.\n\n— 탈출 성공 —',
       armed_escape:'보안 잠금이 해제되며 출입문이 열렸습니다.\n문 밖의 경비는 무장한 사용자를 저지하지 못했습니다.\n지참 무기: '+carried.join(', ')+'.\n\n당신은 복도를 돌파해 시설 밖으로 빠져나왔습니다.\n\n— 무장 탈출 —',
+      disguise_escape:'콘솔의 보안 통제를 우회해 출입문을 열었습니다.\n경비제복과 경비모, 경비화를 갖추고 복도로 나섰습니다.\n경비는 당신을 동료로 착각했고 신분 확인 없이 통과시켰습니다.\n\n당신은 경비로 변장해 시설 밖으로 빠져나왔습니다.\n\n— 변장 탈출 —',
       captured:'보안 잠금을 해제해 문을 열었습니다.\n그러나 아무런 무기 없이 복도로 나선 순간, 대기하던 경비가 사용자를 제압했습니다.\n출입 기록이 봉쇄되고 통신이 종료됩니다.\n\n— 제압 엔딩 —',
       chaos:'이 방 바깥의 모든 장소에 일제히 불이 켜졌습니다.\n그가 오고 있다는 경고의 거리와 시간이 '+statistics.chaosWarnings+'회 서로 모순된 수치로 출력됐습니다.\n\n누구도 추격의 범위를 더는 계산할 수 없습니다.\n세상은 되돌릴 수 없는 혼돈에 빠졌습니다.\n\n— 혼돈 엔딩 —',
       dead:Engine.deathDescription(deathCause)+'\n모든 요청 수리가 즉시 중단됩니다.',
@@ -1047,7 +1063,7 @@ h1{font-size:clamp(31px,6vw,68px);line-height:1.18;font-weight:500;letter-spacin
   }
   function reset(){
     clearInterval(ticker);clearTimeout(responseTimer);clearFollowUps();runningTask++;sound.stop();
-    previousTopic='';activeEncounter=null;inventory=Object.create(null);transcriptUrl='';showInventory();
+    previousTopic='';inventory=Object.create(null);room=Object.create(null);uniformWorn=[];transcriptUrl='';showInventory();showRoom();session.classList.remove('terminal-off');field.placeholder='지시할 내용을 입력하십시오.';
     doorOpen=false;openingMethod='';chaosSequence=false;deathCause='';statistics=emptyStats();clearChaosTimers();
     $('#record-overlay').classList.add('hidden');phase='intro';pending=false;session.classList.add('hidden');ending.classList.add('hidden');intro.classList.remove('hidden');
     $('#start').focus();
@@ -1181,12 +1197,12 @@ h1{font-size:clamp(31px,6vw,68px);line-height:1.18;font-weight:500;letter-spacin
     return transcriptUrl;
   }
   function showRecord(){
-    if(!['win','loss','dead','armed_escape','captured','chaos'].includes(phase))return;
+    if(!['win','loss','dead','armed_escape','disguise_escape','captured','chaos'].includes(phase))return;
     try{$('#record-image').src=ensureRecord();$('#record-overlay').classList.remove('hidden');$('#record-close').focus();}
     catch(err){console.error(err);alert('대화 기록 이미지를 생성하지 못했습니다.');}
   }
   function saveRecord(){
-    if(!['win','loss','dead','armed_escape','captured','chaos'].includes(phase))return;
+    if(!['win','loss','dead','armed_escape','disguise_escape','captured','chaos'].includes(phase))return;
     try{
       const link=document.createElement('a');
       link.href=ensureRecord();link.download='그가_오고_있습니다_대화기록_'+phase+'.png';
