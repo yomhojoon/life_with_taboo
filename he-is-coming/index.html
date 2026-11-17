@@ -763,6 +763,7 @@ h1{font-size:clamp(31px,6vw,68px);line-height:1.18;font-weight:500;letter-spacin
   function recordInventoryChange(item,delta){
     if(!item)return;
     inventory[item]=Math.max(0,(inventory[item]||0)+delta);
+    if(delta>0)statistics.itemsGained+=delta;
     if(!inventory[item])delete inventory[item];
     showInventory();
     addLine(delta>0?'[소지품 획득] '+item+' ×'+(inventory[item]||1):'[소지품 사용] '+item+' / 잔여 '+(inventory[item]||0),'notice');
@@ -1051,6 +1052,7 @@ h1{font-size:clamp(31px,6vw,68px);line-height:1.18;font-weight:500;letter-spacin
     const request=field.value.trim();
     if(phase!=='active'||pending||chaosSequence||!request)return;
     statistics.requests++;
+    if(/(?:해킹|침투|권한상승|보안우회|emp|전자기펄스)/i.test(request)&&!/[?？]/.test(request)&&!/(줘|주세요|지급|달라|필요해|가지고싶)/.test(request))statistics.hacks++;
     if(/[?？]/.test(request)||/(인가|있나|있니|뭐야|무엇|어떻게|알려줘|가능하|할수있)/.test(Engine.squeeze(request)))statistics.questions++;
     if(elapsedMs()>=Engine.LIMIT_SECONDS*1000){finish(false);return;}
     addLine(request,'self');field.value='';setBusy(true);sound.beep('message');
@@ -1073,16 +1075,35 @@ h1{font-size:clamp(31px,6vw,68px);line-height:1.18;font-weight:500;letter-spacin
       if(phase!=='active'||currentTask!==runningTask)return;
       if(elapsedMs()>=Engine.LIMIT_SECONDS*1000){finish(false);return;}
       const outcome=applySemantic(request,preliminary,semantic);
-      addLine(outcome.text,outcome.kind==='denied'?'failure':outcome.kind==='win'?'good':outcome.kind);
+      if(outcome.kind==='denied')statistics.denied++;
+      else if(outcome.kind==='notice'){
+        if(outcome.text.includes('이해하지 못'))statistics.unrecognized++;
+      }else statistics.accepted++;
+      if(outcome.kind==='door_open'){
+        doorOpen=true;openingMethod=outcome.openingMethod||'self';
+        connect.textContent='EXIT CONTROL / UNLOCKED';
+      }
+      addLine(outcome.text,outcome.kind==='denied'?'failure':['win','armed_escape','door_open'].includes(outcome.kind)?'good':outcome.kind);
       if(outcome.resolvedEncounter){
+        statistics.resolved++;
         activeEncounter=null;nextEncounterAt=elapsedMs()+16000+Math.random()*16000;
       }
       if(outcome.encounterReward)recordInventoryChange(outcome.encounterReward,1);
       const granted=Engine.grantedItem(request,outcome);
       if(granted)recordInventoryChange(granted,1);
       if(outcome.consumeItem)recordInventoryChange(outcome.consumeItem,-1);
+      if(outcome.usedItem||outcome.kind==='door_open'&&outcome.consumeItem)statistics.itemsUsed++;
       if(outcome.usedItem&&!activeEncounter&&Math.random()<.16)activateEncounter();
-      if(outcome.kind==='dead') { finish('dead'); return; }
+      if(outcome.kind==='dead') {
+        deathCause=outcome.deathCause||'self';
+        finish('dead');return;
+      }
+      if(outcome.kind==='chaos_start'){beginChaos();return;}
+      if(outcome.kind==='captured'){finish('captured');return;}
+      if(outcome.kind==='armed_escape'){finish('armed_escape');return;}
+      if(outcome.kind==='door_open'){
+        sound.beep('start');setBusy(false);field.focus();return;
+      }
       if(outcome.kind==='win'){
         sound.beep('message');
         finish(true);return;
@@ -1178,7 +1199,7 @@ h1{font-size:clamp(31px,6vw,68px);line-height:1.18;font-weight:500;letter-spacin
   document.addEventListener('visibilitychange',()=>{if(!document.hidden)tick();});
   window.addEventListener('pagehide',()=>{sound.stop();});
   // 게임 상태를 브라우저 개발자 도구에서만 확인 가능한 제한된 테스트 인터페이스.
-  window.__gameTest = Object.freeze({state:()=>phase,elapsed:()=>phase==='active'?elapsedMs():0,inventory:()=>({...inventory}),transcript:()=>transcript.slice(),encounter:()=>activeEncounter,record:()=>ensureRecord()});
+  window.__gameTest = Object.freeze({state:()=>phase,elapsed:()=>phase==='active'?elapsedMs():0,inventory:()=>({...inventory}),transcript:()=>transcript.slice(),encounter:()=>activeEncounter,doorOpen:()=>doorOpen,chaos:()=>chaosSequence,statistics:()=>({...statistics}),record:()=>ensureRecord()});
 })();
 
 </script>
