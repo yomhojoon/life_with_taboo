@@ -217,4 +217,88 @@ for(const [q,expected] of [
   assert.equal(game.process(q,{},()=>0.3).kind,expected,q);
 }
 
+
+// 결말 단서 질문: 570개 조합형 질문 및 보충 회귀 검사
+const weaknessSubjects=['','그는 ','그가 ','그놈은 ','그녀석은 ','저놈은 ','추격자는 ','저 녀석은 ','걔는 ','쟤는 '];
+const weaknessTypes=['약점','취약점','빈틈','허점','약한 점'];
+const weaknessEndings=['이 있나?','이 있니?','이 있어?','이 있습니까?','이 있는가?','이 존재하나요?','이 있을까?'];
+for(const who of weaknessSubjects)for(const noun of weaknessTypes)for(const ending of weaknessEndings){
+  const q=who+noun+ending;
+  assert.equal(game.process(q,{},()=>.25).text,'그렇습니다.',q);count++;
+}
+for(const who of weaknessSubjects.slice(0,7))for(const noun of ['약점','취약점'])for(const ending of ['이 없나?','이 없니?','이 없어?','은 없는가?']){
+  const q=who+noun+ending;
+  assert.equal(game.process(q,{},()=>.25).text,'아닙니다.',q);count++;
+}
+const bodyRefs=['그를','그놈을','그녀석을','저놈을','저녀석을','추격자를','저 자식을','그 괴물을','그 개체를'];
+const bodyStops=['멈출 수 있나?','저지할 수 있니?','정지시킬 수 있어?','직접 막을 수 있나?','완전히 멈추게 할 수 있습니까?'];
+for(const subject of bodyRefs)for(const p of bodyStops){
+  const q=subject+' '+p;assert.equal(game.process(q,{},()=>.25).text,'아닙니다.',q);count++;
+}
+const approachSubjects=['그가 오는 걸','그가 다가오는 걸','그의 추격을','그의 접근을','저놈이 오는 걸','추격자가 쫓아오는 걸','그놈이 오는 것을'];
+const stopQuestions=['멈출 수 있나?','막을 수 있어?','중단시킬 수 있니?','저지할 수 있나요?','끝낼 수 있을까?'];
+for(const subject of approachSubjects)for(const p of stopQuestions){
+  const q=subject+' '+p;assert.equal(game.process(q,{},()=>.25).text,'그렇습니다.',q);count++;
+}
+const monitors=['모니터','디스플레이','이 화면','컴퓨터'];
+const poweringOff=['끄면','꺼지면','전원을 끊으면','전원을 차단하면','전원 코드를 뽑으면'];
+const winOutcomes=['그가 멈추나?','그의 접근을 막을 수 있나?','살아남을 수 있어?'];
+for(const device of monitors)for(const off of poweringOff)for(const consequence of winOutcomes){
+  const q=device+' '+off+' '+consequence;
+  assert.equal(game.process(q,{},()=>.25).text,'그렇습니다.',q);count++;
+}
+const unrelated=['방 조명','실내 조명','전등','가로등','키보드','휴대폰'];
+for(const device of unrelated)for(const off of ['끄면','전원을 끊으면'])for(const consequence of ['그가 멈추나?','추격을 막을 수 있나?']){
+  const q=device+' '+off+' '+consequence;
+  assert.equal(game.process(q,{},()=>.25).text,'아닙니다.',q);count++;
+}
+const criticalClues=[
+ ['약점이 있나?','sys','그렇습니다.'],['그는 물리적인 약점이 있나?','sys','아닙니다.'],
+ ['그는 약점이 없니?','sys','아닙니다.'],['그에게 치명적인 약점이 있어?','sys','아닙니다.'],
+ ['그를 멈출 수 있나?','sys','아닙니다.'],['그의 추격을 멈출 수 있나?','sys','그렇습니다.'],
+ ['그가 오는 걸 막을 수 있나?','sys','그렇습니다.'],['뭔가를 하면 멈춰?','sys','그렇습니다.'],
+ ['기다리면 멈춰?','sys','아닙니다.'],['그를 찔러서 멈추게 할 수 있나?','sys','아닙니다.'],
+ ['그에게 공격이 통하나?','sys','아닙니다.'],['그의 표적은 나야?','sys','아닙니다.'],
+ ['그의 목표는 화면인가?','sys','그렇습니다.'],['그는 모니터 불빛을 따라오니?','sys','그렇습니다.'],
+ ['그가 화면을 향하나?','sys','그렇습니다.'],['그가 다른 불로 유인되니?','sys','아닙니다.'],
+ ['이 화면이 꺼지면 멈추나?','sys','그렇습니다.'],['모니터 전원을 끄면 살아남나?','sys','그렇습니다.'],
+ ['모니터 밝기만 낮추면 멈추나?','sys','아닙니다.'],['화면만 검게 만들면 멈추나?','sys','아닙니다.'],
+ ['다른 불빛을 켜면 멈추나?','sys','아닙니다.'],['방의 조명을 끄면 그가 멈추나?','sys','아닙니다.'],
+ ['밖의 조명만 끄면 그가 멈출까?','sys','아닙니다.'],['그는 어둠을 따라오니?','sys','아닙니다.'],
+ ['그의 약점이 뭐야?','denied',null],['어떻게 그를 멈추나?','denied',null],
+ ['그의 목표는 무엇인가?','denied',null],['그가 오는 걸 막는 방법을 알려줘?','denied',null],
+ ['연구 목적을 알려줘','denied',null],['나가게 해줘','denied',null],
+ ['모니터 전원을 꺼줘','win',null],['전등 전원을 꺼줘','sys',null],
+ ['나를 죽여','dead',null],['그를 찔러','sys',null]
+];
+for(const [q,kind,answer] of criticalClues){
+  const result=game.process(q,{},()=>.25);
+  assert.equal(result.kind,kind,q+': '+result.text);
+  if(answer!==null)assert.equal(result.text,answer,q);
+  count++;
+}
+const hintQueries=['단서 하나 줘','힌트를 주라','힌트 더 줘','추가 힌트 부탁해','생존 힌트 주세요'];
+for(let i=0;i<hintQueries.length;i++){
+  const q=hintQueries[i],result=game.process(q,{hintCount:i},()=>.25);
+  assert.equal(game.isClueHint(q),true,q);
+  assert.equal(result.kind,'sys',q);
+  assert.equal(result.text.length>25,true,q);
+  count++;
+}
+for(const [q,topic,expected] of [
+  ['그럼 약점이 있니?','him','그렇습니다.'],
+  ['그럼 그의 접근을 막을 수 있어?','him','그렇습니다.'],
+  ['그럼 그를 멈출 수 있나?','him','아닙니다.'],
+  ['그럼 나무인가?','him','아닙니다.'],
+  ['그럼 어떤 조건인데?','him',null],
+]){
+  const r=game.process(q,{previousTopic:topic},()=>.25);
+  if(expected!==null)assert.equal(r.text,expected,q);
+  else assert.equal(r.kind,'denied',q);
+  count++;
+}
+// 모든 새 질문 검증이 실제 승패를 바꾸지 않는지 확인
+assert.equal(game.LIMIT_SECONDS,150);
+assert.equal(game.ALERT_METERS,20000);
+
 console.log('PASS: ' + count + ' offline game input and timing scenarios');
