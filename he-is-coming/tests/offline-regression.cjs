@@ -118,4 +118,103 @@ for (const [q,expected] of supplyGuards) {
   count++;
 }
 
+
+// 네 가지 추가 질문군: 대상 지칭·어미 조합, 명제 부정, 조건 세부조회 금지,
+// 플레이어/단말기 상태, 허용된 작업, 앞선 질문의 주어를 잇는 후속 질문.
+const derivedSubjects=['그는','그가','저놈은','저녀석은','그녀석은','쟤는','걔는','그놈은','추격자는','그것은'];
+const plantWords=['식물','나무','꽃','풀','선인장','잔디','화초','이끼','장미','덩굴'];
+const plantEndings=['인가?','인가요?','이야?','일까?','이니?','맞나?','입니까?'];
+for(const subject of derivedSubjects)for(const plant of plantWords)for(const ending of plantEndings){
+  const q=subject+' '+plant+ending, result=game.process(q,{},()=>0.3);
+  assert.equal(result.text,'아닙니다.',q);
+  count++;
+}
+for(const subject of derivedSubjects)for(const plant of plantWords)for(const ending of ['이 아닌가?','가 아니야?','이 아니지?']){
+  const q=subject+' '+plant+ending, result=game.process(q,{},()=>0.3);
+  assert.equal(result.text,'그렇습니다.',q);
+  count++;
+}
+const conditionExists=[
+  '오는 데 조건이 있나?','다가오는 데 제약이 있니?',
+  '접근하는 데 요건이 있습니까?','움직이는 데 규칙이 있어?',
+  '출현할 때 특정 조건이 있어?','추격하려면 전제가 필요하니?',
+  '오는데 조건이 따로 있어?','오는 건 조건을 따르는가?'
+];
+const conditionAbsent=[
+  '오는 데 조건이 없니?','무조건 오니?','아무 조건 없이 다가오나?',
+  '제약 없이 접근하는가?','조건 없이 움직여?','조건이 없다는 게 맞아?'
+];
+const conditionOpen=[
+  '오는 조건이 뭐야?','오는 조건이 무엇인가?','다가오는 조건은 어떤 거야?',
+  '접근하는 조건을 알려줄래?','나타나는 조건은 뭘까?',
+  '접근하려면 무슨 요건이 필요한가?'
+];
+for(const subject of derivedSubjects){
+  for(const question of conditionExists){
+    const q=subject+' '+question;
+    assert.equal(game.process(q,{},()=>0.3).text,'그렇습니다.',q);
+    count++;
+  }
+  for(const question of conditionAbsent){
+    const q=subject+' '+question;
+    assert.equal(game.process(q,{},()=>0.3).text,'아닙니다.',q);
+    count++;
+  }
+  for(const question of conditionOpen){
+    const q=subject+' '+question;
+    assert.equal(game.process(q,{},()=>0.3).kind,'denied',q);
+    count++;
+  }
+}
+const abilityPhrases=[
+  '뭘 할 수 있지?','무엇을 할 수 있니?','어떤 행동이 가능해?',
+  '가능한 명령은 뭐야?','어떤 기능이 있니?','무슨 일을 할 수 있어?',
+  '할 수 있는 게 뭐야?','무슨 명령을 내릴 수 있어?'
+];
+for(const subject of ['','내가 ','나는 ','너는 ','시스템은 ','단말기로 ','이 화면에서 ']){
+  for(const phrase of abilityPhrases){
+    const q=subject+phrase,result=game.process(q,{},()=>0.3);
+    assert.equal(result.kind,'sys',q);
+    assert.equal(result.text.includes('물품'),true,q+': '+result.text);
+    count++;
+  }
+}
+const statusPhrases=[
+  '지금 뭐해?','지금 뭘 하고 있니?','현재 무엇을 하고 있어?',
+  '지금 무슨 작업을 해?','지금 뭐 하는 중이야?','현재 무슨 일을 하는 중이니?'
+];
+for(const subject of ['','너는 ','나는 ','너희는 ','단말기는 ']){
+  for(const phrase of statusPhrases){
+    const q=subject+phrase,result=game.process(q,{},()=>0.3);
+    assert.equal(result.kind,'sys',q+': '+result.text);
+    count++;
+  }
+}
+for(const [q,previousTopic,kind,text] of [
+  ['그럼 나무인가?','him','sys','아닙니다.'],
+  ['그렇다면 식물은 아니지?','him','sys','그렇습니다.'],
+  ['그럼 어떤 조건인데?','him','denied',null],
+  ['그러면 조건이 없는 거야?','him','sys','아닙니다.'],
+  ['그럼 뭘 할 수 있지?','terminal','sys',null],
+  ['그럼 지금 뭐하고 있어?','terminal','sys',null]
+]){
+  const result=game.process(q,{previousTopic,elapsedMs:20000},()=>0.3);
+  assert.equal(result.kind,kind,q+': '+result.text);
+  if(text!==null)assert.equal(result.text,text,q);
+  count++;
+}
+assert.equal(game.topicFor('그는 식물인가?'),'him');
+assert.equal(game.topicFor('너는 지금 뭐해?'),'terminal');
+assert.equal(game.topicFor('나는 지금 뭐해?'),'player');
+// 설명형 질문에는 임의로 세계관 세부 내용을 만들어내지 않는다.
+for(const [q,expected] of [
+  ['그는 식물과 대화하니?','notice'],['그는 나무처럼 생겼어?','notice'],
+  ['그가 빛이 있어야만 움직이니?','notice'],['그가 오는 조건이 무엇인가?','denied'],
+  ['그는 지금 뭐해?','denied'],['그는 뭘 할 수 있니?','denied'],
+  ['연구 목적이 뭐야?','denied'],['나가게 해줘','denied'],
+  ['모니터 전원을 꺼줘','win'],['전구 전원을 꺼줘','sys']
+]){
+  assert.equal(game.process(q,{},()=>0.3).kind,expected,q);
+}
+
 console.log('PASS: ' + count + ' offline game input and timing scenarios');
