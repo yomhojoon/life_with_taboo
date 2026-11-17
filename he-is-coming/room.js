@@ -73,7 +73,7 @@ function roomAction(raw,state={}){
   for(const id of selection)undress?worn.delete(id):worn.add(id);
   return result('sys',(undress?'복식을 벗었습니다: ':'복식을 착용했습니다: ')+selection.join(', ')+'.\n'+(DRESS.every(id=>worn.has(id))?'경비 복식 규정을 모두 충족합니다.':'경비제복·경비모·경비화를 모두 갖춰야 합니다.'),{uniformWorn:[...worn],roomAction:'uniform'});
  }
- if((uniform.test(t)||/(?:경비|복도).*(?:복식|복장|옷|유니폼|착용)/.test(t))&&(inspect.test(t)||/(규정|지침|안내|입어야|필요)/.test(t)))
+ if((uniform.test(t)||/(?:경비원|경비병|복도경비|경비).*(?:복식|복장|옷|유니폼|착용|입어야|입고|입는|신발|모자)/.test(t))&&(inspect.test(t)||/(규정|지침|안내|입어야|필요|착용)/.test(t)))
   return result('sys',INFO.uniform+'\n현재 착용: '+(worn.size?[...worn].join(', '):'없음'));
  if(wires.test(t)){
   if(room.wireCut)return result('sys','모니터 전원선은 이미 끊어졌습니다. 단말기가 종료됐으며 이제 물리적으로 문을 열 수 있습니다.');
