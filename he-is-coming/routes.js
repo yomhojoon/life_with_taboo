@@ -38,7 +38,7 @@ function worldLights(raw,t){
 }
 function portalOpened(state){return !!state?.doorOpen;}
 function actionableExit(raw,t,state){
- if(!portalOpened(state)||!exitVerb.test(t)||exitQuestion.test(t)||question(raw,t))return false;
+ if(!exitVerb.test(t)||exitQuestion.test(t)||question(raw,t))return false;
  if(/(?:그를|그가|그는|그놈|추격자).*(?:나가|탈출|나오|밖으로)/.test(t))return false;
  if(/(?:나가게해줘|나가게해|내보내줘|탈출시켜줘)/.test(t))return true;
  return /^(?:(?:나는|내가|난|나|내몸을|내몸이|플레이어|사용자|지금|즉시|어서|당장|그럼|그러면|좋아|무기를들고|무기없이|총을들고|칼을들고|문을열고|문이열렸으니|문이열렸다면|열린문으로|맨손으로|맨몸으로|비무장으로|무기없이|무기를내려놓고|무기를버리고|무기를두고|권총을버리고|총을버리고|칼을버리고|무장해제하고|방에서|이방에서|이곳에서|여기서|천천히|조심히|재빨리|뛰어서|걸어서|무장하고)*)?(?:나가|밖으로나|밖으로걸어|문밖으로|문을통과|문으로나|복도로|탈출|도망가|문을지나|방을떠나|이곳을떠나|퇴실|밖으로빠져나)/.test(t)||/(?:나가|나오|탈출|밖으로|문밖으로|퇴실)(?:줘|라|자|보자|겠습니다|겠어|겠습니다|보겠습니다|버리자|해줘|하자|할래)$/.test(t);
@@ -117,6 +117,7 @@ E.process=function alternateRoutes(raw,state={},random=Math.random){
  if(worldLights(input,t))return {kind:'chaos_start',text:'외부 전체 조명 동기화를 승인했습니다.\n광원 제어 범위가 통제를 벗어납니다.'};
  const poison=deriveDeathCause(input,state.inventory);
  if(poison&&!question(input,t))return poison;
+ if(actionableExit(input,t,state)&&!portalOpened(state))return {kind:'denied',text:'요청이 반려되었습니다. 출입문이 잠겨 있어 아직 나갈 수 없습니다.'};
  if(actionableExit(input,t,state)){
   const explicitlyUnarmed=/(?:무기없이|맨손으로|맨몸으로|비무장으로|무장해제하고|무기를내려놓고|무기를버리고|총을놓고|총을버리고|칼을놓고|칼을버리고|무기를두고)/.test(t);
   const carried=explicitlyUnarmed?[]:equippedWeapons(state.inventory);
