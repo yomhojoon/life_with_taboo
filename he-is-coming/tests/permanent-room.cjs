@@ -5,7 +5,7 @@ const base=path.resolve(__dirname,'..'),html=fs.readFileSync(path.join(base,'ind
 const core=html.match(/<script>([\s\S]*?)<\/script>/);assert.ok(core);
 const sandbox={module:{exports:{}}};
 vm.runInNewContext(core[1],sandbox,{timeout:5000});
-for(const script of ['extras.js','question-catalog.js','routes.js','room.js'])
+for(const script of ['extras.js','question-catalog.js','routes.js','room.js','short-questions.js'])
  vm.runInNewContext(fs.readFileSync(path.join(base,script),'utf8'),sandbox,{timeout:5000});
 const game=sandbox.module.exports;
 let count=0;
