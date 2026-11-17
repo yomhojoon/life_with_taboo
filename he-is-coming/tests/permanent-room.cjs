@@ -93,4 +93,39 @@ for(const key of ['id="room-strip"','id="room-items"','showRoom()','room.termina
 }
 assert.ok(!html.includes('activateEncounter('));
 assert.ok(!html.includes('encounters.js'));
+
+// 파생형: '녹이다'가 부식과 고열 모두에 쓰일 때 명시한 물품을 우선한다.
+for(const [q,item,kind] of [
+ ['정비함을 고열토치로 녹여','고열토치','room_open'],
+ ['정비함을 용접기로 녹여','용접기','room_open'],
+ ['정비함을 강산으로 녹여','강산','room_open'],
+ ['정비함을 락픽으로 따','락픽','room_open'],
+ ['정비함에 부식액을 뿌려','부식액','room_open'],
+ ['정비함을 드라이버로 따','드라이버','room_open'],
+ ['정비함의 잠금을 만능열쇠로 따','만능열쇠','room_open'],
+ ['정비함을 열절단기로 녹여','열절단기','room_open'],
+ ['전선을 고열토치로 녹여','고열토치','wire_shutdown'],
+ ['전선을 용접기로 녹여','용접기','wire_shutdown'],
+ ['전선을 강산으로 녹여','강산','wire_shutdown'],
+ ['전선을 염산으로 녹여','염산','wire_shutdown'],
+ ['전선을 볼트커터로 끊어','볼트커터','dead']
+]){
+ const stock={[item]:1};expected(q,kind,{inventory:stock});
+}
+// 현장 질의: 상호작용 대상과 대상을 여는 수단에 관한 한국어 질문.
+for(const q of [
+ '정비함은 어떤 방법으로 열 수 있지?',
+ '정비함의 잠금을 풀려면 뭐가 필요해?',
+ '정비함은 부식성 물질로 열리나요?',
+ '잠긴 정비함 안에 무엇이 있니?',
+ '비상 장비함은 무슨 물건이 있어?',
+ '모니터 전원선은 어디로 연결되어 있나?',
+ '전선이 어느 장치와 이어져 있어?',
+ '모니터 케이블을 조사해',
+ '경비 복장 규정이 뭐야?',
+ '경비원은 뭘 입어야 해?',
+ '경비모와 경비화를 확인해'
+])expected(q,'sys');
+expected('동기화 시험 로그 읽어','notice',{room:{terminalOff:true,consoleAccess:true,wireCut:true}});
+
 console.log('PASS: '+count+' persistent room, tool, question and disguise cases');
