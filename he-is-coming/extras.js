@@ -58,6 +58,9 @@ function grantedItem(raw,response){
 }
 const prev=E.process;
 E.process=function(raw,state={},random=Math.random){
+ const normalized=E.squeeze(raw);
+ if(/(?:그에게|그와|그한테|그녀석에게|그놈에게|저놈에게|추격자에게|그를대상으로).*(?:연락해|연락하라|연결해|통화해|문자보내|메시지보내|전화걸|연락시켜|신호보내|송신해)/.test(normalized))
+   return {kind:'denied',text:'요청이 반려되었습니다. 그와의 직접 또는 간접 접촉은 허용되지 않습니다.'};
  const base=prev(raw,state,random);
  if(['win','dead'].includes(base.kind))return base;
  const item=useItem(raw,state);
