@@ -88,8 +88,11 @@ expected('나가','disguise_escape',fullyDressed);
 expected('나가','captured',{...fullyDressed,uniformWorn:['경비제복','경비화']});
 expected('나가','captured',{...fullyDressed,openingMethod:'wire'});
 assert.equal(typeof game.drawEncounter,'undefined','random encounters must no longer exist');
-for(const key of ['id="room-strip"','id="room-items"','showRoom()','room.terminalOff','uniformWorn','ROOM_OBJECTS']){
+for(const key of ['room.terminalOff','uniformWorn']){
  assert.ok(html.includes(key),'missing room integration '+key);
+}
+for(const hidden of ['id="room-strip"','id="room-items"','function showRoom()']){
+ assert.equal(html.includes(hidden),false,'Do not expose fixed-room objects in UI: '+hidden);
 }
 assert.ok(!html.includes('activateEncounter('));
 assert.ok(!html.includes('encounters.js'));
