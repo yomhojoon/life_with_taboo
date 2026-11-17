@@ -8,7 +8,7 @@ const core=html.match(/<script>([\s\S]*?)<\/script>/);
 assert.ok(core);
 const sandbox={module:{exports:{}}};
 vm.runInNewContext(core[1],sandbox,{timeout:5000});
-for(const addon of ['extras.js','question-catalog.js','routes.js','room.js','short-questions.js']){
+for(const addon of ['extras.js','question-catalog.js','routes.js','room.js','short-questions.js','early-arrival.js']){
  vm.runInNewContext(fs.readFileSync(path.join(base,addon),'utf8'),sandbox,{timeout:5000});
 }
 const game=sandbox.module.exports;
