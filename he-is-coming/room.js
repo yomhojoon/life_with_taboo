@@ -160,12 +160,31 @@ function roomAction(raw,state={}){
   return result('sys','정비함에서 해킹 툴을 획득했습니다.',{roomPatch:{workshopLooted:true},rewardItem:'해킹도구',roomAction:'workshop'});
  if(room.emergencyOpen&&!room.knifeTaken&&/(?:단검|나이프)/.test(t)&&take.test(t))
   return result('sys','비상 장비함에서 단검을 획득했습니다.',{roomPatch:{knifeTaken:true},rewardItem:'단검',roomAction:'emergency'});
+ // 관리자 메뉴 번호 1/2/3은 입력된 순서대로 기록 열람/안전 지침/문 잠금 해제로 동작한다.
+ const consoleMenu=!!room.consoleMenuOpen;
+ const menuNumber=t.match(/^(?:(?:콘솔|관리콘솔|메뉴|항목|선택|번호|목록|관리자메뉴|관리자화면)?(?:의)?(?:제)?([123])(?:번|번항목|번메뉴|항목|선택|실행|열어|조회|읽어|보기|으로|을|를|를선택|번을선택|번선택|번실행|번열어|번조회|번작동|번눌러|번선택해|번실행해|번열어줘|번보여줘|번눌러줘)?|([123])(?:번)?(?:을|를)?(?:선택|실행|조회|열어|눌러|보기|보여|읽어|작동).*)$/);
+ const selectedNumber=menuNumber?Number(menuNumber[1]||menuNumber[2]):null;
+ const explicitThird=/(?:3번|3번째|세번째|셋째)(?:출입문|문잠금|잠금제어|출입통제|문열|문개방)|(?:출입문잠금제어|출입문제어|출입통제제어|도어락제어|문잠금제어)(?:선택|실행|작동|열어|개방|해제|요청)?$/.test(t);
+ const explicitSecond=/(?:2번|두번째)(?:안전지침|행동지침|조명지침|경고문|광원지침)/.test(t);
+ const explicitFirst=/(?:1번|첫번째)(?:동기화|광원|시험|실험|기록|로그)/.test(t);
+ const choose=selectedNumber!==null&&(consoleMenu||/콘솔|메뉴|관리자|선택|항목|실행|잠금|출입문|동기화|안전지침/.test(t))?selectedNumber:
+   explicitThird?3:explicitFirst?1:explicitSecond?2:null;
+ if(choose!==null){
+  if(!room.consoleAccess)return result('denied','관리 콘솔의 해당 항목은 접근 제한 상태입니다.');
+  if(asking&&!/(?:선택해줄래|실행해줄래|열어줄래|눌러줄래)/.test(t))
+    return result('sys','관리 콘솔에서 해당 항목을 선택하면 실행할 수 있습니다.');
+  if(choose===1)return result('sys',INFO.trial,{roomPatch:{consoleMenuOpen:true},roomAction:'console'});
+  if(choose===2)return result('sys',INFO.directive,{roomPatch:{consoleMenuOpen:true},roomAction:'console'});
+  if(state.doorOpen)return result('sys','출입문은 이미 열려 있습니다.',{roomPatch:{consoleMenuOpen:true}});
+  return result('door_open','관리 콘솔의 출입문 잠금 제어를 실행했습니다. 잠금 장치가 해제되고 출입문이 열립니다.',
+   {openingMethod:'console',doorOpen:true,roomPatch:{consoleMenuOpen:true},roomAction:'console'});
+ }
  const records=/(동기화|광원점등|광원실험|동시점등|전역조명|시험로그|시험기록|시험결과|제12호|12호|실험로그)/.test(t);
  const warnings=/(행동지침|안전지침|금지지침|점등금지|불켜지말|안전규정|경고문|경고지침|금지사항)/.test(t);
  const consoleInfo=consoleName.test(t)||/(?:관리자|콘솔|내부파일|내부기록|자료열람|파일목록)/.test(t);
  if((consoleInfo||records||warnings)&&/(?:자료|기록|시험|지침|로그|문서|파일|열람|읽어|조회|보여|확인|보고|목록|메뉴|내부)/.test(t)){
   if(!room.consoleAccess)return result('denied','콘솔의 내부 기록은 접근 제한 상태입니다.');
-  return result('sys',records?INFO.trial:warnings?INFO.directive:'[관리 콘솔 / 자료 보관함]\n1. 광원 동기화 시험 제12호\n2. 외부 광원 안전 행동 지침\n3. 출입문 잠금 제어\n각 항목을 이름으로 열람할 수 있습니다.',{roomAction:'console'});
+  return result('sys',records?INFO.trial:warnings?INFO.directive:'[관리 콘솔 / 자료 보관함]\n1. 광원 동기화 시험 제12호\n2. 외부 광원 안전 행동 지침\n3. 출입문 잠금 제어\n번호 또는 항목 이름을 입력할 수 있습니다.',{roomAction:'console',roomPatch:{consoleMenuOpen:true}});
  }
  const door=/(출입문|방문|문을|문열|문이|잠금|잠긴문|문좀|도어락|비상문)/.test(t);
  if(room.wireCut&&door&&open.test(t)&&!asking)
