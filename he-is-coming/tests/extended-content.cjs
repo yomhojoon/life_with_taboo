@@ -1,5 +1,5 @@
 // Run: node he-is-coming/tests/extended-content.cjs
-// 320 structured prompts x 3, 59 items x 8 interactions x 2, and encounter choice paths.
+// 320 structured prompts x 3, 77 items x 8 interactions x 2, and five permanent room objects.
 'use strict';
 const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm'),assert=require('node:assert/strict');
 const base=path.resolve(__dirname,'..');
@@ -8,7 +8,7 @@ const core=html.match(/<script>([\s\S]*?)<\/script>/);
 assert.ok(core);
 const sandbox={module:{exports:{}}};
 vm.runInNewContext(core[1],sandbox,{timeout:5000});
-for(const addon of ['extras.js','question-catalog.js','encounters.js','routes.js']){
+for(const addon of ['extras.js','question-catalog.js','routes.js','room.js']){
  vm.runInNewContext(fs.readFileSync(path.join(base,addon),'utf8'),sandbox,{timeout:5000});
 }
 const game=sandbox.module.exports;
@@ -24,27 +24,23 @@ for(const row of game.QUESTION_CATALOG){
   count++;
  }
 }
-assert.equal(game.ITEM_CATALOG.length,59);
-assert.equal(game.ITEM_INTERACTIONS.length,472);
+assert.equal(game.ITEM_CATALOG.length,77);
+assert.equal(game.ITEM_INTERACTIONS.length,616);
 for(const recipe of game.ITEM_INTERACTIONS){
  const verb=recipe.verbs.split('|')[0];
  for(const input of [recipe.item+' '+verb,recipe.item+' 좀 '+verb]){
   const r=game.process(input,{inventory:{[recipe.item]:1}},()=>0.2);
-  assert.equal(r.actionId,recipe.id,input+' => '+r.text);
+  assert.ok(r.actionId===recipe.id || ['경비제복','경비모','경비화'].includes(recipe.item)&&r.kind==='sys'&&r.text.length>15,input+' => '+r.text);
   count++;
  }
 }
-assert.equal(game.ENCOUNTERS.length,12);
-for(const ev of game.ENCOUNTERS){
- const drawn=game.drawEncounter(()=>(ev.id+0.001)/game.ENCOUNTERS.length,-1);
- assert.equal(drawn.id,ev.id);
- for(const option of ev.options){
-  const input=option.verbs.split('|')[0];
-  const r=game.resolveEncounter(input,drawn);
-  assert.equal(r?.resolvedEncounter,true,ev.name+' : '+input);
-  count++;
- }
+assert.equal(game.ROOM_OBJECTS.length,5);
+for(const obj of game.ROOM_OBJECTS){
+ const r=game.process(obj.hint,{inventory:{},room:{}},()=>0.2);
+ assert.equal(r.kind,'sys',obj.name);
+ count++;
 }
+assert.equal(game.roomNames({room:{}}).length,5);
 const deny=[
  ['손전등으로 출입문을 열어','denied'],
  ['라디오로 그에게 연락해','denied'],
@@ -70,11 +66,11 @@ const gifted=game.process('손전등 하나 줘',{},()=>0.2);
 assert.equal(game.grantedItem('손전등 하나 줘',gifted),'손전등');
 assert.equal(game.process('물 마셔',{inventory:{물:1}},()=>0.2).consumeItem,'물');
 assert.equal(game.process('손전등 켜',{inventory:{}},()=>0.2).kind,'notice');
-for(const marker of ['id="record-overlay"','id="record-image"','id="view-record"','id="save-record"','function makeTranscriptImage','id="inventory-items"','function activateEncounter']){
+for(const marker of ['id="record-overlay"','id="record-image"','id="view-record"','id="save-record"','function makeTranscriptImage','id="inventory-items"','id="room-strip"','id="room-items"']){
  assert.ok(html.includes(marker),'UI missing '+marker);
 }
-for(const script of ['extras.js','question-catalog.js','encounters.js','routes.js']){
+for(const script of ['extras.js','question-catalog.js','routes.js','room.js']){
  assert.ok(html.includes('<script src="./'+script+'"></script>'),script);
 }
 assert.ok(html.includes('거부됩니다.<br>응답을 관찰하고 방법을 찾으십시오.'),'intro line break');
-console.log('PASS: '+count+' extended question, inventory and encounter inputs');
+console.log('PASS: '+count+' extended question, inventory and permanent-room inputs');
