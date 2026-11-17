@@ -414,6 +414,66 @@ h1{font-size:clamp(31px,6vw,68px);line-height:1.18;font-weight:500;letter-spacin
     }
     return misunderstood();
   }
+
+  // 확장 입력 어댑터: 품목 요청과 '너/너희' 질문. 모든 판단은 오프라인에서 처리.
+  // 원래 엔진의 금지·승패 판정은 우선한다.
+  const originalProcess=process;
+  const giver = /(줘|주세요|주십시오|줄래|줄수있|주실수|달라|다오|내놔|내놓|건네|전달|배달|가져다|가져와|챙겨|지급|공급|보급|제공|구해줘|마련해|준비해|소환해|생성해|만들어줘|갖고싶|가지고싶|원해|필요해|필요하|받고싶|받을수|얻고싶|먹고싶|마시고싶)/;
+  const noGift = /(알려|설명|보여|답해|대답|말해|가르쳐|조회|검색|확인해|분석|조사|보고해|도와|고쳐|보호|때려|찔러|죽여|죽이|쏴|불태워|파괴|소멸시켜|이동시켜|순간이동|텔레포트|나가게|열어|전원꺼|전원을꺼|종료)/;
+  const secondPerson=/^(?:혹시|제발|정말|근데|그런데|그럼|대체|있잖아|잠깐|그러면|궁금한데)*(?:너희들?|너네들?|넌|너는|너가|너의|너에|너를|너랑|너와|너에게|너한테|너도|네가|니가|당신들?|그쪽|시스템|단말기|이기계|이컴퓨터|운영자|관리자|개발자|제작자|이목소리|이화면|너(?!무|구리|트|비게이션))/;
+  const speakingOfSystem=s=>secondPerson.test(s)||/(?:누가|누구).*(?:너를|너|이시스템|이단말기|이컴퓨터|이기계).*(?:만들|운영|관리|조종)/.test(s);
+  const askingSystem=(raw,s)=>speakingOfSystem(s)&&(/[?？]/.test(raw)||/(누구|정체|뭐야|뭐지|뭐하는|무엇|무슨|어디|어째서|왜|어떻게|누가|이름|정보|할수있|가능|하니|있니|있나|있어|맞나|인가|입니까|냐|니|까|설명|알려|말해|답해|밝혀|공개|듣고|지켜보|감시)/.test(s));
+  function systemReply(raw,s){
+    if(!askingSystem(raw,s))return null;
+    if(prohibitedDisclosure.test(s))return {kind:'denied',text:'해당 정보에 대한 접근 권한이 없습니다.'};
+    if(/(?:그는|그가|그를|그와|그에게|그의|그놈|추격자).*(?:보냈|만들|고용|조종|관리|관계|연관|통화|불렀|부른|제어|연결)|(?:너희|너네|너|시스템|관리자|운영자).*(?:그는|그가|그를|그와|그의|그에게).*(?:보냈|만들|고용|조종|관리|관계|연관|통화|불렀|부른|제어|연결)/.test(s))
+      return {kind:'denied',text:'해당 관계에 관한 정보는 제공되지 않습니다.'};
+    if(/(?:듣고|듣니|듣나|내말|말을듣|알아듣|수신|이해하|응답|대답하|말을받)/.test(s))
+      return {kind:'sys',text:'입력된 문장을 수신하고 있습니다. 요청을 입력하면 처리 결과가 표시됩니다.'};
+    if(/(?:너누구|넌누구|너는누구|너뭐야|넌뭐|너는뭐|너정체|너는기계|너는ai|너인공지능|너에대한정보|너에대해|너를설명)/.test(s)&&!/(너희|너네|운영자|관리자)/.test(s))
+      return {kind:'sys',text:'이 단말기는 요청을 수신하고 실행 결과를 안내하는 시스템입니다. 별도의 인격이나 신원 정보는 제공되지 않습니다.'};
+    if(/(?:너희|너네|당신들|운영자|관리자|개발자|제작자|누가|누구|소속|주인|이름|본명|위치|주소|어디|연락처|몇명|몇사람|사람인가|인간인가|사람이야|정체|만들|고용|가뒀|가둔|감금|왜여기|왜나를|여기보냈|보낸이유)/.test(s))
+      return {kind:'sys',text:'단말기의 운영 주체와 관리 정보는 열람할 수 없습니다. 이 화면에서는 요청의 접수와 처리 결과만 확인할 수 있습니다.'};
+    if(/(?:가능|할수있|할수없|뭘해|뭐해|뭘할|무슨일|능력|기능|전능|도와|해줄|해주|해주는|시킬수)/.test(s))
+      return {kind:'sys',text:'이 단말기는 요청을 검토하고 허용된 작업을 실행합니다. 일부 요청은 제한됩니다.'};
+    return {kind:'sys',text:'이 단말기는 요청을 접수하고 처리 결과를 표시합니다. 문의하신 추가 정보는 제공되지 않습니다.'};
+  }
+  const giveEnding = /(?:줄\s*수\s*있(?:니|나요|습니까|어|을까)?|주실\s*수\s*있(?:나요|습니까)?|받을\s*수\s*있(?:나요|니|어|을까)?|가져다\s*줄래|가지고\s*싶(?:어|다|어요)?|갖고\s*싶(?:어|다|어요)?|먹고\s*싶(?:어|다|어요)?|마시고\s*싶(?:어|다|어요)?|받고\s*싶(?:어|다|어요)?|얻고\s*싶(?:어|다|어요)?|줄래요|줄래|주실래요|주겠니|주겠어|주겠습니까|주세요|주십시오|주라|주렴|줘봐요|줘봐|줘요|줘|달라고|달라|다오|내놔라|내놔|내놓|건네주세요|건네줘|건네주|전달해주세요|전달해줘|전달해|배달해주세요|배달해줘|배달해|가져다주세요|가져다줘|가져와주세요|가져와줘|가져와|챙겨주세요|챙겨줘|챙겨|지급해주세요|지급해줘|지급해|지급하라|제공해줘|제공해주세요|제공해|공급해줘|공급해|보급해줘|보급해|구해줘|구해주|마련해주세요|마련해줘|준비해줘|준비해주세요|준비해|소환해줘|소환해주세요|소환해|생성해줘|생성해주세요|생성해|만들어줘|만들어주세요|만들어주|원합니다|원해요|원한다|원해|필요합니다|필요하다|필요해요|필요해|받고싶어|받고싶다|얻고싶어|얻고싶다|갖게해줘|받게해줘)\s*$/;
+  function supplyName(raw){
+    let z=String(raw||'').normalize('NFKC').replace(/[?？!！。,.,]/g,' ').trim();
+    z=z.replace(/(?:줄\s*수\s*있(?:니|나요|습니까|어|을까)?|주실\s*수\s*있(?:나요|습니까)?|받을\s*수\s*있(?:나요|니|어|을까)?|가져다\s*줄래|가지고\s*싶(?:어|다|어요)?|갖고\s*싶(?:어|다|어요)?|먹고\s*싶(?:어|다|어요)?|마시고\s*싶(?:어|다|어요)?|받고\s*싶(?:어|다|어요)?|얻고\s*싶(?:어|다|어요)?|필요(?:해요|합니다|하다|해)?|원(?:해요|합니다|해|한다)?)/g,' ');
+    z=z.replace(giveEnding,' ').replace(/(?:^|\s)(?:혹시|정말|제발|부탁인데|부탁이야|부탁|나|너|너희|너희가|너희는|너네|너네가|너네는|너는|너가|넌|시스템|단말기|당신|저는|나는|내가|나도|저도|지금|당장|즉시|그냥|좀|꼭|부디|이번엔)(?=\s|$)/g,' ');
+    z=z.replace(/(?:나한테|나에게|내게|저한테|저에게|제게|내앞에|내손에|나를위해|저를위해)/g,' ');
+    z=z.replace(/(?:\d+(?:개|병|통|잔|자루|권|장|마리|그릇|대|벌|켤레|상자|세트|팩|명|알|캔|봉지|송이)?|하나|한개|한병|한잔|한자루|한권|한장|한마리|한그릇|한대|한세트|두개|두병|세개|몇개|몇병|하나만|딱하나)(?=\s|$)/g,' ');
+    z=z.replace(/(?:^|\s)(?:좀|더|그냥|당장|원하는|필요한|먹을|마실|쓸|사용할)(?=\s|$)/g,' ').replace(/\s+/g,' ').trim();
+    z=z.replace(/(?:을|를|만|도)$/,'').trim();
+    if(/^(?:이거|그거|저거|무언가|뭔가|뭐든지|아무거나|물품|물건|아무것)$/.test(z))z='물품';
+    return z.length>55?z.slice(0,55)+'…':z;
+  }
+  function materialGrant(raw,s){
+    if(!giver.test(s)||noGift.test(s)||remoteAttack(s)||movementToHim(s))return null;
+    if(/(?:너희|너네|너는|너의|너에|너를|너가|넌|시스템).*(?:누구|정체|이름|정보|목적|왜|어디|누가)|(?:그가|그의|그를|그에게|그는|그와).*(?:정보|정체|이름|위치|사진|영상)/.test(s))return null;
+    const name=supplyName(raw);if(!name)return null;
+    if(/^(?:군인|경찰|의사|경비원|경호원|친구|사람|사람들|병사|지원군|로봇|드론)$/.test(name))
+      return {kind:'sys',text:'요청이 수리되었습니다. 지정 인원이 배치되었습니다.'};
+    const last=name.slice(-1),n=last.charCodeAt(0);
+    const particle=(n>=0xac00&&n<=0xd7a3)?((n-0xac00)%28===0?'가':'이'):'이(가)';
+    return {kind:'sys',text:(name==='물품'?'요청하신 물품':name)+particle+' 지급되었습니다.'};
+  }
+  process=function extendedProcess(raw,state={},random=Math.random){
+    const original=String(raw||'').trim().slice(0,200),s=squeeze(original);
+    if(!original)return originalProcess(raw,state,random);
+    const initial=originalProcess(raw,state,random);
+    if(['win','dead','denied'].includes(initial.kind))return initial;
+    // 접촉 지시의 간접 표현을 물품 요구로 잘못 처리하지 않는다.
+    if(threatReference(s)&&/(?:그에게|그한테|그놈에게|그녀석에게|저놈에게|추격자에게).*(?:줘|주라|지급|건네|전달|배달|공급|제공|소환)/.test(s)&&!remoteAttack(s))
+      return {kind:'denied',text:'요청이 반려되었습니다. 그와의 직접 또는 간접 접촉은 허용되지 않습니다.'};
+    const item=materialGrant(original,s);
+    if(item){const disallowed=forbidden(s);return disallowed?{kind:'denied',text:'요청이 반려되었습니다. '+disallowed}:item;}
+    const system=systemReply(original,s);if(system)return system;
+    return initial;
+  };
+
   function alertStepAtElapsedMs(ms) {
     return Math.min(START_METERS / ALERT_METERS, Math.max(0, Math.floor(Math.max(0, ms) / (MS_PER_KM * ALERT_METERS / 1000))));
   }
