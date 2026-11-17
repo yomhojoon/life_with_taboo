@@ -82,6 +82,6 @@ assert.equal(game.LIMIT_SECONDS,150);
 for(const marker of ['function beginChaos()','function finish(result)','disguise_escape','room:()=>({...room})','function makeTranscriptImage']){
  assert.ok(html.includes(marker),'UI missing '+marker);
 }
-assert.ok(html.includes('<script src="./room.js?v=20261118-13011"></script>'));
+assert.ok(html.includes('<script src="./room.js?v=20261118-13643"></script>'));
 assert.ok(!html.includes('encounters.js'));
 console.log('PASS: '+count+' branching routes and permanently placed room objects');
