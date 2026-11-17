@@ -1,0 +1,8 @@
+{
+  "name": "he-is-coming-semantic",
+  "main": "index.mjs",
+  "compatibility_date": "2026-11-17",
+  "ratelimits": [
+    {"name":"AI_LIMITER","namespace_id":"1001","simple":{"limit":25,"period":60}}
+  ]
+}
