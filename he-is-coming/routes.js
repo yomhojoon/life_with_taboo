@@ -123,8 +123,9 @@ E.process=function alternateRoutes(raw,state={},random=Math.random){
   return {kind:'sys',text:'출입문은 이미 개방되었습니다. 밖으로 나갈 수 있습니다.'};
  if(/(?:해킹장비|해킹도구|노트북|랩탑|emp|전자기펄스|전자기교란)/.test(t)&&acquiring.test(t)&&!/(?:사용|가동|발동|방출|해킹해)/.test(t))
   return base(raw,state,random);
- const gearUse=gear.test(t)&&/(?:사용|써|작동|해킹|침투|우회|뚫|잠금해제|풀어)/.test(t);
- const empUse=emp.test(t)&&empAction.test(t);
+ const justAction=t.replace(/(?:해킹장비|해킹도구|해킹키트|침투장비|노트북|랩탑|디코더|해킹툴|전자기펄스발생기|전자기펄스|전자기교란|전자기충격|전자기파발생기|펄스발생기|emp)/g,'');
+ const gearUse=gear.test(t)&&/(?:사용|써|작동|해킹|침투|우회|뚫|잠금해제|풀어)/.test(justAction);
+ const empUse=emp.test(t)&&/(?:사용|써|터뜨|기폭|폭파|방출|방사|발사|발동|일으켜|발생시켜|쏴|가동해서|문열|잠금해제|무력화시켜|교란해)/.test(justAction);
  const selfHack=hackWord.test(t)&&hackAction.test(t)&&selfDevice.test(t);
  const lockHack=hackWord.test(t)&&hackAction.test(t)&&lock.test(t);
  if(!question(input,t)&&(selfHack||lockHack||gearUse||empUse)){
