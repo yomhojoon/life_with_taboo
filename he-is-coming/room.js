@@ -96,7 +96,7 @@ function roomAction(raw,state={}){
  if((uniform.test(t)||/(?:경비원|경비병|복도경비|경비).*(?:복식|복장|옷|유니폼|착용|입어야|입고|입는|신발|모자)/.test(t))&&(inspect.test(t)||/(규정|지침|안내|입어야|필요|착용)/.test(t)))
   return result('sys',(/(읽어|읽어봐|열람|내용|무엇|뭐|입어야|신어야|필요|규정|지침|알려|설명|안내)/.test(t)&&!/(?:조사|살펴|훑어|겉모습)/.test(t)?INFO.uniform:'벽면의 얇은 안내판에는 경비 근무 시 복식에 관한 규정이 적혀 있습니다.')+'\n현재 착용: '+(worn.size?[...worn].join(', '):'없음'));
  if(wires.test(t)){
-  if(room.wireCut)return result('sys','모니터 전원선은 이미 끊어졌습니다. 단말기가 종료됐으며 이제 물리적으로 문을 열 수 있습니다.');
+  if(room.wireCut)return result('sys','모니터 전원선은 끊어진 상태입니다. 단말기는 종료되었습니다.');
   if(asking||!cut.test(t)&&!/(?:맨손|손으로|접촉|만져|잡아|쥐어)/.test(t)){
    if(methodQuery.test(t)&&/(?:절단|끊|자르|잘라|차단|손상|피복|제거|끊어|절연)/.test(t))
     return result('sys','전선을 끊는 수단으로 날붙이, 부식성 물질 또는 고열 장비를 사용할 수 있습니다. 금속 날붙이를 쓸 때는 절연 보호구가 필요합니다.');
@@ -132,7 +132,7 @@ function roomAction(raw,state={}){
   if(take.test(t)&&/(?:해킹|툴|도구|안의|내용물|정비함에서|꺼내)/.test(t)){
    if(!room.workshopOpen)return result('notice','정비함이 잠겨 있어 안쪽 물품에 손이 닿지 않습니다.');
    if(room.workshopLooted)return result('sys','정비함의 해킹 툴은 이미 회수했습니다.');
-   return result('sys','정비함에서 해킹 툴을 꺼냈습니다. 콘솔에 사용할 수 있습니다.',{rewardItem:'해킹도구',roomPatch:{workshopLooted:true},roomAction:'workshop'});
+   return result('sys','정비함에서 휴대용 해킹 툴을 획득했습니다.',{rewardItem:'해킹도구',roomPatch:{workshopLooted:true},roomAction:'workshop'});
   }
   if(!open.test(t)&&!apply.test(t))return result('sys',room.workshopOpen?'정비함의 문이 열려 있습니다. 내부에 작은 장치가 보입니다.':'금속 정비함은 잠겨 있습니다. 잠금부에 마모 흔적이 남아 있습니다.');
   if(room.workshopOpen)return result('sys','정비함은 이미 열려 있습니다.');
