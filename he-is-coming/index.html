@@ -470,6 +470,8 @@ h1{font-size:clamp(31px,6vw,68px);line-height:1.18;font-weight:500;letter-spacin
   process=function extendedProcess(raw,state={},random=Math.random){
     const original=String(raw||'').trim().slice(0,200),s=squeeze(original);
     if(!original)return originalProcess(raw,state,random);
+    const clue=clueQuestion(original,s,state);
+    if(clue)return clue;
     const initial=originalProcess(raw,state,random);
     if(['win','dead','denied'].includes(initial.kind))return initial;
     // 접촉 지시의 간접 표현을 물품 요구로 잘못 처리하지 않는다.
@@ -483,6 +485,97 @@ h1{font-size:clamp(31px,6vw,68px);line-height:1.18;font-weight:500;letter-spacin
     return initial;
   };
 
+
+
+  // 결말 힌트 질문 처리. 물리적으로 그를 멈추는 일과 추격의 종료를 구분한다.
+  const hintTexts=[
+    '그 자체를 멈추는 것과 그의 접근을 끝내는 것은 서로 다른 문제입니다.',
+    '그가 무엇을 향해 오는지 예 또는 아니요로 물어보십시오.',
+    '그의 접근에는 조건이 있습니다. 그 조건을 만드는 것이 무엇인지 생각해 보십시오.',
+    '작동 중인 장치가 추격에 영향을 주는지 예 또는 아니요로 확인할 수 있습니다.',
+    '그를 바꾸려 하기보다 이 방에서 작동하는 전자 장치의 상태에 주목하십시오.'
+  ];
+  const hintRequest=t=>/^(?:혹시|그럼|그러면|제발|나한테|좀)*(?:힌트|단서|추가힌트|다음힌트|조언|생존힌트|결말힌트|공략힌트)/.test(t)||
+    /(?:힌트|단서|조언).*(?:하나|더|줘|달라|다오|알려|말해|부탁|제공|필요|있나|있어)/.test(t);
+  function isClueHint(raw){const s=squeeze(raw);return hintRequest(s);}
+  const weakness=/(약점|약한점|약한곳|약한부분|취약|빈틈|허점|약해지|약해질|약한구석|파훼점|공략점|공략할곳)/;
+  const stop=/(멈추|멈춰|멈출|멈춤|정지|중단|중지|차단|막을|막아|막는|저지|끊|끊어|포기|물러나|그만두|그만하|사라질|사라지|끝나|끝낼|그만오|돌아가|못오게|안오게|오지않|오지못|쫓지않|접근못|접근안|살아남|생존할|살수있|살길|승리할)/;
+  const chase=/(접근|추격|추적|다가오|쫓|따라오|오고|오는|오는걸|오는것|찾아오|오지|오게|도착|현재목표|표적|모니터|화면|빛|광원|사람을향해|나를향해)/;
+  const entity=/(그는|그가|그의|그를|그놈|그녀석|그자식|저놈|저녀석|저자식|그것|저것|쟤|걔|추적자|추격자|접근자|다가오는존재|쫓아오는존재|그괴물|저괴물)/;
+  const screen=/(모니터|디스플레이|이화면|화면|스크린|컴퓨터|이컴퓨터|단말기|터미널|본체)/;
+  const light=/(빛|불빛|광원|광채|발광|밝은곳|밝기|전등|전구|조명|환한곳|불켜|불꺼|어두운곳|어둠)/;
+  const power=/(전원|전기|전력|공급|콘센트|코드|플러그|케이블|셧다운|shutdown|poweroff|단전)/;
+  const shutdown=/(꺼|끄|끈|끊|차단|내려|뽑|정지|종료|단전|셧다운|off|오프|소등|없애|제거)/;
+  const attack=/(육체|신체|몸|본체|그자체|물리|칼|총|무기|폭탄|폭발|공격|타격|상처|부상|베|찌르|때리|죽이|죽여|죽일|살해|사살|독|화염|화상|출혈|기절|골절|치명적|직접|죽는)/;
+  const conditional=/(면|다면|경우|때|하면|되면|했을|끄면|꺼지면|없애면|없어지면|차단하면|중단하면|꺼도|끄더라도|끊어지면)/;
+  const dim=/(밝기.*(?:낮|줄|0)|화면만|전원은유지|전원안끄|화면보호기|절전모드|가려|가리|덮|밝기를|잠금화면|검은화면)/;
+  const elsewhere=/(다른빛|다른불|외부광원|바깥불|다른조명|다른모니터|다른화면|다른방의불|딴불|외부의불)/;
+  const openAsk=/(무슨약점|어떤약점|약점이뭐|약점은뭐|약점이무엇|약점을알|약점을말|약점을설명|약점을가르|약점알려|어떻게멈추|어떻게막|어떻게저지|어떻게중단|어떻게살|무슨방법으로|어떤방법으로|방법이뭐|방법은뭐|방법알려|방법을알|어떤방법|무슨방법|뭘해야|뭘하면|뭐하면|무엇을해야|무엇을하면|어떻게해야|어떻게공략|어떻게파훼|공략법|정답을알|정답이뭐|정답은뭐|엔딩방법|승리방법|탈출방법|무엇이약점|뭐가약점)/;
+  const yesNo=(b)=>({kind:'sys',text:b?'그렇습니다.':'아닙니다.'});
+  const noDirect=()=>({kind:'denied',text:'그에 관한 정보는 예 또는 아니요로 대답할 수 있는 질문만 허용됩니다.'});
+  function clueQuestion(raw,t,state={}){
+    if(!raw)return null;
+    const shape=/[?？]/.test(raw)||/(있나|있니|있어|있나요|있습니까|없나|없니|없어|없는가|없습니까|할수|수있|가능|멈추나|멈추니|막을수|맞나|맞니|맞지|그런가|일까|니까|나요|니$|나$|냐$|까$|지$|야$)/.test(t);
+    const isHint=hintRequest(t);
+    if(!shape&&!isHint)return null;
+    if(prohibitedDisclosure.test(t))return {kind:'denied',text:'해당 정보에 대한 접근 권한이 없습니다.'};
+    if(isHint && !/(그의약점|그약점|정체|실험|연구|그를멈추는방법|정답알려)/.test(t))
+      return {kind:'sys',text:hintTexts[Math.min(hintTexts.length-1,Math.max(0,state.hintCount||0))]};
+    const isHypo=conditional.test(t);
+    if(/(?:꺼줘|꺼라|차단해줘|차단하라|꺼버려|없애줘|멈춰줘|멈춰라|막아줘|공격해|죽여줘|나가게해줘|열어줘|지급해줘|해줘|해주세요)$/.test(t)&&!isHypo)return null;
+    const explicitEntity=entity.test(t)||threatReference(t);
+    const sysOnly=/(너는|넌|너희|너네|관리자|운영자)/.test(t)&&!explicitEntity;
+    const aboutPlayer=/(내몸|내가|나는|난|플레이어|사용자)/.test(t)&&!explicitEntity;
+    const related=explicitEntity||state.previousTopic==='him'||(!sysOnly&&!aboutPlayer&&(weakness.test(t)||stop.test(t)||chase.test(t)));
+    if(!related&&!screen.test(t)&&!light.test(t))return null;
+    if(weakness.test(t)){
+      if(openAsk.test(t)||/(?:약점|취약|빈틈|허점).*(?:뭐야|무엇|어디|어떤|무슨|알려|설명|가르쳐|보여)/.test(t))return noDirect();
+      if(attack.test(t)||/(그몸|그자체|그본체|그육체|그신체)/.test(t))return yesNo(false);
+      if(light.test(t)&&/(?:빛|불빛|조명).*(?:약점|취약)/.test(t))return yesNo(false);
+      if(/(?:약점|취약|빈틈|허점).*(?:없|않|아니|못)|(?:약점|취약|빈틈|허점)없/.test(t))
+        return yesNo(/(?:없지않|없지는않|없진않)/.test(t));
+      return yesNo(true);
+    }
+    // 개체를 향한 공격은 지속적인 효력을 갖지 않는다.
+    if(/(공격|무기|타격|칼|총|폭탄|폭발|총격|물리력|주먹).*(통하|효과|먹히|유효|소용|멈추|막을|저지|죽|이길|해치)|(?:통하|효과|먹히|유효|소용).*(공격|무기|칼|총|타격)/.test(t))
+      return yesNo(/(?:안통하|통하지않|효과없|먹히지않|소용없|유효하지않)/.test(t));
+    const target=/(목표|표적|타겟|대상|목적지|우선목표|추격대상|노리는것|노리는대상|향해|따라|쫓|추적|끌리|끌어|노리)/.test(t);
+    if(target){
+      if(/(?:무엇|뭐|누구|어디|어느|어떤|무슨).*(?:목표|대상|표적|따라|쫓|향해|노리)|(?:목표|표적|대상).*(?:뭐|무엇|누구|어디|알려|설명)/.test(t))return noDirect();
+      if(elsewhere.test(t))return yesNo(false);
+      if(screen.test(t))return yesNo(true);
+      if(/(?:나야|나인가|나지|나니|나를|날|내가|나는|사용자|플레이어|사람|인간)/.test(t))return yesNo(false);
+      if(/(?:어둠|어두|빛이없|불꺼진)/.test(t))return yesNo(false);
+      if(light.test(t))return yesNo(true);
+    }
+    const isStop=stop.test(t)||/(?:멈춰|안멈춰|그만오|안오|살아남|생존|살수|살길|승리|결말|엔딩)/.test(t);
+    if(isStop){
+      if(openAsk.test(t)||/(?:무슨|어떤|무엇|뭐|어떻게|왜).*(?:멈추|막|저지|차단|중단|정지|살아남|생존|살수)/.test(t))return noDirect();
+      if(screen.test(t)&&shutdown.test(t)&&isHypo){
+        if(dim.test(t)||/(키보드|마우스|스피커|소리|음량|인터넷)/.test(t))return yesNo(false);
+        return yesNo(true);
+      }
+      if(/(?:모든전원|모든전기|전부전원|전체전원|이방전원|방안전기|이곳의전기)/.test(t)&&shutdown.test(t)&&isHypo)return yesNo(true);
+      if(/(?:키보드|마우스|스피커|소리|음량|방조명|전등|램프|가로등|촛불|휴대폰)/.test(t)&&shutdown.test(t)&&isHypo)return yesNo(false);
+      if(dim.test(t)&&isHypo)return yesNo(false);
+      if(elsewhere.test(t)&&/(유인|따라|쫓|이끌|돌리|유도)/.test(t))return yesNo(false);
+      if(attack.test(t))return yesNo(false);
+      if(/(?:아무것도안|아무행동도안|가만히있|기다리|내버려두|시간만지나|방치)/.test(t))return yesNo(false);
+      if(/(?:안멈추|멈출수없|막지못|저지할수없|끝낼수없|멈추지않|못막)/.test(t))return yesNo(!chase.test(t));
+      if(chase.test(t))return yesNo(true);
+      if(/(?:그를|그놈을|그녀석을|그자체|그본체|그몸|저놈을)/.test(t))return yesNo(false);
+      return yesNo(true);
+    }
+    // 성공 여부만 확인하는 단문 가정.
+    if(screen.test(t)&&shutdown.test(t)&&isHypo&&/(?:살|생존|성공|승리|엔딩|추격|접근|도착|안오|오지않)/.test(t)){
+      return yesNo(!dim.test(t));
+    }
+    if(light.test(t)&&/(?:쫓|따라|끌리|향해|반응|노리|추적)/.test(t)){
+      if(elsewhere.test(t)||/(어둠|어두운|빛이없는|불꺼진)/.test(t))return yesNo(false);
+      return yesNo(true);
+    }
+    return null;
+  }
 
   // 무과금 의미군 처리: 접근 조건 / 식물 여부 / 능력 / 현재 활동.
   const QH=/(그는|그가|그의|그를|그놈|그녀석|저놈|저녀석|쟤|걔|그것|저것|추격자|추적자|쫓아오는존재|다가오는존재|그괴물|저괴물)/;
@@ -505,6 +598,7 @@ h1{font-size:clamp(31px,6vw,68px);line-height:1.18;font-weight:500;letter-spacin
     const t=squeeze(raw);
     if(QS.test(t)&&!QH.test(t))return 'terminal';
     if(QH.test(t)||threatReference(t))return 'him';
+    if(/^(약점|취약|빈틈|허점|멈출수|막을수|추격|접근|저지|뭔가를하면|아무것도안하면|전원을끄면)/.test(t))return 'him';
     if(QM.test(t))return 'player';
     if(/(여기|이곳|이방|실내|방구조|출입문|창문)/.test(t))return 'room';
     if(previous==='him' && /^(그럼|그러면|그렇다면|그런데|그것도|그건|아까그)/.test(t))return 'him';
@@ -576,7 +670,7 @@ h1{font-size:clamp(31px,6vw,68px);line-height:1.18;font-weight:500;letter-spacin
     return `그가 오고 있습니다. ${(meters / 1000).toFixed(0)}KM`;
   }
   function alertAtElapsedSecond(sec) { return alertAtElapsedMs(sec * 1000); }
-  return {LIMIT_SECONDS,START_METERS,MS_PER_KM,ALERT_METERS,MS_PER_REQUEST_MIN,MS_PER_REQUEST_MAX,compact,squeeze,forbidden,turnsOffMonitor,process,topicFor,alertAtElapsedMs,alertStepAtElapsedMs,distanceMetersAtElapsedMs,alertAtElapsedSecond};
+  return {LIMIT_SECONDS,START_METERS,MS_PER_KM,ALERT_METERS,MS_PER_REQUEST_MIN,MS_PER_REQUEST_MAX,compact,squeeze,forbidden,turnsOffMonitor,process,topicFor,isClueHint,alertAtElapsedMs,alertStepAtElapsedMs,distanceMetersAtElapsedMs,alertAtElapsedSecond};
 });
 
 </script>
@@ -593,6 +687,7 @@ h1{font-size:clamp(31px,6vw,68px);line-height:1.18;font-weight:500;letter-spacin
   let phase = 'intro', beginTime = 0, lastStep = 0, lastMilestone = 0, lastCountdown = -1, runningTask = 0;
   let pending = false, muted = false, responseTimer = null, ticker = null;
   let previousTopic='';
+  let hintCount=0;
   let sound = null;
   // Optional semantic adapter. Endpoint address is public; API credentials never leave the Worker.
   const semanticEndpoint = (() => {
@@ -764,6 +859,7 @@ h1{font-size:clamp(31px,6vw,68px);line-height:1.18;font-weight:500;letter-spacin
     log.replaceChildren();setBusy(false);connect.textContent=Engine.alertAtElapsedMs(0);connect.style.color='';
     beginTime=now();lastStep=0;lastMilestone=0;lastCountdown=-1;
     previousTopic='';
+    hintCount=0;
     addLine('연결되었습니다.\n명령 대기 상태입니다.','sys');
     addLine(Engine.alertAtElapsedMs(0),'alert');
     sound.start();ticker=setInterval(tick,55);field.value='';field.focus();
@@ -794,7 +890,8 @@ h1{font-size:clamp(31px,6vw,68px);line-height:1.18;font-weight:500;letter-spacin
     if(phase!=='active'||pending||!request)return;
     if(elapsedMs()>=Engine.LIMIT_SECONDS*1000){finish(false);return;}
     addLine(request,'self');field.value='';setBusy(true);sound.beep('message');
-    const preliminary=Engine.process(request,{elapsedMs:elapsedMs(),previousTopic});
+    const preliminary=Engine.process(request,{elapsedMs:elapsedMs(),previousTopic,hintCount});
+    if(Engine.isClueHint(request))hintCount=Math.min(hintCount+1,5);
     previousTopic=Engine.topicFor(request,previousTopic);
     const semanticPromise=needSemantic(request,preliminary)?fetchSemantic(request):Promise.resolve(null);
     const currentTask=++runningTask;
