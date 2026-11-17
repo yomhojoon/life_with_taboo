@@ -123,7 +123,7 @@ E.process=function alternateRoutes(raw,state={},random=Math.random){
   return {kind:'sys',text:'출입문은 이미 개방되었습니다. 밖으로 나갈 수 있습니다.'};
  if(/(?:해킹장비|해킹도구|노트북|랩탑|emp|전자기펄스|전자기교란)/.test(t)&&acquiring.test(t)&&!/(?:사용|가동|발동|방출|해킹해)/.test(t))
   return base(raw,state,random);
- const gearUse=gear.test(t)&&/(?:사용|써|연결|작동|해킹|침투|우회|뚫|잠금해제|풀어)/.test(t);
+ const gearUse=gear.test(t)&&/(?:사용|써|작동|해킹|침투|우회|뚫|잠금해제|풀어)/.test(t);
  const empUse=emp.test(t)&&empAction.test(t);
  const selfHack=hackWord.test(t)&&hackAction.test(t)&&selfDevice.test(t);
  const lockHack=hackWord.test(t)&&hackAction.test(t)&&lock.test(t);
