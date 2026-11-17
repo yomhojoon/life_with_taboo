@@ -53,6 +53,11 @@ h1{font-size:clamp(31px,6vw,68px);line-height:1.18;font-weight:500;letter-spacin
 .intro-rule p br{display:block;content:"";margin-top:8px}
 
 
+/* 엔딩별 기록과 조작 버튼을 작은 화면에서도 끝까지 볼 수 있게 한다. */
+.end{overflow-y:auto;justify-content:flex-start;padding-top:clamp(24px,4vw,52px);padding-bottom:clamp(24px,4vw,52px)}
+.end h2{font-size:clamp(29px,5vw,54px);line-height:1.18;margin-bottom:20px}
+.end p#ending-body{line-height:1.7;margin-bottom:22px;font-size:clamp(12px,1.6vw,15px)}
+.ending-actions{flex-shrink:0;margin-bottom:6px}
 /* 혼돈 엔딩에서는 단말기의 화면만 불안정하게 남습니다. */
 .end.chaos{background:repeating-linear-gradient(178deg,#170809,#050605 13px,#0d1510 24px)}
 .end.chaos h2{color:#e7b6af;text-shadow:2px 0 #5e383b,-2px 0 #394d43;animation:chaos-title 1.3s steps(3,end) 3}
