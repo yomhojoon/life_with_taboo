@@ -32,6 +32,8 @@ function useItem(raw,state={}){
   const names=inventoryNames(stock);
   return {kind:'sys',text:names.length?'현재 소지품: '+names.join(', ')+'.\n물건 이름과 행동을 입력하면 사용합니다.':'현재 소지품이 없습니다. 물건을 달라고 요청한 뒤 사용할 수 있습니다.'};
  }
+ // 질문 속의 가정은 실제 물건 사용 명령으로 실행하지 않는다.
+ if(/[?？]/.test(raw)&&/(끄면|켜면|켜면|먹으면|마시면|사용하면|쓰면|작동하면|전원을끄면|꺼지면|차단하면|되면|한다면|어떻게)/.test(s))return null;
  const it=locate(raw);if(!it)return null;
  const actions=recipes.filter(a=>a.item===it.id);
  const found=actions.find(a=>new RegExp(a.verbs).test(s));
