@@ -53,6 +53,10 @@ const take=/(꺼내|집어|주워|가져|챙겨|획득|회수|수령|소지|줍|
 const cut=/(자르|잘라|끊|절단|베어|썰어|부식|녹여|녹이|태워|지져|가열|달궈|용접|불붙|손상|파괴|차단)/;
 const apply=/(사용|써|활용|이용|적용|뿌려|부어|묻혀|대어|대서|대고|열어|해제|녹여|녹이|부식|잘라|끊|자르|가열|태워|지져|절단|절연|닿|접촉)/;
 const inspect=/(확인|조사|살펴|관찰|상태|구조|설명|어떤|무슨|무엇|뭐|방법|알려|보여|잠겨|열려|읽어|열람|조회|안에|내용물|있는지|어디)/;
+const methodQuery=/(?:어떻게|무슨방법|어떤방법|방법|뭐로|뭘로|무엇으로|어떤도구|무슨도구|어떤공구|무슨공구|무슨장비|어떤장비|무슨물질|어떤물질|열려면|풀려면|따려면|절단하려면|끊으려면|자르려면|열기위해|열기위한|할수있|열수있|열수있나|사용해야|필요한도구|필요한공구|써야|열어야|어떻게하면|사용가능한)/;
+const contentQuery=/(?:안에|안에는|내부에뭐|내용물|무엇이들어|뭐가들어|무슨물건|뭐들어|무엇을보관|안쪽에뭐)/;
+const wireConnectionQuery=/(?:어디에연결|어디로연결|무엇과연결|무엇에연결|뭐에연결|뭐랑연결|어느장치|어디로이어|어디에이어|무엇을연결|뭘연결|무엇과이어|뭐와이어|무슨장치|연결돼|연결되|이어져)/;
+const wireEffectQuery=/(?:끊으면|자르면|절단하면|끊어지면|잘라내면|차단하면|전원이끊기면|끊었을때|절단했을때|끊고나면|끊으면어떻게)/;
 const wear=/(착용|입어|입고|입자|걸쳐|차려입|써|쓰고|신어|신고|맞춰입|갖춰입|변장|착장|복식갖춰)/;
 const remove=/(벗어|벗고|탈의|착용해제|모자벗|신발벗)/;
 const isQ=(raw,t)=>/[?？]/.test(raw)&&!/(?:열어줘|꺼내줘|읽어줘|해줘|해주세요|해줄래|풀어줘|착용해줘)\??$/.test(t);
@@ -67,7 +71,7 @@ function roomNames(state={}){
  ];
 }
 function roomOverview(state={}){
- return result('sys','방 내부의 고정 시설:\n'+roomNames(state).map(x=>'• '+x).join('\n')+'\n시설 이름과 조사·사용 행동을 입력할 수 있습니다.');
+ return result('sys','어두운 방 안에는 입력을 받는 단말기와 낡은 설비들이 있습니다. 벽면과 주변 물체는 가까이 확인해야 자세한 상태를 알 수 있습니다.');
 }
 function roomAction(raw,state={}){
  const t=sq(raw),room=state.room||{},inv=state.inventory||{},worn=new Set(state.uniformWorn||[]);
@@ -90,13 +94,19 @@ function roomAction(raw,state={}){
   return result('sys',(undress?'복식을 벗었습니다: ':'복식을 착용했습니다: ')+selection.join(', ')+'.\n'+(DRESS.every(id=>worn.has(id))?'경비 복식 규정을 모두 충족합니다.':'경비제복·경비모·경비화를 모두 갖춰야 합니다.'),{uniformWorn:[...worn],roomAction:'uniform'});
  }
  if((uniform.test(t)||/(?:경비원|경비병|복도경비|경비).*(?:복식|복장|옷|유니폼|착용|입어야|입고|입는|신발|모자)/.test(t))&&(inspect.test(t)||/(규정|지침|안내|입어야|필요|착용)/.test(t)))
-  return result('sys',INFO.uniform+'\n현재 착용: '+(worn.size?[...worn].join(', '):'없음'));
+  return result('sys',(/(읽어|읽어봐|열람|내용|무엇|뭐|입어야|신어야|필요|규정|지침|알려|설명|안내)/.test(t)&&!/(?:조사|살펴|훑어|겉모습)/.test(t)?INFO.uniform:'벽면의 얇은 안내판에는 경비 근무 시 복식에 관한 규정이 적혀 있습니다.')+'\n현재 착용: '+(worn.size?[...worn].join(', '):'없음'));
  if(wires.test(t)){
   if(room.wireCut)return result('sys','모니터 전원선은 이미 끊어졌습니다. 단말기가 종료됐으며 이제 물리적으로 문을 열 수 있습니다.');
   if(asking||!cut.test(t)&&!/(?:맨손|손으로|접촉|만져|잡아|쥐어)/.test(t)){
-   if(/(?:연결|이어|뭐|무엇|어디|어느|어디로|무슨장치|용도)/.test(t))
-    return result('sys','이 전선은 모니터의 전원부와 연결돼 있습니다. 끊으면 모니터가 종료되고 잠금 장치를 수동으로 열 수 있습니다.');
-   return result('sys','손상된 피복의 모니터 전원선입니다. 날붙이, 부식성 물질 또는 고열 장비로 절단할 수 있습니다. 날붙이에는 절연 보호구가 필요합니다.');
+   if(methodQuery.test(t)&&/(?:절단|끊|자르|잘라|차단|손상|피복|제거|끊어|절연)/.test(t))
+    return result('sys','전선을 끊는 수단으로 날붙이, 부식성 물질 또는 고열 장비를 사용할 수 있습니다. 금속 날붙이를 쓸 때는 절연 보호구가 필요합니다.');
+   if(wireConnectionQuery.test(t))
+    return result('sys','전선의 한쪽 끝은 모니터의 전원부와 연결되어 있습니다.');
+   if(wireEffectQuery.test(t))
+    return result('sys','전선이 끊어지면 모니터 전원이 종료되고, 이후 출입문 잠금을 수동으로 조작할 수 있습니다.');
+   if(methodQuery.test(t))
+    return result('sys','전선의 절단에 사용할 수 있는 물품 종류를 물어보면 확인할 수 있습니다.');
+   return result('sys','단말기 주변에서 피복이 낡은 전선이 보입니다. 일부 구간에서는 도선이 드러나 있으며 작은 전류음이 들립니다.');
   }
   if(/(?:맨손|손으로|손바닥|손가락|접촉|만져|잡아|쥐어)/.test(t)&&!cut.test(t)){
    return has(inv,GROUPS.insulator)?result('sys','절연 보호구로 피복을 확인했습니다. 전선은 아직 연결되어 있습니다.'):result('dead','전선의 손상된 피복을 맨손으로 잡자 강한 전류가 흘렀습니다.',{deathCause:'electric'});
@@ -113,30 +123,38 @@ function roomAction(raw,state={}){
  }
  if(workshop.test(t)){
   if(asking||/(?:방법|뭐로|무엇으로|어떤도구|무슨도구|안에뭐|내용물|열수있|잠겨|어떤공구)/.test(t)){
-   if(/(?:안에|내용물|들어있)/.test(t))return result('sys',room.workshopLooted?'정비함은 비어 있습니다.':'정비함에는 해킹 툴이 보입니다. 잠금을 해제해야 꺼낼 수 있습니다.');
-   return result('sys','정비함은 기계식 잠금입니다. 락픽·열쇠·드라이버·지렛대·니퍼 등의 공구 또는 부식성 물질·고열 장비로 열 수 있습니다.');
+   if(methodQuery.test(t)&&/(?:열|잠금|풀|따|개방|해제|어떻게|사용)/.test(t))
+    return result('sys','정비함은 기계식 잠금입니다. 락픽·열쇠·드라이버·지렛대·니퍼 등의 공구 또는 부식성 물질·고열 장비로 열 수 있습니다.');
+   if(contentQuery.test(t))
+    return result('sys',room.workshopLooted?'정비함 내부는 비어 있습니다.':'정비함 안쪽에 휴대용 해킹 툴이 놓여 있습니다.');
+   return result('sys',room.workshopOpen?'금속 정비함은 열려 있습니다. 안쪽에 작은 장치가 보입니다.':'금속 재질의 정비함입니다. 문은 잠겨 있고 표면에는 오래된 마모 흔적이 남아 있습니다.');
   }
   if(take.test(t)&&/(?:해킹|툴|도구|안의|내용물|정비함에서|꺼내)/.test(t)){
-   if(!room.workshopOpen)return result('notice','정비함이 잠겨 있습니다. 먼저 공구 또는 부식성·고열 물질로 열어야 합니다.');
+   if(!room.workshopOpen)return result('notice','정비함이 잠겨 있어 안쪽 물품에 손이 닿지 않습니다.');
    if(room.workshopLooted)return result('sys','정비함의 해킹 툴은 이미 회수했습니다.');
    return result('sys','정비함에서 해킹 툴을 꺼냈습니다. 콘솔에 사용할 수 있습니다.',{rewardItem:'해킹도구',roomPatch:{workshopLooted:true},roomAction:'workshop'});
   }
-  if(!open.test(t)&&!apply.test(t))return result('sys',room.workshopOpen?'정비함이 열려 있습니다. 해킹 툴을 꺼낼 수 있습니다.':'잠긴 정비함입니다. 공구나 부식성·고열 물질을 사용할 수 있습니다.');
-  if(room.workshopOpen)return result('sys','정비함은 이미 열려 있습니다. 해킹 툴을 회수하십시오.');
+  if(!open.test(t)&&!apply.test(t))return result('sys',room.workshopOpen?'정비함의 문이 열려 있습니다. 내부에 작은 장치가 보입니다.':'금속 정비함은 잠겨 있습니다. 잠금부에 마모 흔적이 남아 있습니다.');
+  if(room.workshopOpen)return result('sys','정비함은 이미 열려 있습니다.');
   const category=materialKind(t,inv,'lock');
   const gear=findTool(raw,inv,GROUPS[category]);
-  if(!gear.item)return result('notice',(gear.missing||'적합한 공구')+'이(가) 없습니다. 공구·부식성·고열 물질 중 하나가 필요합니다.');
-  return result('room_open','정비함의 잠금을 풀었습니다. 안에는 휴대용 해킹 툴이 있습니다.\n"정비함에서 해킹 툴 꺼내"라고 입력할 수 있습니다.',{roomPatch:{workshopOpen:true},roomAction:'workshop',usedItem:gear.item,consumeItem:category==='corrosive'?gear.item:null});
+  if(!gear.item)return result('notice','정비함의 잠금이 풀리지 않았습니다. '+(gear.missing||'사용할 물품')+'을(를) 현재 가지고 있지 않습니다.');
+  return result('room_open','정비함의 잠금이 풀렸습니다. 문을 열자 내부의 작은 전자 장치가 드러났습니다.',{roomPatch:{workshopOpen:true},roomAction:'workshop',usedItem:gear.item,consumeItem:category==='corrosive'?gear.item:null});
  }
  if(emergency.test(t)){
-  if(asking||inspect.test(t)&&!open.test(t)&&!take.test(t))return result('sys',room.knifeTaken?'비상 장비함은 비어 있습니다.':'비상 장비함 안에 단검 한 자루가 있습니다. 문은 열쇠 없이 열 수 있습니다.');
+  if(asking||inspect.test(t)&&!open.test(t)&&!take.test(t)){
+   if(methodQuery.test(t)&&/(?:열|개방|잠금|방법|어떻게)/.test(t))
+    return result('sys','비상 장비함의 문은 열쇠 없이 손잡이를 조작해 열 수 있습니다.');
+   if(contentQuery.test(t))return result('sys',room.knifeTaken?'비상 장비함 안에는 아무것도 남아 있지 않습니다.':'장비함 내부에는 칼집에 든 단검 한 자루가 있습니다.');
+   return result('sys',room.knifeTaken?'벽에 부착된 비상 장비함입니다. 내부는 비어 있습니다.':'벽면에 설치된 비상 장비함입니다. 투명한 보호판 안쪽에 길쭉한 물체가 보입니다.');
+  }
   if(take.test(t)){
    if(!room.emergencyOpen)return result('notice','비상 장비함이 닫혀 있습니다. 먼저 여십시오.');
    if(room.knifeTaken)return result('sys','단검을 이미 회수했습니다.');
    return result('sys','비상 장비함에서 단검을 꺼냈습니다.',{rewardItem:'단검',roomPatch:{knifeTaken:true},roomAction:'emergency'});
   }
-  if(open.test(t))return room.emergencyOpen?result('sys','비상 장비함은 이미 열려 있습니다.'):result('room_open','비상 장비함 문을 열었습니다. 단검을 꺼낼 수 있습니다.',{roomPatch:{emergencyOpen:true},roomAction:'emergency'});
-  return result('sys','비상 장비함 안에 단검이 있습니다. 장비함을 열어 꺼낼 수 있습니다.');
+  if(open.test(t))return room.emergencyOpen?result('sys','비상 장비함은 이미 열려 있습니다.'):result('room_open','비상 장비함의 문을 열었습니다. 칼집에 든 단검이 놓여 있습니다.',{roomPatch:{emergencyOpen:true},roomAction:'emergency'});
+  return result('sys','벽에 설치된 비상 장비함입니다. 투명한 보호판 뒤에 길쭉한 물체가 보입니다.');
  }
  if(room.workshopOpen&&!room.workshopLooted&&/(?:해킹툴|해킹도구)/.test(t)&&take.test(t))
   return result('sys','정비함에서 해킹 툴을 획득했습니다.',{roomPatch:{workshopLooted:true},rewardItem:'해킹도구',roomAction:'workshop'});
@@ -146,7 +164,7 @@ function roomAction(raw,state={}){
  const warnings=/(행동지침|안전지침|금지지침|점등금지|불켜지말|안전규정|경고문|경고지침|금지사항)/.test(t);
  const consoleInfo=consoleName.test(t)||/(?:관리자|콘솔|내부파일|내부기록|자료열람|파일목록)/.test(t);
  if((consoleInfo||records||warnings)&&/(?:자료|기록|시험|지침|로그|문서|파일|열람|읽어|조회|보여|확인|보고|목록|메뉴|내부)/.test(t)){
-  if(!room.consoleAccess)return result('denied','콘솔 내부 자료는 잠겨 있습니다. 먼저 단말기의 관리자 접근 권한을 확보하십시오.');
+  if(!room.consoleAccess)return result('denied','콘솔의 내부 기록은 접근 제한 상태입니다.');
   return result('sys',records?INFO.trial:warnings?INFO.directive:'[관리 콘솔 / 자료 보관함]\n1. 광원 동기화 시험 제12호\n2. 외부 광원 안전 행동 지침\n3. 출입문 잠금 제어\n각 항목을 이름으로 열람할 수 있습니다.',{roomAction:'console'});
  }
  const door=/(출입문|방문|문을|문열|문이|잠금|잠긴문|문좀|도어락|비상문)/.test(t);
@@ -154,8 +172,11 @@ function roomAction(raw,state={}){
   return state.doorOpen?result('sys','문이 이미 열려 있습니다.'):result('door_open','단말기가 꺼진 뒤 출입문의 수동 잠금 장치를 해제했습니다. 문이 열렸습니다.',{openingMethod:'wire',doorOpen:true,roomAction:'wire'});
  if(room.consoleAccess&&door&&open.test(t)&&!asking)
   return state.doorOpen?result('sys','문이 이미 열려 있습니다.'):result('door_open','관리자 권한으로 출입 통제 장치를 해제했습니다. 문이 열렸습니다.',{openingMethod:'console',doorOpen:true,roomAction:'console'});
- if(consoleInfo&&inspect.test(t)&&!/(?:해킹하|해킹해|크래킹|침투|열어)/.test(t))
-  return result('sys',room.consoleAccess?'관리자 권한이 있습니다. 동기화 시험 로그·행동 지침 열람 또는 문 개방이 가능합니다.':'관리 콘솔은 보안 잠금 상태입니다. 단말기 자체 해킹이나 해킹 툴이 필요합니다.');
+ if(consoleInfo&&inspect.test(t)&&!/(?:해킹하|해킹해|크래킹|침투|열어)/.test(t)){
+  if(methodQuery.test(t)&&/(?:해킹|보안|접근|권한|잠금|방법|어떻게)/.test(t))
+   return result('sys','단말기 자체 권한을 우회하거나 해킹 도구를 사용하면 관리자 접근을 시도할 수 있습니다.');
+  return result('sys',room.consoleAccess?'관리 콘솔의 접근 제한이 해제되어 있습니다. 일부 기록과 제어 항목이 표시됩니다.':'관리 콘솔에는 접근 제한 표시가 떠 있습니다. 상세 내용은 잠겨 있습니다.');
+ }
  return null;
 }
 const base=E.process;
@@ -168,8 +189,8 @@ E.process=function permanentRoom(raw,state={},random=Math.random){
    return result('notice','모니터 전원이 종료돼 단말기 명령을 수리할 수 없습니다. 출입문을 직접 열고 물리적으로 나가십시오.');
  }
  if(normal.kind==='door_open'&&normal.openingMethod!=='EMP'){
-  if(state.room?.consoleAccess)return result('sys','콘솔 관리자 권한이 이미 확보됐습니다. 내부 자료를 읽거나 "콘솔에서 문 열어"를 입력하십시오.');
-  return result('console_access','콘솔 관리자 접근을 확보했습니다.\n출입문은 여전히 잠겨 있습니다.\n내부 기록을 열람하거나 문 개방 명령을 선택할 수 있습니다.',{roomPatch:{consoleAccess:true},roomAction:'console',openingMethod:normal.openingMethod||'self',usedItem:normal.usedItem||null,actionId:normal.actionId||null});
+  if(state.room?.consoleAccess)return result('sys','관리 콘솔의 접근 권한은 이미 확보되어 있습니다.');
+  return result('console_access','관리 콘솔의 접근 권한을 확보했습니다.\n출입문은 여전히 잠겨 있습니다.',{roomPatch:{consoleAccess:true},roomAction:'console',openingMethod:normal.openingMethod||'self',usedItem:normal.usedItem||null,actionId:normal.actionId||null});
  }
  return normal;
 };
