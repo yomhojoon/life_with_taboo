@@ -121,6 +121,9 @@ E.process=function alternateRoutes(raw,state={},random=Math.random){
  if(actionableExit(input,t,state)){
   const explicitlyUnarmed=/(?:무기없이|맨손으로|맨몸으로|비무장으로|무장해제하고|무기를내려놓고|무기를버리고|총을놓고|총을버리고|칼을놓고|칼을버리고|무기를두고)/.test(t);
   const carried=explicitlyUnarmed?[]:equippedWeapons(state.inventory);
+  const dressed=['경비제복','경비모','경비화'].every(id=>(state.uniformWorn||[]).includes(id)&&qty(state.inventory,id)>0);
+  const hackPath=['console','self','equipment','EMP'].includes(state.openingMethod||'');
+  if(dressed&&hackPath)return {kind:'disguise_escape',text:'경비 제복·모자·신발을 갖춰 입었습니다. 출입구의 경비는 사용자를 동료로 판단했습니다. 복도를 지나 시설 밖으로 빠져나왔습니다.',weapons:carried};
   return carried.length?{kind:'armed_escape',text:'문을 통과했습니다. 무장 상태 확인: '+carried.join(', ')+'.',weapons:carried}
     :{kind:'captured',text:'문을 통과하자 대기하던 경비가 사용자를 제압했습니다.',weapons:[]};
  }
