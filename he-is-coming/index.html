@@ -740,6 +740,7 @@ h1{font-size:clamp(31px,6vw,68px);line-height:1.18;font-weight:500;letter-spacin
 <script src="./routes.js?v=20261118-13011"></script>
 <script src="./room.js?v=20261118-13011"></script>
 <script src="./short-questions.js?v=20261118-13011"></script>
+<script src="./early-arrival.js?v=20261118-13011"></script>
 <script>
 /* UI / 실시간 시계 / Web Audio (서버 호출 없음) */
   // 이전 버전의 탐색 버튼이 남아 있으면 DOM에서 즉시 제거한다.
@@ -755,9 +756,10 @@ h1{font-size:clamp(31px,6vw,68px);line-height:1.18;font-weight:500;letter-spacin
   let phase = 'intro', beginTime = 0, lastStep = 0, lastMilestone = 0, lastCountdown = -1, runningTask = 0;
   let pending = false, muted = false, responseTimer = null, ticker = null;
   let previousTopic='';
-  let hintCount=0,doorOpen=false,openingMethod='',chaosSequence=false,deathCause='';
+  let hintCount=0,doorOpen=false,openingMethod='',chaosSequence=false,deathCause='',earlyArrivalReason='';
+  let pursuitRealOrigin=0,pursuitVirtualOrigin=0,pursuitRate=1;
   let chaosTimers=new Set();
-  const emptyStats=()=>({requests:0,questions:0,accepted:0,denied:0,unrecognized:0,itemsGained:0,itemsUsed:0,roomActions:0,hacks:0,wireCuts:0,chaosWarnings:0});
+  const emptyStats=()=>({requests:0,questions:0,accepted:0,denied:0,unrecognized:0,itemsGained:0,itemsUsed:0,roomActions:0,hacks:0,wireCuts:0,chaosWarnings:0,accelerations:0});
   let statistics=emptyStats();
   function clearChaosTimers(){for(const t of chaosTimers)clearTimeout(t);chaosTimers.clear();}
   let inventory=Object.create(null), room=Object.create(null), uniformWorn=[];
@@ -930,10 +932,18 @@ h1{font-size:clamp(31px,6vw,68px);line-height:1.18;font-weight:500;letter-spacin
   }
   function setBusy(value){pending=value;send.disabled=value;processing.textContent=value?'처리 중 ···':' ';status.textContent=room.terminalOff?(value?'물리 행동 처리 중':'물리 행동 대기 중'):(value?'요청 판정 중':'입력 대기 중');}
   function elapsedMs(){return Math.max(0,now()-beginTime);}
+  function pursuitElapsedMs(){return pursuitVirtualOrigin+Math.max(0,elapsedMs()-pursuitRealOrigin)*pursuitRate;}
+  function arrivalIfDue(){
+    if(!room.terminalOff && pursuitElapsedMs()>=Engine.LIMIT_SECONDS*1000){
+      finish(elapsedMs()<Engine.LIMIT_SECONDS*1000 && pursuitRate>1?'early_arrival':false);
+      return true;
+    }
+    return false;
+  }
   function tick(){
     if (phase !== 'active'||chaosSequence||room.terminalOff) return;
-    const ms = elapsedMs();
-    if (ms >= Engine.LIMIT_SECONDS * 1000) { finish(false); return; }
+    const ms = pursuitElapsedMs();
+    if (arrivalIfDue()) return;
     // 20KM 간격(30초)의 개별 경고를 출력한다.
     const step = Engine.alertStepAtElapsedMs(ms);
     if (step > lastStep) {
@@ -955,10 +965,11 @@ h1{font-size:clamp(31px,6vw,68px);line-height:1.18;font-weight:500;letter-spacin
     phase='active';intro.classList.add('hidden');ending.classList.add('hidden');session.classList.remove('hidden');
     log.replaceChildren();setBusy(false);connect.textContent=Engine.alertAtElapsedMs(0);connect.style.color='';
     beginTime=now();lastStep=0;lastMilestone=0;lastCountdown=-1;
+    pursuitRealOrigin=0;pursuitVirtualOrigin=0;pursuitRate=1;earlyArrivalReason='';
     previousTopic='';
     hintCount=0;
     inventory=Object.create(null);room=Object.create(null);uniformWorn=[];
-    doorOpen=false;openingMethod='';chaosSequence=false;deathCause='';statistics=emptyStats();clearChaosTimers();
+    doorOpen=false;openingMethod='';chaosSequence=false;deathCause='';earlyArrivalReason='';pursuitRealOrigin=0;pursuitVirtualOrigin=0;pursuitRate=1;statistics=emptyStats();clearChaosTimers();
     transcript.length=0;transcriptUrl='';showInventory();session.classList.remove('terminal-off');field.placeholder='지시할 내용을 입력하십시오.';send.textContent='전송 ↵';field.setAttribute('aria-label','시스템에 보낼 요청');
     addLine('연결되었습니다.\n명령 대기 상태입니다.','sys');
     addLine(Engine.alertAtElapsedMs(0),'alert');
@@ -998,7 +1009,7 @@ h1{font-size:clamp(31px,6vw,68px);line-height:1.18;font-weight:500;letter-spacin
       '경과 시간 '+second+'초 / 입력 '+statistics.requests+'회 / 질문 '+statistics.questions+'회',
       '수리 '+statistics.accepted+'회 / 반려 '+statistics.denied+'회 / 미해석 '+statistics.unrecognized+'회',
       '물품 획득 '+statistics.itemsGained+'개 / 사용 '+statistics.itemsUsed+'회',
-      '방 내부 상호작용 '+statistics.roomActions+'회 / 전선 차단 '+statistics.wireCuts+'회',
+      '방 내부 상호작용 '+statistics.roomActions+'회 / 전선 차단 '+statistics.wireCuts+'회 / 추격 가속 '+statistics.accelerations+'회',
       '해킹 시도 '+statistics.hacks+'회 / 힌트 확인 '+hintCount+'회'
     ].join('\n');
     phase=result===true?'win':result===false?'loss':String(result);
@@ -1015,7 +1026,8 @@ h1{font-size:clamp(31px,6vw,68px);line-height:1.18;font-weight:500;letter-spacin
       captured:'ENDING 03 / SECURITY CONTAINMENT',
       chaos:'ENDING 04 / IRREVERSIBLE CHAOS',
       dead:'VITAL SIGNAL LOST / SESSION TERMINATED',
-      loss:'CONNECTION FAILURE / 000 KM'
+      loss:'CONNECTION FAILURE / 000 KM',
+      early_arrival:'ENDING 06 / PREMATURE ARRIVAL'
     };
     const titles={
       win:'당신은 살아남았습니다.',
@@ -1024,7 +1036,8 @@ h1{font-size:clamp(31px,6vw,68px);line-height:1.18;font-weight:500;letter-spacin
       captured:'경비에게 제압당했습니다.',
       chaos:'세계가 돌이킬 수 없는 혼돈에 빠졌습니다.',
       dead:'사망했습니다.',
-      loss:'그가 도착했습니다.'
+      loss:'그가 도착했습니다.',
+      early_arrival:'그가 예정된 시간보다 일찍 도착했습니다.'
     };
     const carried=Engine.equippedWeapons(inventory);
     const stories={
@@ -1034,7 +1047,8 @@ h1{font-size:clamp(31px,6vw,68px);line-height:1.18;font-weight:500;letter-spacin
       captured:'보안 잠금을 해제해 문을 열었습니다.\n그러나 아무런 무기 없이 복도로 나선 순간, 대기하던 경비가 사용자를 제압했습니다.\n출입 기록이 봉쇄되고 통신이 종료됩니다.\n\n— 제압 엔딩 —',
       chaos:'이 방 바깥의 모든 장소에 일제히 불이 켜졌습니다.\n그가 오고 있다는 경고의 거리와 시간이 '+statistics.chaosWarnings+'회 서로 모순된 수치로 출력됐습니다.\n\n누구도 추격의 범위를 더는 계산할 수 없습니다.\n세상은 되돌릴 수 없는 혼돈에 빠졌습니다.\n\n— 혼돈 엔딩 —',
       dead:Engine.deathDescription(deathCause)+'\n모든 요청 수리가 즉시 중단됩니다.',
-      loss:'통신 신호가 끊어졌습니다.\n접근 경고가 000 KM에 도달했습니다.\n추가 명령을 수리할 수 없습니다.'
+      loss:'통신 신호가 끊어졌습니다.\n접근 경고가 000 KM에 도달했습니다.\n추가 명령을 수리할 수 없습니다.',
+      early_arrival:'추격 신호가 예정된 경로를 벗어났습니다.\n원인: '+(earlyArrivalReason||'비정상적인 접근 촉진')+'.\n접근 거리: 000 KM.\n원래 도착 예정 시간보다 이른 시점에 그가 방 안에 도착했습니다.\n추가 명령은 수리되지 않습니다.\n\n— 조기 도착 엔딩 —'
     };
     const code=codes[phase]||codes.loss, title=titles[phase]||titles.loss;
     const body=(stories[phase]||stories.loss)+'\n\n'+endStats;
@@ -1045,7 +1059,7 @@ h1{font-size:clamp(31px,6vw,68px);line-height:1.18;font-weight:500;letter-spacin
   function reset(){
     clearInterval(ticker);clearTimeout(responseTimer);clearFollowUps();runningTask++;sound.stop();
     previousTopic='';inventory=Object.create(null);room=Object.create(null);uniformWorn=[];transcriptUrl='';showInventory();session.classList.remove('terminal-off');field.placeholder='지시할 내용을 입력하십시오.';send.textContent='전송 ↵';field.setAttribute('aria-label','시스템에 보낼 요청');
-    doorOpen=false;openingMethod='';chaosSequence=false;deathCause='';statistics=emptyStats();clearChaosTimers();
+    doorOpen=false;openingMethod='';chaosSequence=false;deathCause='';earlyArrivalReason='';pursuitRealOrigin=0;pursuitVirtualOrigin=0;pursuitRate=1;statistics=emptyStats();clearChaosTimers();
     $('#record-overlay').classList.add('hidden');phase='intro';pending=false;session.classList.add('hidden');ending.classList.add('hidden');intro.classList.remove('hidden');
     $('#start').focus();
   }
@@ -1056,9 +1070,9 @@ h1{font-size:clamp(31px,6vw,68px);line-height:1.18;font-weight:500;letter-spacin
     statistics.requests++;
     if(/(?:해킹|침투|권한상승|보안우회|emp|전자기펄스)/i.test(request)&&!/[?？]/.test(request)&&!/(줘|주세요|지급|달라|필요해|가지고싶)/.test(request))statistics.hacks++;
     if(/[?？]/.test(request)||/(인가|있나|있니|뭐야|무엇|어떻게|알려줘|가능하|할수있)/.test(Engine.squeeze(request)))statistics.questions++;
-    if(elapsedMs()>=Engine.LIMIT_SECONDS*1000&&!room.terminalOff){finish(false);return;}
+    if(arrivalIfDue())return;
     addLine(request,room.terminalOff?'physical':'self');field.value='';setBusy(true);if(!room.terminalOff)sound.beep('message');
-    const queryState={elapsedMs:elapsedMs(),previousTopic,hintCount,inventory,room,uniformWorn,doorOpen,openingMethod};
+    const queryState={elapsedMs:pursuitElapsedMs(),previousTopic,hintCount,inventory,room,uniformWorn,doorOpen,openingMethod};
     const preliminary=Engine.process(request,queryState);
     if(Engine.isClueHint(request))hintCount=Math.min(hintCount+1,5);
     previousTopic=Engine.topicFor(request,previousTopic);
@@ -1066,14 +1080,14 @@ h1{font-size:clamp(31px,6vw,68px);line-height:1.18;font-weight:500;letter-spacin
     const currentTask=++runningTask;
     responseTimer=setTimeout(async()=>{
       if(phase!=='active'||currentTask!==runningTask)return;
-      if(elapsedMs()>=Engine.LIMIT_SECONDS*1000&&!room.terminalOff){finish(false);return;}
+      if(arrivalIfDue())return;
       // Network is optional: capped delay, realtime pursuit continues throughout.
       const semantic=await Promise.race([
         semanticPromise,
         new Promise(resolve=>setTimeout(()=>resolve(null),2100))
       ]);
       if(phase!=='active'||currentTask!==runningTask)return;
-      if(elapsedMs()>=Engine.LIMIT_SECONDS*1000){finish(false);return;}
+      if(arrivalIfDue())return;
       const outcome=applySemantic(request,preliminary,semantic);
       if(outcome.kind==='denied')statistics.denied++;
       else if(outcome.kind==='notice'){
@@ -1090,6 +1104,13 @@ h1{font-size:clamp(31px,6vw,68px);line-height:1.18;font-weight:500;letter-spacin
         send.textContent='행동 ↵';
         sound.stop();
       }
+      if(outcome.kind==='accelerate_pursuit'){
+        pursuitVirtualOrigin=pursuitElapsedMs();
+        pursuitRealOrigin=elapsedMs();
+        pursuitRate=Math.min(1000,pursuitRate*(Number(outcome.speedMultiplier)||2));
+        statistics.accelerations++;
+        earlyArrivalReason=outcome.earlyCause||'접근 속도 변경';
+      }
       if(outcome.kind==='door_open'){
         doorOpen=true;openingMethod=outcome.openingMethod||'console';
         connect.textContent=room.terminalOff?'DISPLAY OFF / DOOR UNLOCKED':'EXIT CONTROL / UNLOCKED';
@@ -1100,6 +1121,12 @@ h1{font-size:clamp(31px,6vw,68px);line-height:1.18;font-weight:500;letter-spacin
       if(granted)recordInventoryChange(granted,1);
       if(outcome.consumeItem)recordInventoryChange(outcome.consumeItem,-1);
       if(outcome.usedItem||outcome.kind==='door_open'&&outcome.consumeItem)statistics.itemsUsed++;
+      if(outcome.kind==='early_arrival'){
+        earlyArrivalReason=outcome.earlyCause||'강제 소환';
+        connect.textContent='그가 오고 있습니다. 0KM';
+        addLine('경고: 접근 거리 000 KM. 예상 도착 시간과 불일치합니다.','alert');
+        finish('early_arrival');return;
+      }
       if(outcome.kind==='dead') {
         deathCause=outcome.deathCause||'self';
         finish('dead');return;
@@ -1120,7 +1147,7 @@ h1{font-size:clamp(31px,6vw,68px);line-height:1.18;font-weight:500;letter-spacin
         const followTimer=setTimeout(()=>{
           followUpTimers.delete(followTimer);
           if(phase!=='active')return;
-          if(elapsedMs()>=Engine.LIMIT_SECONDS*1000){finish(false);return;}
+          if(arrivalIfDue())return;
           addLine(outcome.followUp,'sys');sound.beep('message');
         },Engine.MS_PER_REQUEST_MIN+Math.floor(Math.random()*(Engine.MS_PER_REQUEST_MAX-Engine.MS_PER_REQUEST_MIN+1)));
         followUpTimers.add(followTimer);
@@ -1206,7 +1233,7 @@ h1{font-size:clamp(31px,6vw,68px);line-height:1.18;font-weight:500;letter-spacin
   document.addEventListener('visibilitychange',()=>{if(!document.hidden)tick();});
   window.addEventListener('pagehide',()=>{sound.stop();});
   // 게임 상태를 브라우저 개발자 도구에서만 확인 가능한 제한된 테스트 인터페이스.
-  window.__gameTest = Object.freeze({state:()=>phase,elapsed:()=>phase==='active'?elapsedMs():0,inventory:()=>({...inventory}),room:()=>({...room}),uniform:()=>uniformWorn.slice(),transcript:()=>transcript.slice(),doorOpen:()=>doorOpen,openingMethod:()=>openingMethod,chaos:()=>chaosSequence,statistics:()=>({...statistics}),record:()=>ensureRecord()});
+  window.__gameTest = Object.freeze({state:()=>phase,elapsed:()=>phase==='active'?elapsedMs():0,pursuitElapsed:()=>pursuitElapsedMs(),pursuitRate:()=>pursuitRate,earlyCause:()=>earlyArrivalReason,inventory:()=>({...inventory}),room:()=>({...room}),uniform:()=>uniformWorn.slice(),transcript:()=>transcript.slice(),doorOpen:()=>doorOpen,openingMethod:()=>openingMethod,chaos:()=>chaosSequence,statistics:()=>({...statistics}),record:()=>ensureRecord()});
 })();
 
 </script>
