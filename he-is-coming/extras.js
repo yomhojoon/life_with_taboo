@@ -64,7 +64,7 @@ E.process=function(raw,state={},random=Math.random){
  // "문서"의 첫 글자인 '문'을 문짝으로 오인하는 기존 금기 정규식의 오탐만 좁게 보정.
  if(base.kind==='denied'){
    const q=E.squeeze(raw);
-   if(item?.kind==='sys'&&item.usedItem==='문서'&&/^문서(?:를|을)?(?:일부를|모서리를)?(?:찢어|잘라|일부를떼)/.test(q))return item;
+   if(item?.kind==='sys'&&item.usedItem==='문서'&&/^문서(?:를|을)?(?:좀)?(?:일부를|모서리를)?(?:찢어|잘라|일부를떼)/.test(q))return item;
    return base;
  }
  if(item)return item;
