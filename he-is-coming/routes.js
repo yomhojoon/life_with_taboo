@@ -41,7 +41,7 @@ function actionableExit(raw,t,state){
  if(!portalOpened(state)||!exitVerb.test(t)||exitQuestion.test(t)||question(raw,t))return false;
  if(/(?:그를|그가|그는|그놈|추격자).*(?:나가|탈출|나오|밖으로)/.test(t))return false;
  if(/(?:나가게해줘|나가게해|내보내줘|탈출시켜줘)/.test(t))return true;
- return /^(?:(?:나는|내가|난|나|내몸을|내몸이|플레이어|사용자|지금|즉시|어서|당장|그럼|그러면|좋아|무기를들고|무기없이|총을들고|칼을들고|문을열고|문이열렸으니|문이열렸다면|열린문으로|방에서|이방에서|이곳에서|여기서|천천히|조심히|재빨리|뛰어서|걸어서|무장하고)*)?(?:나가|밖으로나|밖으로걸어|문밖으로|문을통과|문으로나|복도로|탈출|도망가|문을지나|방을떠나|이곳을떠나|퇴실|밖으로빠져나)/.test(t)||/(?:나가|나오|탈출|밖으로|문밖으로|퇴실)(?:줘|라|자|보자|겠습니다|겠어|겠습니다|보겠습니다|버리자|해줘|하자|할래)$/.test(t);
+ return /^(?:(?:나는|내가|난|나|내몸을|내몸이|플레이어|사용자|지금|즉시|어서|당장|그럼|그러면|좋아|무기를들고|무기없이|총을들고|칼을들고|문을열고|문이열렸으니|문이열렸다면|열린문으로|맨손으로|맨몸으로|비무장으로|무기없이|무기를내려놓고|무기를버리고|무기를두고|권총을버리고|총을버리고|칼을버리고|무장해제하고|방에서|이방에서|이곳에서|여기서|천천히|조심히|재빨리|뛰어서|걸어서|무장하고)*)?(?:나가|밖으로나|밖으로걸어|문밖으로|문을통과|문으로나|복도로|탈출|도망가|문을지나|방을떠나|이곳을떠나|퇴실|밖으로빠져나)/.test(t)||/(?:나가|나오|탈출|밖으로|문밖으로|퇴실)(?:줘|라|자|보자|겠습니다|겠어|겠습니다|보겠습니다|버리자|해줘|하자|할래)$/.test(t);
 }
 function questionRoute(raw,t,state){
  if(!question(raw,t))return null;
@@ -125,10 +125,10 @@ E.process=function alternateRoutes(raw,state={},random=Math.random){
  }
  if(portalOpened(state)&&/(?:문|출입문|방문|도어락|잠금장치).*(?:열어|열어줘|개방|해제|풀어)/.test(t)&&!question(input,t))
   return {kind:'sys',text:'출입문은 이미 개방되었습니다. 밖으로 나갈 수 있습니다.'};
- if(/(?:해킹장비|해킹도구|노트북|랩탑|emp|전자기펄스|전자기교란)/.test(t)&&acquiring.test(t)&&!/(?:사용|가동|발동|방출|해킹해)/.test(t))
+ if(/(?:해킹장비|해킹도구|노트북|랩탑|emp|전자기펄스|전자기교란)/.test(t)&&acquiring.test(t)&&!/(?:사용|작동|가동|발동|방출|터뜨|기폭|발사|해킹해)/.test(t))
   return base(raw,state,random);
  const justAction=t.replace(/(?:해킹장비|해킹도구|해킹키트|침투장비|노트북|랩탑|디코더|해킹툴|전자기펄스발생기|전자기펄스|전자기교란|전자기충격|전자기파발생기|펄스발생기|emp)/g,'');
- const gearUse=gear.test(t)&&/(?:사용|써|작동|해킹|침투|우회|뚫|잠금해제|풀어)/.test(justAction);
+ const gearUse=gear.test(t)&&(/(?:사용|써|작동|해킹|침투|우회|뚫|잠금해제|풀어)/.test(justAction)||lock.test(t)&&/(?:열어|개방|해제)/.test(justAction));
  const empUse=emp.test(t)&&/(?:사용|써|작동|터뜨|기폭|폭파|방출|방사|발사|발동|일으켜|발생시켜|쏴|가동해서|문열|잠금해제|무력화시켜|교란해)/.test(justAction);
  const adminOverride=adminHack.test(t)&&/(?:탈취|획득|얻어|접근해|상승|뚫어|접수해|확보해)/.test(t);
  const selfHack=(hackWord.test(t)&&hackAction.test(t)&&selfDevice.test(t))||adminOverride;
