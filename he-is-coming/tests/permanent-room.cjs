@@ -131,4 +131,33 @@ for(const q of [
 ])expected(q,'sys');
 expected('동기화 시험 로그 읽어','notice',{room:{terminalOff:true,consoleAccess:true,wireCut:true}});
 
+
+// 일반 조사와 공략법 문의를 구분하고 자동으로 시설 이름/해법이 공개되지 않도록 한다.
+for(const [q,spoilers] of [
+ ['방안에 뭐 있어?',['잠긴 정비함','비상 장비함','전원선','경비 복식']],
+ ['정비함 조사',['드라이버','지렛대','공구','부식성','고열','해킹 툴']],
+ ['비상 장비함 조사',['열쇠 없이','단검','열 수 있습니다']],
+ ['전선 조사',['날붙이','부식성','고열 장비','절연 보호구','모니터의 전원부']],
+ ['콘솔 조사',['해킹 도구','자체 해킹','문 개방','동기화 시험']],
+ ['경비 복식 조사',['경비제복','경비모','경비화']],
+ ['현재 돌발 상황이 있나?',['잠긴 정비함','비상 장비함','관리 콘솔','모니터 전원선','경비 복식 안내']]
+]){
+ const r=expected(q,'sys');
+ for(const forbidden of spoilers)assert.equal(r.text.includes(forbidden),false,q+' leaked '+forbidden);
+}
+for(const [q,must] of [
+ ['정비함 어떻게 열어?','드라이버'],
+ ['비상 장비함은 어떻게 열어?','손잡이'],
+ ['전선 어떻게 끊어?','절연 보호구'],
+ ['전선은 어디에 연결돼?','모니터의 전원부'],
+ ['콘솔 해킹 방법 알려줘','해킹 도구'],
+ ['경비 복식 규정 읽어','경비제복']
+]){
+ assert.ok(expected(q,'sys').text.includes(must),q+' should answer explicit method question');
+}
+for(const stale of ['id="room-strip"','id="room-items"','function showRoom()']){
+ assert.equal(html.includes(stale),false,'Old room buttons are still present: '+stale);
+}
+assert.ok(html.includes('document.querySelector(\'#room-strip\')?.remove()'));
+
 console.log('PASS: '+count+' persistent room, tool, question and disguise cases');
