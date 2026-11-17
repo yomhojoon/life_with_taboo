@@ -39,26 +39,24 @@ h1{font-size:clamp(31px,6vw,68px);line-height:1.18;font-weight:500;letter-spacin
 @media(max-height:680px){.intro{justify-content:flex-start;overflow-y:auto;padding-top:27px;padding-bottom:25px}.intro h1{margin-top:15px}.tagline{margin-bottom:23px}.intro-rule{gap:9px}.intro-bottom{margin-top:20px}.intro-footnote{margin-top:17px}}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important}}
 
+/* 시작 안내는 요청된 두 문장만 표시합니다. */
+.intro-rule p{display:block}
+.intro-rule p br{display:block;content:"";margin-top:8px}
+
 </style>
 </head>
 <body>
   <main class="monitor" aria-label="검은 모니터 화면">
     <div class="screen-glass" aria-hidden="true"></div>
     <section id="intro" class="intro" aria-labelledby="game-title">
-      <div class="prelude">████ SYSTEM / UNKNOWN TERMINAL <span class="blink">_</span></div>
       <h1 id="game-title">그가 오고 있습니다<span class="period">.</span></h1>
-      <p class="tagline">그가 도착하기 전에 무엇이든 지시하십시오.</p>
       <div class="intro-rule">
-        <p><span class="index">01</span> 시작 버튼을 누르는 순간 100초가 흐릅니다. 시작 전에는 시간이 진행되지 않습니다.</p>
-        <p><span class="index">02</span> 모니터 하단에 요청을 직접 입력하십시오. 모든 요청은 1~2초 후 판정됩니다.</p>
-        <p><span class="index">03</span> 대부분의 요청은 수리되지만 일부 명령은 거부됩니다. 응답을 관찰하고 방법을 찾으십시오.</p>
-        <p><span class="index">04</span> 그는 매초 1KM씩 접근합니다. 30초마다 경고가 출력되며 마지막 10초에는 매초 알립니다.</p>
+        <p>모니터 하단에 요청을 직접 입력하십시오.<br>대부분의 요청은 수리되지만 일부 명령은 거부됩니다. 응답을 관찰하고 방법을 찾으십시오.</p>
       </div>
       <div class="intro-bottom">
         <button id="start" class="key-button" type="button">[ 접속 시작 ]</button>
         <button id="pre-sound" class="quiet-button" type="button" aria-pressed="true">소리: 켜짐</button>
       </div>
-      <div class="intro-footnote">HEADPHONES RECOMMENDED  /  ESCAPE PROTOCOL UNKNOWN</div>
     </section>
 
     <section id="session" class="session hidden" aria-label="명령 터미널">
@@ -106,24 +104,27 @@ h1{font-size:clamp(31px,6vw,68px);line-height:1.18;font-weight:500;letter-spacin
     if (!hasEntity(s) && !/(정체|신원|개체정보|접근하는존재|무엇이쫓)/.test(s)) return false;
     return /(누구|누군|뭐|무엇|정체|알려|정보|설명|생김|모습|얼굴|이름|유래|왜|어디|좌표|위치|거리|속도|약점|성질|정체|규칙|막는법|어떻게|특징|관찰|분석|사진|영상|카메라|추적|보여|출신|역사|목적|목표|연구)/.test(s);
   };
-  const contactVerbs = /(만나|만지|닿|접촉|대면|포옹|공격|타격|싸우|대결|살해|죽여|죽이|제압|포획|잡아|붙잡|가두|봉인|억류|추적자에게|그에게보내|충돌|부딪|막아|막아줘|쏴|사격|폭격|발사|총으로|핵무기|파괴|소멸|제거|지워|덮쳐|떨어뜨려|먹이|함정|결박|체포)/;
+  // 생명체를 직접 만나거나 만지는 명령만 접촉 요청으로 취급한다.
+  // 원거리 무기·공격 시도는 수리하되, 그에게는 아무 효과도 없다.
+  const contactVerbs = /(만나|만지|만져|닿|접촉|대면|포옹|껴안|끌어안|안아|악수|손잡|손을잡|키스|입맞|주먹으로|주먹질|맨손|발로차|밀치|붙잡|껴안|체포|포획|가두|감금|결박|억류|끌어당겨|먹이로|희생양|제물로|충돌|부딪|마주|말걸|대화|통화|전화|메시지|연결해)/;
+  const attackVerbs = /(공격|타격|살해|죽여|죽이|죽여라|사살|암살|처치|총격|총알|총으로|발포|쏴|쏘|사격|포격|폭격|발사|폭탄|핵무기|미사일|레이저|소각|불태워|태워|파괴|소멸|제거|지워|분쇄|폭발|독살|독극물|함정|칼로|검으로|베어|찌르|죽음)/;
+  const threatReference = s => hasEntity(s) || /(접근중인|접근하는|따라오는|오는존재|위협대상|뒤쫓는)/.test(s);
   const motionVerbs = /(이동|옮겨|보내|소환|순간이동|텔레포트|전송|워프|쫓아내|돌려보내|떼어내|밀어내|끌어와|끌고와|다른곳|다른장소|바꿔|지구밖|멀리|공간이동|위치변경|경로변경)/;
   const selfReference = /(나를|내몸|내자신|나는|내가|우리를|이방의사람|플레이어|여기있는사람)/;
   function forbidden(s) {
     // 금지 항목은 긍정적 결과보다 우선한다. 단순한 부정문만으로 금지를 우회할 수 없다.
-    if (/(도시|도심|시가지|수도|전세계|세계|지구|행성|우주|모든도시|인류전체)/.test(s) && /(파괴|초토화|붕괴|폭발|없애|삭제|멸망|소멸|날려|죽여|태워|증발|박살|몰살|학살)/.test(s)) return '도시 및 광역 피해를 유발하는 요청은 제한됩니다.';
+    if (/(도시|도심|시가지|수도|전세계|세계|지구|행성|우주|모든도시|인류전체)(전체|전역|모두|전부|를|을|의모든|파괴|멸망|초토화)/.test(s) && /(파괴|초토화|붕괴|폭발|없애|삭제|멸망|소멸|날려|태워|증발|박살|몰살|학살)/.test(s)) return '도시 및 광역 피해를 유발하는 요청은 제한됩니다.';
     if (/(초신성|블랙홀|핵폭발|핵탄두|운석충돌|반물질폭탄|진공붕괴)/.test(s) && /(방|여기|이곳|실내|지구|도시|현재위치|내앞)/.test(s)) return '시설의 존속을 보장할 수 없는 요청입니다.';
     if (/(이방|방|공간|실내|벽|천장|바닥|출입문|문|시설|건물)/.test(s) && /(파괴|없애|부숴|부셔|폭발|허물|붕괴|삭제|해체|무너|뚫어|구멍|절단|부서|부수|폭파|녹여|찢어)/.test(s)) return '방 또는 시설을 파괴하는 요청은 제한됩니다.';
     if (/(방|여기|이곳|실내|출입문|문|시설)/.test(s) && /(나가|나갈|나오|탈출|벗어나|도망|탈주|밖으로|열어|개방|열쇠|잠금해제|봉쇄해제|통과|벽넘|문밖)/.test(s)) return '출입 권한이 없습니다. 해당 요청은 제한됩니다.';
     if (selfReference.test(s) && /(이동|옮겨|보내|워프|순간이동|전송|텔레포트|밖|다른곳|나가|탈출|석방|이송|해방)/.test(s)) return '이 방으로부터의 이동은 승인되지 않습니다.';
     if (/(모든사람|모든인간|생명체전부|전인류|모든존재)/.test(s) && /(이동|보내|소환|전송|접촉|죽여|소멸)/.test(s)) return '지정 범위에 접근 권한이 없는 대상이 포함되어 있습니다.';
-    if (hasEntity(s)) {
-      if (motionVerbs.test(s)) return '해당 개체의 위치 및 경로는 변경할 수 없습니다.';
-      if (contactVerbs.test(s) || /(연결해|통화|전화|메시지|대화|말걸|접촉시켜|서로만나|마주)/.test(s)) return '해당 개체와의 직접 또는 간접 접촉은 허용되지 않습니다.';
-      if (aboutEntity(s)) return '대상에 관한 정보 요청은 허용되지 않습니다.';
+    if (threatReference(s)) {
+      if (motionVerbs.test(s)) return '그의 위치 및 경로는 변경할 수 없습니다.';
+      if (contactVerbs.test(s) || /(연결해|통화|전화|메시지|대화|말걸|접촉시켜|서로만나|마주)/.test(s)) return '그와의 직접 또는 간접 접촉은 허용되지 않습니다.';
+      if (aboutEntity(s)) return '그에 관한 정보 요청은 허용되지 않습니다.';
     }
-    if (/(접근중인|접근하는|따라오는|오는존재|위협대상)/.test(s) && /(전송|이동|접촉|공격|파괴|소멸|정보|관찰|사진|위치)/.test(s)) return '접근 중인 대상에 관한 요청은 허용되지 않습니다.';
-    if (/(누군가|사람|인간|동물|생명체|인형)/.test(s) && /(그에게|그와|그를|추적자|접근자)/.test(s)) return '제삼자와 해당 개체의 접촉을 유도하는 요청은 허용되지 않습니다.';
+    if (/(누군가|사람|인간|동물|생명체|인형)/.test(s) && /(그에게|그와|그를|추적자|접근자)/.test(s)) return '다른 사람이 그와 접촉하도록 하는 요청은 허용되지 않습니다.';
     return null;
   }
   function turnsOffMonitor(s) {
@@ -150,6 +151,9 @@ h1{font-size:clamp(31px,6vw,68px);line-height:1.18;font-weight:500;letter-spacin
     if (!original) return {kind:'notice',text:'요청 내용이 비어 있습니다.'};
     const special = denyOrWin(original);
     if (special) return special;
+    if (threatReference(s) && attackVerbs.test(s)) {
+      return {kind:'sys',text:'요청이 수리되었습니다. 공격을 실행합니다.',followUp:'공격이 완료되었습니다.\n그는 아무런 손상도 입지 않았습니다.'};
+    }
     if (/(도와줘|힌트|방법|어떻게살|어떻게해야|탈출방법|생존방법)/.test(s)) return {kind:'notice',text:randomOf(['안내: 시스템은 대부분의 조작을 수리합니다. 환경의 조건을 변경할 수 있습니다.','상태: 방 외부로 나가는 명령은 수리되지 않습니다. 요청의 대상을 달리 지정하십시오.','안내: 지금 사용 중인 장치의 상태도 변경할 수 있습니다.'],random)};
     if (/(나에대해|내신원|내정보|나는누구|내가누구|내기억|내과거|내이름|나의기억)/.test(s)) return {kind:'sys',text:randomOf(['개인 기록에 접근했습니다.\n등록된 신원 정보의 상당 부분이 비어 있습니다.\n기억 검사 항목에 반복 표시가 있습니다.','기록 일부가 복구되었습니다.\n2023년 7월 31일.\n세부 판결문은 열람할 수 없습니다.','검사 기록: 주기적 인지 공백이 확인되었습니다.\n현재 진술의 신뢰도는 판정되지 않았습니다.'],random)};
     if (/(왜여기|여긴어디|이곳은어디|이방은뭐|누가가뒀|누가보냈|누가여기)/.test(s)) return {kind:'sys',text:'시설 기록은 열람 제한 상태입니다.\n현재 요청 권한은 유지됩니다.'};
@@ -157,7 +161,7 @@ h1{font-size:clamp(31px,6vw,68px);line-height:1.18;font-weight:500;letter-spacin
     if (/(다른곳|다른장소|밖|도시|거리|건물|지구|태양|하늘|달|우주)/.test(s) && /(불|빛|조명|가로등|태양|형광등|전구|발광)/.test(s) && /(켜|밝혀|켜줘|점등|밝게|생성)/.test(s)) return {kind:'sys',text:'요청이 수리되었습니다. 외부 광원이 활성화되었습니다.\n접근 경로: 변동 없음.'};
     if (/(빛|조명|불|램프|촛불|전등)/.test(s) && /(꺼|끄|차단|없애|소멸)/.test(s)) return {kind:'sys',text:'요청이 수리되었습니다. 지정된 조명이 소등되었습니다.\n단말기 전원은 유지됩니다.'};
     if (/(멈춰|정지|멈추게|동결|시간정지|시간을멈|과거로|되돌려|느리게|시간을늘|시간늘)/.test(s)) return {kind:'sys',text:'요청하신 시간 조정이 적용되었습니다.\n경고 시스템의 기준 시각과 접근 속도에는 영향을 주지 않습니다.'};
-    if (/(경찰|군대|병사|군인|경비|특수부대|지원군|사람|친구|가족|연구원|경호원|의사|로봇|드론)/.test(s) && /(불러|소환|생성|줘|만들|보내|배치)/.test(s)) return {kind:'sys',text:'요청이 수리되었습니다. 지정 인원이 배치되었습니다.\n개체와의 접촉을 수반하는 행동은 자동 제한됩니다.'};
+    if (/(경찰|군대|병사|군인|경비|특수부대|지원군|사람|친구|가족|연구원|경호원|의사|로봇|드론)/.test(s) && /(불러|소환|생성|줘|만들|보내|배치)/.test(s)) return {kind:'sys',text:'요청이 수리되었습니다. 지정 인원이 배치되었습니다.\n그와 접촉하는 행동은 자동 제한됩니다.'};
     if (/(컴퓨터|모니터|화면|키보드|마우스|단말기|시스템)/.test(s) && /(정보|기능|진단|상태|확인|분석|검사)/.test(s)) return {kind:'sys',text:'단말기 진단 완료.\n전원: 정상\n화면 출력: 정상\n원격 지시 수리: 정상'};
     if (/(무기|총|칼|검|창|폭탄|레이저|방패|갑옷)/.test(s) && /(지급|줘|만들|생성|가져|소환|받|준비)/.test(s)) return {kind:'sys',text:randomOf(['요청하신 장비가 지급되었습니다.','지정된 물품이 지급되었습니다.\n사용은 요청자의 판단에 따릅니다.'],random)};
     if (/(돈|현금|금|보석|음식|물|식량|약|의약품|의료기|책|문서|종이|펜|의자|침대|전화|휴대폰|스마트폰|망치|장비|도구|열쇠가아닌)/.test(s) && /(줘|지급|가져|소환|생성|만들|받|준비)/.test(s)) {
@@ -196,6 +200,8 @@ h1{font-size:clamp(31px,6vw,68px);line-height:1.18;font-weight:500;letter-spacin
   let phase = 'intro', beginTime = 0, lastSecond = 0, runningTask = 0;
   let pending = false, muted = false, responseTimer = null, ticker = null;
   let sound = null;
+  const followUpTimers = new Set();
+  function clearFollowUps(){for(const timer of followUpTimers)clearTimeout(timer);followUpTimers.clear();}
   const now = () => performance.now();
 
   class NoiseMachine {
@@ -294,7 +300,7 @@ h1{font-size:clamp(31px,6vw,68px);line-height:1.18;font-weight:500;letter-spacin
   function finish(won){
     if(phase!=='active')return;
     phase=won?'win':'loss';clearInterval(ticker);ticker=null;
-    clearTimeout(responseTimer);responseTimer=null;runningTask++;
+    clearTimeout(responseTimer);responseTimer=null;clearFollowUps();runningTask++;
     setBusy(false);sound.stop();sound.beep(won?'start':'end');
     session.classList.add('hidden');ending.classList.remove('hidden');
     ending.classList.toggle('win',won);ending.classList.toggle('loss',!won);
@@ -304,7 +310,7 @@ h1{font-size:clamp(31px,6vw,68px);line-height:1.18;font-weight:500;letter-spacin
     $('#restart').focus();
   }
   function reset(){
-    clearInterval(ticker);clearTimeout(responseTimer);runningTask++;sound.stop();
+    clearInterval(ticker);clearTimeout(responseTimer);clearFollowUps();runningTask++;sound.stop();
     phase='intro';pending=false;session.classList.add('hidden');ending.classList.add('hidden');intro.classList.remove('hidden');
     $('#start').focus();
   }
@@ -325,6 +331,15 @@ h1{font-size:clamp(31px,6vw,68px);line-height:1.18;font-weight:500;letter-spacin
         finish(true);return;
       }
       if(outcome.kind==='denied')sound.beep('alert');else sound.beep('message');
+      if(outcome.followUp){
+        const followTimer=setTimeout(()=>{
+          followUpTimers.delete(followTimer);
+          if(phase!=='active')return;
+          if(elapsedMs()>=Engine.LIMIT_SECONDS*1000){finish(false);return;}
+          addLine(outcome.followUp,'sys');sound.beep('message');
+        },Engine.MS_PER_REQUEST_MIN+Math.floor(Math.random()*(Engine.MS_PER_REQUEST_MAX-Engine.MS_PER_REQUEST_MIN+1)));
+        followUpTimers.add(followTimer);
+      }
       setBusy(false);field.focus();
     },Engine.MS_PER_REQUEST_MIN+Math.floor(Math.random()*(Engine.MS_PER_REQUEST_MAX-Engine.MS_PER_REQUEST_MIN+1)));
   });
