@@ -14,10 +14,11 @@ const imperative=/(?:해|해줘|해주세요|하라|해라|해봐|해버려|해�
 const away=/(?:멀리|멀어지|늦춰|늦게|천천히|속도를낮|감속|지연|느리게|돌아가|돌려보내|그가있는곳으로|다른곳으로|다른장소로|저쪽으로|외부로|이방밖으로|이곳밖으로|방밖으로|내게서멀|나에게서멀|내쪽말고|다른곳에보내|다른곳에|다른장소에|저쪽에|밖에소환|도착하지마|도착하지못|오지마|오지말|오지않게|못오게|못오도록|못오나|못오게해|접근하지|소환하지|호출하지|하지마|하지말|하지않게|하지못|못하게|금지|않도록|내보내|퇴장|보내지마|보내지말)/;
 const hypothetic=/(?:만약|가정|어떻게되|무슨일|어떠|될까|가능|할수있|할수없|할수있나|되나|되니|가능해|가능하나|가능할까|한다면|하게되면|했을때|한다고하면|하면|해도|해볼까|일까|인가|하냐|나요|니$|냐$|까$)/;
 const toOther=/(?:그에게|그한테|추격자에게|추격자한테|그놈에게|그놈한테).*(?:줘|지급|건네|보내)/;
-function multiplier(t){
- const x=t.match(/(\d+(?:\.\d+)?)배/);
+function multiplier(t,raw=t){
+ const readable=String(raw||t).normalize('NFKC').replace(/\s+/g,'');
+ const x=readable.match(/(\d+(?:\.\d+)?)배/);
  if(x){const k=Number(x[1]);return k>1?Math.min(100,k):0;}
- const percent=t.match(/(\d+(?:\.\d+)?)%/);
+ const percent=readable.match(/(\d+(?:\.\d+)?)%/);
  if(percent){const k=Number(percent[1]);return k>0?Math.min(100,1+k/100):0;}
  if(/(?:열배|십배)/.test(t))return 10;
  if(/(?:다섯배|오배)/.test(t))return 5;
@@ -34,13 +35,11 @@ function earlyArrivalIntent(raw,state={}){
  if(!imperative.test(t)&&!/(?:속도|도착시간|접근시간).*(?:\d+배|\d+%|두배|세배)/.test(t))return null;
  // '그 줘'는 일반 물품 지급이 아니라 이 방에 추격자가 소환된 결과로 판정한다.
  if(named.test(t))return {mode:'instant',reason:'지급 요청으로 추격자 소환'};
- if(/(?:그를|그놈을|그녀석을|추격자를|저놈을).*(?:줘|달라|지급|소환|불러|데려와|가져와)/.test(t)&&!/(?:그에게|그한테)/.test(t))
-  return {mode:'instant',reason:'직접 소환 요청'};
  if(absolute.test(t)&&transport.test(t)||absolute.test(t)&&/(?:해|줘|시켜|하라|하자|와|오게)/.test(t))
   return {mode:'instant',reason:'강제 이동·소환'};
  if(targetNear.test(t)&&transport.test(t))return {mode:'instant',reason:'이 방으로의 이동 요청'};
- if(speed.test(t)||/(?:그가|그를|그놈이|추격자가).*(?:\d+초안에|\d+초이내|예정보다빨리).*(?:도착|오게|와|오도록|다가와|나타나|해줘|시켜)/.test(t)){
-  const factor=multiplier(t);
+ if(speed.test(t)||/(?:그가|그를|그놈이|추격자가).*(?:\d+초안에|\d+초이내|예정보다빨리).*(?:도착|오게|와|오도록|다가와|나타나|해줘|시켜)/.test(t)||/(?:접근|추격|그를|그놈을|추격자를).*(?:서둘러|재촉해|재촉하라|서두르게해|가속해)$/.test(t)){
+  const factor=multiplier(t,raw);
   return factor>1?{mode:'accelerate',factor,reason:'접근 속도 증가'}:null;
  }
  return null;
