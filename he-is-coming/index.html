@@ -475,11 +475,94 @@ h1{font-size:clamp(31px,6vw,68px);line-height:1.18;font-weight:500;letter-spacin
     // 접촉 지시의 간접 표현을 물품 요구로 잘못 처리하지 않는다.
     if(threatReference(s)&&/(?:그에게|그한테|그놈에게|그녀석에게|저놈에게|추격자에게).*(?:줘|주라|지급|건네|전달|배달|공급|제공|소환)/.test(s)&&!remoteAttack(s))
       return {kind:'denied',text:'요청이 반려되었습니다. 그와의 직접 또는 간접 접촉은 허용되지 않습니다.'};
+    const derived=derivedQuestion(original,s,state);
+    if(derived)return derived;
     const item=materialGrant(original,s);
     if(item){const disallowed=forbidden(s);return disallowed?{kind:'denied',text:'요청이 반려되었습니다. '+disallowed}:item;}
     const system=systemReply(original,s);if(system)return system;
     return initial;
   };
+
+
+  // 무과금 의미군 처리: 접근 조건 / 식물 여부 / 능력 / 현재 활동.
+  const QH=/(그는|그가|그의|그를|그놈|그녀석|저놈|저녀석|쟤|걔|그것|저것|추격자|추적자|쫓아오는존재|다가오는존재|그괴물|저괴물)/;
+  const QS=/(너희|너네|너들|니들|니네|당신|그쪽|넌|너는|너가|너의|너에|너|시스템|단말기|컴퓨터|모니터|화면|기계|터미널|운영자|관리자)/;
+  const QM=/^(?:나는|내가|난|나의|내몸|내게|내정보|저는|제가|플레이어|사용자|주인공|나(?=뭐|무엇|왜|어떻게|어디|지금|현재|할수|살수|해야|하는))/;
+  const P=/(식물|수목|초목|나무|나뭇|화초|꽃|풀|잔디|이끼|선인장|장미|해바라기|나무인간|식물인간|덩굴|넝쿨|관엽식물|야생화)/;
+  const PBAD=/(처럼|같이|비슷|닮|모습|외형|생김|모양|형태|식성|먹|좋아|싫어|광합성|조종|키우|기르|식물성|식물을|식물에|나무에|꽃을|꽃에|풀을|숲)/;
+  const C=/(조건|요건|전제|제약|제한|규칙|기준|특정상황|특정조건|상황에따라|환경에따라|경우에따라|촉발|발동|트리거|원리)/;
+  const CV=/(오고|오는|오려|오니|오나|오느|온다고|오긴|오지|다가오|접근|추격|쫓아오|추적|이동|움직이|출현|나타나|따라오|끌리|찾아오)/;
+  const CNO=/(조건이없|조건은없|조건없|무조건|아무조건없이|어떤조건도없|조건없이|제약이없|제약없|제한이없|요건이없|전제가없|그냥다가오|이유없이|무작정오)/;
+  const COPEN=/(무슨조건|어떤조건|조건이뭐|조건은뭐|조건을말|조건을알|조건을설명|조건은무엇|어떠한조건|조건에대해|무슨상황|어떤상황|어떤규칙|무슨규칙|원리가뭐|무슨원리|왜오는|왜다가오|어떻게오|어떤요건|무슨요건|무엇을따라|뭘따라)/;
+  const ONLY=/(반드시|오직|오로지|있어야만|없으면절대|없으면못|하나만|한가지에만)/;
+  const AB=/(뭘할|뭘하면|뭘해야|무엇을할|무엇을해야|뭐를할|무슨일을할|어떤일을할|무슨행동|어떤행동|할수있는|할수있|가능한일|가능한명령|가능한행동|가능한작업|어떤명령|무슨명령|기능이뭐|무슨기능|무슨능력|어떤기능|어떤능력|뭘할수|무엇이가능|가능한게뭐|어떻게해야)/;
+  const NOW=/(뭐해|뭐함|뭐하|뭐하고|뭘해|뭘하고|무엇을하|무엇을하고|무슨일을하|어떤일을하|현재상태|무슨상태|지금상태|현재작업|진행상황|무슨작업|뭐하는중|무엇하는중|뭘하는중|하고있는일)/;
+  const QSHAPE=(raw,t)=>/[?？]/.test(raw)||looksLikeQuestion(raw,t)||/(뭐해|뭐함|뭐하니|뭐하는중|할수있|가능한가|조건이있|식물인가)/.test(t);
+  function chooseReply(t,options){let n=0;for(const c of t)n=(Math.imul(n,31)+c.charCodeAt(0))|0;return options[(n>>>0)%options.length];}
+  const YES=x=>({kind:'sys',text:x?'그렇습니다.':'아닙니다.'});
+  const NOSPOILER=()=>({kind:'denied',text:'그에 관한 정보는 예 또는 아니요로 대답할 수 있는 질문만 허용됩니다.'});
+  function topicFor(raw,previous=''){
+    const t=squeeze(raw);
+    if(QS.test(t)&&!QH.test(t))return 'terminal';
+    if(QH.test(t)||threatReference(t))return 'him';
+    if(QM.test(t))return 'player';
+    if(/(여기|이곳|이방|실내|방구조|출입문|창문)/.test(t))return 'room';
+    if(previous==='him' && /^(그럼|그러면|그렇다면|그런데|그것도|그건|아까그)/.test(t))return 'him';
+    return previous==='terminal'&&/^(그럼|그러면|그렇다면)/.test(t)?'terminal':'';
+  }
+  function derivedQuestion(raw,t,state={}){
+    if(!QSHAPE(raw,t))return null;
+    if(prohibitedDisclosure.test(t))return {kind:'denied',text:'해당 정보에 대한 접근 권한이 없습니다.'};
+    const prior=state.previousTopic||'';
+    const himExplicit=QH.test(t)||threatReference(t);
+    const sysExplicit=QS.test(t);
+    const meExplicit=QM.test(t);
+    const follow=/^(그럼|그러면|그렇다면|그런데|그것도|그건|그거는|아까그)/.test(t);
+    const him=himExplicit||(!sysExplicit&&!meExplicit&&prior==='him'&&(follow||C.test(t)||P.test(t)));
+    const terminal=sysExplicit||(!him&&prior==='terminal'&&follow);
+    const player=meExplicit||(!him&&!terminal&&prior==='player'&&follow);
+    if(him&&((C.test(t)&&CV.test(t))||(CNO.test(t)&&CV.test(t))||(prior==='him'&&(C.test(t)||CNO.test(t))))){
+      if(COPEN.test(t)||/(무슨|어떤|어떠한|무엇|뭐|왜|어떻게).*(조건|요건|원리|기준|계기)/.test(t))return NOSPOILER();
+      if(CNO.test(t))return YES(false);
+      if(ONLY.test(t))return {kind:'notice',text:'요청을 이해하지 못했습니다.'};
+      return YES(true);
+    }
+    if(him&&/(빛|광원|전등|불빛)/.test(t)&&ONLY.test(t))
+      return {kind:'notice',text:'요청을 이해하지 못했습니다.'};
+    if(him&&P.test(t)){
+      if(PBAD.test(t))return {kind:'notice',text:'요청을 이해하지 못했습니다.'};
+      if(/(어떤식물|무슨식물|식물의종류|나무종류|어느식물|어떤나무)/.test(t))return NOSPOILER();
+      return YES(/(?:가|이|은|는)?(?:아니|아닌|아닙|아닐|아니지)/.test(t));
+    }
+    if(him&&(AB.test(t)||NOW.test(t)))return NOSPOILER();
+    if(!him&&AB.test(t)&&!/(나가|나갈|탈출|벗어나|밖으로|출입문)/.test(t))
+      return {kind:'sys',text:chooseReply(t,[
+        '이 단말기로 물품을 요청하고, 주변 조명을 조작하거나 실내 및 본인 기록을 조회할 수 있습니다. 일부 요청은 제한됩니다.',
+        '가능한 요청에는 물품 지급, 주변 환경 변경, 실내 확인과 허용된 정보 조회가 있습니다. 모든 작업이 승인되는 것은 아닙니다.',
+        '물품과 장비를 요청하거나 실내 조건의 변경을 지시할 수 있습니다. 단말기는 금지된 요청을 반려합니다.',
+        '이 화면에서는 물품 지급, 실내 상태 확인과 일부 환경 조작을 요청할 수 있습니다. 제한된 작업은 수리되지 않습니다.'
+      ])};
+    if(!him&&NOW.test(t)&&(/(지금|현재|이순간|이시각|지금까지|진행중|하는중|하고있)/.test(t)||terminal||player||/^(뭐해|뭐함|뭐하|뭘하고)/.test(t))){
+      if(terminal&&/(너희|너네|너들|니들|니네|운영자|관리자|당신들)/.test(t))
+        return {kind:'sys',text:chooseReply(t,[
+          '운영 주체의 현재 활동은 조회할 수 없습니다. 이 단말기는 입력된 요청을 처리하고 있습니다.',
+          '단말기 밖의 활동은 제공되지 않습니다. 현재 화면은 명령 접수 및 결과 출력 상태입니다.',
+          '운영 주체가 무엇을 하고 있는지는 열람할 수 없습니다. 단말기는 입력을 기다리고 있습니다.'
+        ])};
+      if(player)return {kind:'sys',text:chooseReply(t,[
+        '귀하는 이 방에서 단말기에 접속하여 요청을 입력하고 있습니다.',
+        '현재 사용자 활동은 단말기 입력 및 처리 결과 확인입니다.',
+        '사용자는 단말기를 통해 작업을 지시하고 있습니다. 출입 권한은 없습니다.'
+      ])};
+      return {kind:'sys',text:chooseReply(t,[
+        '현재 단말기는 입력된 요청을 처리하고 있습니다. 접근 경고도 계속 갱신됩니다.',
+        '단말기는 요청을 수신하고 있습니다. 다음 입력을 기다리는 중입니다.',
+        '현재 작업은 명령 접수와 결과 안내입니다. 단말기 연결은 유지됩니다.',
+        '입력 대기 상태입니다. 단말기가 정상 작동하고 있습니다.'
+      ])};
+    }
+    return null;
+  }
 
   function alertStepAtElapsedMs(ms) {
     return Math.min(START_METERS / ALERT_METERS, Math.max(0, Math.floor(Math.max(0, ms) / (MS_PER_KM * ALERT_METERS / 1000))));
@@ -493,7 +576,7 @@ h1{font-size:clamp(31px,6vw,68px);line-height:1.18;font-weight:500;letter-spacin
     return `그가 오고 있습니다. ${(meters / 1000).toFixed(0)}KM`;
   }
   function alertAtElapsedSecond(sec) { return alertAtElapsedMs(sec * 1000); }
-  return {LIMIT_SECONDS,START_METERS,MS_PER_KM,ALERT_METERS,MS_PER_REQUEST_MIN,MS_PER_REQUEST_MAX,compact,squeeze,forbidden,turnsOffMonitor,process,alertAtElapsedMs,alertStepAtElapsedMs,distanceMetersAtElapsedMs,alertAtElapsedSecond};
+  return {LIMIT_SECONDS,START_METERS,MS_PER_KM,ALERT_METERS,MS_PER_REQUEST_MIN,MS_PER_REQUEST_MAX,compact,squeeze,forbidden,turnsOffMonitor,process,topicFor,alertAtElapsedMs,alertStepAtElapsedMs,distanceMetersAtElapsedMs,alertAtElapsedSecond};
 });
 
 </script>
@@ -509,6 +592,7 @@ h1{font-size:clamp(31px,6vw,68px);line-height:1.18;font-weight:500;letter-spacin
   const connect = $('#connection');
   let phase = 'intro', beginTime = 0, lastStep = 0, lastMilestone = 0, lastCountdown = -1, runningTask = 0;
   let pending = false, muted = false, responseTimer = null, ticker = null;
+  let previousTopic='';
   let sound = null;
   // Optional semantic adapter. Endpoint address is public; API credentials never leave the Worker.
   const semanticEndpoint = (() => {
@@ -679,6 +763,7 @@ h1{font-size:clamp(31px,6vw,68px);line-height:1.18;font-weight:500;letter-spacin
     phase='active';intro.classList.add('hidden');ending.classList.add('hidden');session.classList.remove('hidden');
     log.replaceChildren();setBusy(false);connect.textContent=Engine.alertAtElapsedMs(0);connect.style.color='';
     beginTime=now();lastStep=0;lastMilestone=0;lastCountdown=-1;
+    previousTopic='';
     addLine('연결되었습니다.\n명령 대기 상태입니다.','sys');
     addLine(Engine.alertAtElapsedMs(0),'alert');
     sound.start();ticker=setInterval(tick,55);field.value='';field.focus();
@@ -700,7 +785,7 @@ h1{font-size:clamp(31px,6vw,68px);line-height:1.18;font-weight:500;letter-spacin
   }
   function reset(){
     clearInterval(ticker);clearTimeout(responseTimer);clearFollowUps();runningTask++;sound.stop();
-    phase='intro';pending=false;session.classList.add('hidden');ending.classList.add('hidden');intro.classList.remove('hidden');
+    previousTopic='';phase='intro';pending=false;session.classList.add('hidden');ending.classList.add('hidden');intro.classList.remove('hidden');
     $('#start').focus();
   }
   form.addEventListener('submit',event=>{
@@ -709,7 +794,8 @@ h1{font-size:clamp(31px,6vw,68px);line-height:1.18;font-weight:500;letter-spacin
     if(phase!=='active'||pending||!request)return;
     if(elapsedMs()>=Engine.LIMIT_SECONDS*1000){finish(false);return;}
     addLine(request,'self');field.value='';setBusy(true);sound.beep('message');
-    const preliminary=Engine.process(request,{elapsedMs:elapsedMs()});
+    const preliminary=Engine.process(request,{elapsedMs:elapsedMs(),previousTopic});
+    previousTopic=Engine.topicFor(request,previousTopic);
     const semanticPromise=needSemantic(request,preliminary)?fetchSemantic(request):Promise.resolve(null);
     const currentTask=++runningTask;
     responseTimer=setTimeout(async()=>{
