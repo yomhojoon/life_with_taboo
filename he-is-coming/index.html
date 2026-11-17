@@ -1210,12 +1210,12 @@ h1{font-size:clamp(31px,6vw,68px);line-height:1.18;font-weight:500;letter-spacin
     return transcriptUrl;
   }
   function showRecord(){
-    if(!['win','loss','dead','armed_escape','disguise_escape','captured','chaos'].includes(phase))return;
+    if(!['win','loss','dead','armed_escape','disguise_escape','captured','chaos','early_arrival'].includes(phase))return;
     try{$('#record-image').src=ensureRecord();$('#record-overlay').classList.remove('hidden');$('#record-close').focus();}
     catch(err){console.error(err);alert('대화 기록 이미지를 생성하지 못했습니다.');}
   }
   function saveRecord(){
-    if(!['win','loss','dead','armed_escape','disguise_escape','captured','chaos'].includes(phase))return;
+    if(!['win','loss','dead','armed_escape','disguise_escape','captured','chaos','early_arrival'].includes(phase))return;
     try{
       const link=document.createElement('a');
       link.href=ensureRecord();link.download='그가_오고_있습니다_대화기록_'+phase+'.png';
