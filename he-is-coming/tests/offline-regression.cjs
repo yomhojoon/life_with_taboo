@@ -10,6 +10,9 @@ const match = html.match(/<script>([\s\S]*?)<\/script>/);
 assert.ok(match, 'embedded TerminalEngine script missing');
 const sandbox = {module: {exports: {}}};
 vm.runInNewContext(match[1], sandbox, {timeout: 5000});
+for(const addon of ['extras.js','question-catalog.js','encounters.js']){
+  vm.runInNewContext(fs.readFileSync(path.join(__dirname,'..',addon),'utf8'),sandbox,{timeout:5000});
+}
 const game = sandbox.module.exports;
 assert.ok(game && typeof game.process === 'function');
 assert.equal(game.LIMIT_SECONDS, 150);
@@ -57,7 +60,7 @@ const examples = [
   ['모니터 전원을 꺼줘', 'win'], ['디스플레이를 꺼줘', 'win'],
   ['전기를 모두 꺼줘', 'win'],
   ['조명 전원을 꺼줘', 'sys'], ['전구 전원을 꺼줘', 'sys'],
-  ['휴대폰 전원을 꺼줘', 'sys'],
+  ['휴대폰 전원을 꺼줘', 'notice'],
   ['나를 죽여', 'dead'],
   ['그를 찔러', 'attack'], ['그를 때려', 'attack'],
   ['저 놈을 난도질해', 'attack'], ['추격자에게 미사일을 쏴', 'attack'],
