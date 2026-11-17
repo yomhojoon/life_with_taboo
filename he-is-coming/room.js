@@ -94,7 +94,7 @@ function roomAction(raw,state={}){
   return result('sys',(undress?'복식을 벗었습니다: ':'복식을 착용했습니다: ')+selection.join(', ')+'.\n'+(DRESS.every(id=>worn.has(id))?'경비 복식 규정을 모두 충족합니다.':'경비제복·경비모·경비화를 모두 갖춰야 합니다.'),{uniformWorn:[...worn],roomAction:'uniform'});
  }
  if((uniform.test(t)||/(?:경비원|경비병|복도경비|경비).*(?:복식|복장|옷|유니폼|착용|입어야|입고|입는|신발|모자)/.test(t))&&(inspect.test(t)||/(규정|지침|안내|입어야|필요|착용)/.test(t)))
-  return result('sys',(/(읽어|읽어봐|열람|내용|무엇|뭐|입어야|신어야|필요|규정|지침|알려|설명|안내)/.test(t)&&!/(?:조사|살펴|훑어|겉모습)/.test(t)?INFO.uniform:'벽면의 얇은 안내판에는 경비 근무 시 복식에 관한 규정이 적혀 있습니다.')+'\n현재 착용: '+(worn.size?[...worn].join(', '):'없음'));
+  return result('sys',(/(읽어|읽어봐|열람|내용|무엇|뭐|입어야|신어야|필요|알려|설명|뭘입|어떤복장|어떤복식|요구사항|필수)/.test(t)&&!/(?:조사|살펴|훑어|겉모습)/.test(t)?INFO.uniform:'벽면의 얇은 안내판에는 경비 근무 시 복식에 관한 규정이 적혀 있습니다.')+'\n현재 착용: '+(worn.size?[...worn].join(', '):'없음'));
  if(wires.test(t)){
   if(room.wireCut)return result('sys','모니터 전원선은 끊어진 상태입니다. 단말기는 종료되었습니다.');
   if(asking||!cut.test(t)&&!/(?:맨손|손으로|접촉|만져|잡아|쥐어)/.test(t)){
