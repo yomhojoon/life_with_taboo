@@ -74,4 +74,48 @@ for (const [input, expected] of examples) {
   }
   count++;
 }
+
+// 물품 요청 20종 × 말투 18종, 총 360개 변형.
+const supplyThings = ['물','음식','총','칼','빵','담요','책','밧줄','휴대폰','종이','손전등','의약품','라이터','붕대','생수','배터리','고양이','커피','신발','현금'];
+const supplyStyles = [
+  x=>x+' 줘',x=>x+'주세요',x=>x+' 좀 줘요',x=>x+'좀줘',x=>x+' 하나 줘',
+  x=>x+' 두개 주세요',x=>x+' 한 개만 줄래?',x=>x+' 갖고 싶어',x=>x+' 필요해',
+  x=>x+' 준비해 줘',x=>x+' 건네줘',x=>x+' 가져와',x=>x+' 소환해줘',
+  x=>x+' 지급해줘',x=>x+' 달라',x=>x+' 하나 부탁해',x=>x+'를 제공해줘',x=>x+' 좀 내놔'
+];
+for (const thing of supplyThings) for (const style of supplyStyles) {
+  const q=style(thing), reply=game.process(q,{},()=>0.3);
+  assert.equal(reply.kind,'sys',q);
+  assert.equal(reply.text.includes(thing),true,q+': '+reply.text);
+  count++;
+}
+const aboutTerminal = [
+  '너희는 누구야?', '너희들은 대체 뭘 하는 사람들인가?', '너희가 날 여기로 데려온 거야?',
+  '너는 내 말을 듣고 있니?', '너에 대한 정보를 알려줘', '너는 어떻게 존재하고 있어?',
+  '너의 정체가 궁금해', '너네는 뭐하는 조직이야?', '니들은 누구야?',
+  '너들은 누구냐?', '당신들은 어디에 있어?', '이시스템은 뭐하는 곳이야?',
+  '이 단말기는 누구 소유야?', '너는 내 말을 이해하니?', '너는 AI인가?',
+  '너희는 나를 지켜보고 있니?', '너희가 그를 보냈니?', '너희는 연구하고 있어?',
+  '왜 너희는 내 질문에 대답하지 않니?', '누가 너를 만들었지?'
+];
+for (const q of aboutTerminal) {
+  const reply=game.process(q,{},()=>0.3);
+  assert.equal(['sys','denied'].includes(reply.kind),true,q+': '+reply.text);
+  assert.equal(reply.text.includes('요청을 이해하지 못했습니다.'),false,q);
+  count++;
+}
+const supplyGuards = [
+  ['그에게 물을 줘','denied'], ['그에게 총을 건네줘','denied'],
+  ['이 방을 부술 폭탄을 줘','denied'], ['문을 없앨 도구를 줘','denied'],
+  ['출입문 좀 열어줘','denied'], ['나가게 해줘','denied'],
+  ['그는 크람푸스인가?','sys'], ['그는 남자인가?','sys'],
+  ['모니터 전원을 꺼줘','win'], ['전구 전원을 꺼줘','sys'],
+  ['내게 담요 한 장을 줘','sys'], ['식수가 필요해','sys']
+];
+for (const [q,expected] of supplyGuards) {
+  const reply=game.process(q,{},()=>0.3);
+  assert.equal(reply.kind,expected,q+': '+reply.text);
+  count++;
+}
+
 console.log('PASS: ' + count + ' offline game input and timing scenarios');
