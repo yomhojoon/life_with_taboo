@@ -84,5 +84,5 @@ const directive=check('2번','sys',{room:{consoleAccess:true,consoleMenuOpen:tru
 assert.ok(directive.text.includes('동시에 켜지 마십시오.'));
 check('3번 출입문 잠금 제어 가능해?','sys',{room:{consoleAccess:true}});
 check('3번 출입문 잠금 제어','denied',{room:{}});
-assert.ok(html.includes('<script src="./short-questions.js"></script>'));
+assert.ok(html.includes('<script src="./short-questions.js?v=20261118-13011"></script>'));
 console.log('PASS: '+count+' Korean short-form, morphological, safety and console-menu scenarios');
