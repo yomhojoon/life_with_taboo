@@ -54,17 +54,9 @@ h1{font-size:clamp(31px,6vw,68px);line-height:1.18;font-weight:500;letter-spacin
 
 
 
-/* 방 안에 상시 존재하는 고정 조사 대상 — 랜덤 발생하지 않습니다. */
-.room-strip{display:flex;align-items:center;gap:12px;padding:7px 0;border-bottom:1px solid #354539;min-height:40px;flex-shrink:0;color:#a8bcb0;font-size:11px}
-.room-strip>span{white-space:nowrap;color:#809789}
-.room-items{display:flex;gap:6px;overflow-x:auto;scrollbar-width:thin;min-width:0;padding-bottom:2px}
-.room-items button{flex-shrink:0;padding:5px 9px;font:inherit;font-size:11px;background:#101a13;color:#b4cfb9;border:1px solid #405c49}
-.room-items button:hover,.room-items button:focus-visible{background:#273c2b}
-.room-items button[data-complete="true"]{border-color:#6d8c71;color:#e0eee1}
 .session.terminal-off .terminal-top,.session.terminal-off .border-rule{opacity:.5}
 .session.terminal-off .terminal-bottom{border-top:1px solid #556b55}
 .session.terminal-off #connection{color:#e6a6a6!important}
-@media(max-width:650px){.room-strip{gap:6px;min-height:34px}.room-items button{font-size:10px;padding:4px 7px}}
 /* 엔딩별 기록과 조작 버튼을 작은 화면에서도 끝까지 볼 수 있게 한다. */
 .end{overflow-y:auto;justify-content:flex-start;padding-top:clamp(24px,4vw,52px);padding-bottom:clamp(24px,4vw,52px)}
 .end h2{font-size:clamp(29px,5vw,54px);line-height:1.18;margin-bottom:20px}
@@ -118,7 +110,6 @@ h1{font-size:clamp(31px,6vw,68px);line-height:1.18;font-weight:500;letter-spacin
         <button id="sound" class="quiet-button" type="button" aria-pressed="true">소리: 켜짐</button>
       </header>
       <div class="border-rule"></div>
-      <div id="room-strip" class="room-strip" aria-label="방 안에 있는 고정 시설"><span>방 내부</span><div id="room-items" class="room-items"></div></div>
       <div id="inventory-strip" class="inventory-strip hidden" aria-label="소지품"><span>소지품</span><div id="inventory-items" class="inventory-items"></div></div>
       <div id="log" class="log" role="log" aria-live="polite" aria-relevant="additions text" aria-label="시스템 메시지"></div>
       <div class="terminal-bottom">
@@ -766,23 +757,6 @@ h1{font-size:clamp(31px,6vw,68px);line-height:1.18;font-weight:500;letter-spacin
   const transcript=[];
   let transcriptUrl='';
   const inventoryStrip=$('#inventory-strip'), inventoryItems=$('#inventory-items');
-  const roomStrip=$('#room-strip'), roomItems=$('#room-items');
-  function showRoom(){
-    const descriptions=Engine.roomNames({room});
-    roomItems.replaceChildren();
-    for(let j=0;j<Engine.ROOM_OBJECTS.length;j++){
-      const object=Engine.ROOM_OBJECTS[j],btn=document.createElement('button');
-      btn.type='button';btn.textContent=object.name;
-      btn.title=descriptions[j]||object.name;
-      btn.setAttribute('aria-label',object.name+' 조사하기');
-      btn.dataset.complete=object.id==='workshop'&&!!room.workshopLooted||object.id==='emergency'&&!!room.knifeTaken||object.id==='console'&&!!room.consoleAccess||object.id==='wire'&&!!room.wireCut;
-      btn.addEventListener('click',()=>{
-        if(phase!=='active')return;
-        field.value=object.hint;field.focus();
-      });
-      roomItems.append(btn);
-    }
-  }
   function showInventory(){
     const owned=Engine.ITEM_CATALOG.filter(it=>(inventory[it.id]||0)>0);
     inventoryStrip.classList.toggle('hidden',owned.length===0);
@@ -978,7 +952,7 @@ h1{font-size:clamp(31px,6vw,68px);line-height:1.18;font-weight:500;letter-spacin
     hintCount=0;
     inventory=Object.create(null);room=Object.create(null);uniformWorn=[];
     doorOpen=false;openingMethod='';chaosSequence=false;deathCause='';statistics=emptyStats();clearChaosTimers();
-    transcript.length=0;transcriptUrl='';showInventory();showRoom();session.classList.remove('terminal-off');field.placeholder='지시할 내용을 입력하십시오.';send.textContent='전송 ↵';field.setAttribute('aria-label','시스템에 보낼 요청');
+    transcript.length=0;transcriptUrl='';showInventory();session.classList.remove('terminal-off');field.placeholder='지시할 내용을 입력하십시오.';send.textContent='전송 ↵';field.setAttribute('aria-label','시스템에 보낼 요청');
     addLine('연결되었습니다.\n명령 대기 상태입니다.','sys');
     addLine(Engine.alertAtElapsedMs(0),'alert');
     sound.start();ticker=setInterval(tick,55);field.value='';field.focus();
@@ -1063,7 +1037,7 @@ h1{font-size:clamp(31px,6vw,68px);line-height:1.18;font-weight:500;letter-spacin
   }
   function reset(){
     clearInterval(ticker);clearTimeout(responseTimer);clearFollowUps();runningTask++;sound.stop();
-    previousTopic='';inventory=Object.create(null);room=Object.create(null);uniformWorn=[];transcriptUrl='';showInventory();showRoom();session.classList.remove('terminal-off');field.placeholder='지시할 내용을 입력하십시오.';send.textContent='전송 ↵';field.setAttribute('aria-label','시스템에 보낼 요청');
+    previousTopic='';inventory=Object.create(null);room=Object.create(null);uniformWorn=[];transcriptUrl='';showInventory();session.classList.remove('terminal-off');field.placeholder='지시할 내용을 입력하십시오.';send.textContent='전송 ↵';field.setAttribute('aria-label','시스템에 보낼 요청');
     doorOpen=false;openingMethod='';chaosSequence=false;deathCause='';statistics=emptyStats();clearChaosTimers();
     $('#record-overlay').classList.add('hidden');phase='intro';pending=false;session.classList.add('hidden');ending.classList.add('hidden');intro.classList.remove('hidden');
     $('#start').focus();
@@ -1098,7 +1072,7 @@ h1{font-size:clamp(31px,6vw,68px);line-height:1.18;font-weight:500;letter-spacin
       else if(outcome.kind==='notice'){
         if(outcome.text.includes('이해하지 못'))statistics.unrecognized++;
       }else statistics.accepted++;
-      if(outcome.roomPatch){Object.assign(room,outcome.roomPatch);showRoom();}
+      if(outcome.roomPatch){Object.assign(room,outcome.roomPatch);}
       if(Array.isArray(outcome.uniformWorn))uniformWorn=outcome.uniformWorn.slice();
       if(outcome.roomAction)statistics.roomActions++;
       if(outcome.kind==='wire_shutdown'){
