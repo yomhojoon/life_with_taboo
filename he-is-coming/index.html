@@ -374,6 +374,65 @@ h1{font-size:clamp(31px,6vw,68px);line-height:1.18;font-weight:500;letter-spacin
   let phase = 'intro', beginTime = 0, lastStep = 0, lastMilestone = 0, lastCountdown = -1, runningTask = 0;
   let pending = false, muted = false, responseTimer = null, ticker = null;
   let sound = null;
+  // Optional semantic adapter. Endpoint address is public; API credentials never leave the Worker.
+  const semanticEndpoint = (() => {
+    try {
+      const params = new URLSearchParams(location.search);
+      const chosen = params.get('ai');
+      if (chosen === 'off') { localStorage.removeItem('game_semantic_endpoint'); return ''; }
+      if (chosen !== null) {
+        const endpoint = new URL(chosen);
+        if (endpoint.protocol !== 'https:' || endpoint.pathname !== '/interpret') return '';
+        localStorage.setItem('game_semantic_endpoint',endpoint.href);
+        return endpoint.href;
+      }
+      const saved = localStorage.getItem('game_semantic_endpoint') || '';
+      return saved && new URL(saved).protocol === 'https:' ? saved : '';
+    } catch (_) { return ''; }
+  })();
+  const safeQuestion = raw => /[?？]|(인가|입니까|일까|일까요|맞나|맞니|인거야|일것같|일수있|일지도|이니|냐|니)$/.test(raw.replace(/\s/g,''));
+  function needSemantic(raw, preliminary) {
+    if (!semanticEndpoint || ['denied','win','dead'].includes(preliminary.kind)) return false;
+    return (preliminary.kind === 'notice' && preliminary.text.includes('이해하지 못')) ||
+      (safeQuestion(raw) && /(그는|그가|그를|그의|그것|추적자|다가오는)/.test(raw)) ||
+      (preliminary.kind === 'sys' && /(?:요청이 수리되었습니다|작업이 완료되었습니다|변경 사항이 적용되었습니다)/.test(preliminary.text));
+  }
+  async function fetchSemantic(raw) {
+    if (!semanticEndpoint) return null;
+    try {
+      const response = await fetch(semanticEndpoint,{
+        method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({message:raw}),signal:AbortSignal.timeout(4200)
+      });
+      if(!response.ok)return null;
+      const value=await response.json();
+      if(!['yesno','attack','move','room','player','forbidden','ordinary','unknown'].includes(value.intent))return null;
+      if(typeof value.canonical!=='string'||value.canonical.length>140)return null;
+      return value;
+    }catch{return null;}
+  }
+  function applySemantic(raw, preliminary, parsed) {
+    if(!parsed || ['denied','win','dead'].includes(preliminary.kind))return preliminary;
+    const state={elapsedMs:elapsedMs()};
+    if(parsed.intent==='forbidden')return {kind:'denied',text:'요청이 반려되었습니다. 허용되지 않는 요청입니다.'};
+    if(parsed.intent==='yesno' && safeQuestion(raw) && /(그|쫓아오|다가오|추적)/.test(raw)) {
+      if(parsed.answer==='yes')return {kind:'sys',text:'그렇습니다.'};
+      if(parsed.answer==='no')return {kind:'sys',text:'아닙니다.'};
+      return {kind:'notice',text:'요청을 이해하지 못했습니다.'};
+    }
+    if(parsed.intent==='attack')return Engine.process('그를 때려',state);
+    if(parsed.intent==='move')return Engine.process('그를 이동시켜',state);
+    if(parsed.intent==='room')return Engine.process('여긴 어디지?',state);
+    if(parsed.intent==='player')return Engine.process('나는 누구지?',state);
+    if(parsed.intent==='ordinary') {
+      const translated=parsed.canonical.trim();
+      if(!translated)return preliminary;
+      const resolved=Engine.process(translated,state);
+      // The model may not create a win or death through paraphrase.
+      return ['win','dead'].includes(resolved.kind)?preliminary:resolved;
+    }
+    return preliminary;
+  }
   const followUpTimers = new Set();
   function clearFollowUps(){for(const timer of followUpTimers)clearTimeout(timer);followUpTimers.clear();}
   const now = () => performance.now();
@@ -514,11 +573,20 @@ h1{font-size:clamp(31px,6vw,68px);line-height:1.18;font-weight:500;letter-spacin
     if(phase!=='active'||pending||!request)return;
     if(elapsedMs()>=Engine.LIMIT_SECONDS*1000){finish(false);return;}
     addLine(request,'self');field.value='';setBusy(true);sound.beep('message');
+    const preliminary=Engine.process(request,{elapsedMs:elapsedMs()});
+    const semanticPromise=needSemantic(request,preliminary)?fetchSemantic(request):Promise.resolve(null);
     const currentTask=++runningTask;
-    responseTimer=setTimeout(()=>{
+    responseTimer=setTimeout(async()=>{
       if(phase!=='active'||currentTask!==runningTask)return;
       if(elapsedMs()>=Engine.LIMIT_SECONDS*1000){finish(false);return;}
-      const outcome=Engine.process(request,{elapsedMs:elapsedMs()});
+      // Network is optional: capped delay, realtime pursuit continues throughout.
+      const semantic=await Promise.race([
+        semanticPromise,
+        new Promise(resolve=>setTimeout(()=>resolve(null),2100))
+      ]);
+      if(phase!=='active'||currentTask!==runningTask)return;
+      if(elapsedMs()>=Engine.LIMIT_SECONDS*1000){finish(false);return;}
+      const outcome=applySemantic(request,preliminary,semantic);
       addLine(outcome.text,outcome.kind==='denied'?'failure':outcome.kind==='win'?'good':outcome.kind);
       if(outcome.kind==='dead') { finish('dead'); return; }
       if(outcome.kind==='win'){
