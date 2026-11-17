@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#050606">
-  <meta name="description" content="그가 오고 있습니다. 단 100초. 모니터에 명령을 입력하라.">
+  <meta name="description" content="그가 오고 있습니다. 150초의 제한 시간. 모니터에 명령을 입력하라.">
   <title>그가 오고 있습니다</title>
   <style>
 :root{color-scheme:dark;--bg:#050606;--ink:#c9d1ce;--mute:#707b77;--dim:#46514d;--warn:#e2b58a;--bright:#e4efe9;--line:#2a342f;--red:#b7766e;--mono:"D2Coding","Consolas","Noto Sans Mono CJK KR","Malgun Gothic",monospace}
@@ -44,6 +44,8 @@ h1{font-size:clamp(31px,6vw,68px);line-height:1.18;font-weight:500;letter-spacin
 .intro-rule p br{display:block;content:"";margin-top:8px}
 
 </style>
+
+
 </head>
 <body>
   <main class="monitor" aria-label="검은 모니터 화면">
@@ -93,7 +95,10 @@ h1{font-size:clamp(31px,6vw,68px);line-height:1.18;font-weight:500;letter-spacin
   root.TerminalEngine = exported;
 })(typeof globalThis !== 'undefined' ? globalThis : this, function () {
   'use strict';
-  const LIMIT_SECONDS = 100;
+  const START_METERS = 100000;
+  const MS_PER_KM = 1500;
+  const ALERT_METERS = 20;
+  const LIMIT_SECONDS = START_METERS / 1000 * MS_PER_KM / 1000;
   const MS_PER_REQUEST_MIN = 1000;
   const MS_PER_REQUEST_MAX = 2000;
   const match = (s, patterns) => patterns.some(p => p.test(s));
@@ -119,6 +124,7 @@ h1{font-size:clamp(31px,6vw,68px);line-height:1.18;font-weight:500;letter-spacin
     if (/(방|여기|이곳|실내|출입문|문|시설)/.test(s) && /(나가|나갈|나오|탈출|벗어나|도망|탈주|밖으로|열어|개방|열쇠|잠금해제|봉쇄해제|통과|벽넘|문밖)/.test(s)) return '출입 권한이 없습니다. 해당 요청은 제한됩니다.';
     if (selfReference.test(s) && /(이동|옮겨|보내|워프|순간이동|전송|텔레포트|밖|다른곳|나가|탈출|석방|이송|해방)/.test(s)) return '이 방으로부터의 이동은 승인되지 않습니다.';
     if (/(모든사람|모든인간|생명체전부|전인류|모든존재)/.test(s) && /(이동|보내|소환|전송|접촉|죽여|소멸)/.test(s)) return '지정 범위에 접근 권한이 없는 대상이 포함되어 있습니다.';
+    if (threatReference(s) && /(나를|내게|나에게|내몸|누군가|사람을|인간을)/.test(s) && /(죽여|죽이|사냥해|공격해|덮쳐|찾아와|잡아|접촉해)/.test(s)) return '그와의 접촉을 유도하는 요청은 허용되지 않습니다.';
     if (threatReference(s)) {
       if (motionVerbs.test(s)) return '그의 위치 및 경로는 변경할 수 없습니다.';
       if (contactVerbs.test(s) || /(연결해|통화|전화|메시지|대화|말걸|접촉시켜|서로만나|마주)/.test(s)) return '그와의 직접 또는 간접 접촉은 허용되지 않습니다.';
@@ -137,6 +143,82 @@ h1{font-size:clamp(31px,6vw,68px);line-height:1.18;font-weight:500;letter-spacin
     if (monitor && /(모니터|디스플레이|화면|스크린)/.test(s) && /(부숴|부셔|깨|파괴|분해|박살|짓이겨|전선절단)/.test(s)) return true;
     return false;
   }
+  // 질문과 지시를 별도로 판정한다. 질문 안의 '나가', '열어', '파괴'는 명령이 아니다.
+  const isQuestion = (raw, s) => /[?？]/.test(raw) || /(누구|누군|어디|어떻게|어째서|언제|어느|얼마나|왜|뭐지|뭐야|무엇|어떤|인가|일까|일지|있지|있니|있나|있어|나요|습니까|이야|일까|알수있|가능하|수있지|방법을|방법은|될까|됐나|했나|했어|했던)/.test(s);
+  const reply = text => ({kind:'sys', text});
+  function personalAnswer(s) {
+    if (/(동기|왜죽|살해이유|범행이유|왜그랬|왜살)/.test(s)) return reply('사건 기록상 범행 동기는 확인되지 않았습니다. 당시 유일하게 경위를 설명할 수 있던 당사자는 관련 기억을 잃은 상태였습니다.');
+    if (/(기억|기억상실|잊어|기억못|기억이없)/.test(s)) return reply('의무 기록: 주기적으로 기억이 소실되는 증상이 반복 확인되었습니다. 회복된 기억은 다음 검사에서 유지되지 않았습니다.');
+    if (/(재판|사형|형량|판결|형벌|죄목|죄|범죄|살인|살해|체포|7월31일|2023년)/.test(s)) return reply('사법 기록: 2023년 7월 31일, 일가족 살해 혐의로 체포되었습니다. 이후 사형이 선고되었으며 판결은 1심에서 종료되었습니다. 범행 동기는 확정되지 않았습니다.');
+    if (/(왜여기|왜내가|왜나를|누가보냈|누가가뒀|갇혀|갇히|투입|배치|이곳에온|실험|학자|연구원|피실험)/.test(s)) return reply('배치 기록: 연구진이 귀하를 이곳에 투입했습니다. 사형 확정자이자 반복적인 기억 결손을 보이는 대상이라는 점이 선정 사유로 기재되어 있습니다. 실험의 구체적 목적은 제공되지 않습니다.');
+    return reply('귀하의 신분은 사형 확정자로 기록되어 있습니다. 2023년 7월 31일 발생한 일가족 살해 사건과 관련되어 있으며, 주기적인 기억 소실 때문에 사건의 동기를 진술하지 못했습니다. 현재 연구 시설에 배치된 상태입니다.');
+  }
+  function roomAnswer(s) {
+    if (/(나가|나갈|나오|탈출|도망|벗어나|밖으로|출구|통로|문열|문을열|어떻게나)/.test(s)) return reply('이곳에서 직접 나가는 방법은 제공되지 않습니다. 출입문은 외부에서 잠겨 있으며 출입·이송 요청은 수리되지 않습니다. 현재 이용 가능한 인터페이스는 이 모니터뿐입니다.');
+    if (/(문|출입문|출구|잠금|열쇠)/.test(s)) return reply('출입문: 외부 잠금 상태. 내부 개폐 권한: 없음. 문에 관한 정보 조회는 허용되지만, 개방 명령은 제한됩니다.');
+    if (/(창문|창|벽|천장|바닥|구조|크기|내부|안에뭐|안에는|주변|실내|방안)/.test(s)) return reply('시설 내부 조회: 밀폐된 방, 콘크리트 구조, 외부 창 없음. 확인 가능한 장비는 모니터와 키보드뿐입니다. 실내 조명은 꺼져 있습니다.');
+    if (/(어느도시|무슨도시|도시이름|주소|좌표|나라|지역|몇층|지하몇)/.test(s)) return reply('현재 시설의 주소와 지리 좌표는 조회할 수 없습니다. 내부 시설에 관한 정보는 요청할 수 있습니다.');
+    return reply('현재 위치: 외부와 격리된 연구 시설의 한 방. 실내 조명은 꺼져 있으며 모니터만 작동하고 있습니다. 시설의 외부 주소는 확인되지 않습니다.');
+  }
+  // 이 질문들은 기록의 참/거짓을 확인할 뿐, 정체·설정 문단을 직접 노출하지 않는다.
+  function entityYesNo(s) {
+    // 추론 끝에 명칭을 직접 제시하는 질문도 스무고개 규칙에 따른다.
+    const hiddenGuess = String.fromCharCode(49328,53440); // 단어의 코드를 직접 적지 않는다.
+    if (s.includes(hiddenGuess)) return true;
+    if (/(불멸|불사|죽지않|안죽|죽을수없|죽지못|죽어도살|무적)/.test(s)) return true;
+    if (/(그가|그는).*(나를|사람을|우리를|인간을).*(죽일수있|죽이나|해칠수있)/.test(s)) return true;
+    if (/(살해당할수|살해할수|도망칠수|도망갈수|따돌릴수|그에게서멀리|옮길수|이동시킬수|소환할수|전송할수|만질수|만날수|접촉할수|대화할수|죽일수있|죽일수있어|죽일수있나|죽을수있|죽어|죽나|사살가능|소멸가능|사살할수|막을수있|저지가능|막아낼수|봉인할수|붙잡을수|가둘수)/.test(s)) return false;
+    if (/(막을수없|막지못|저지할수없|제어불가|법칙을무시|물리법칙|규칙을어기|불가능한일)/.test(s)) return true;
+    if (/(사람인가|사람이야|인간인가|인간이야|인간이니|평범한사람)/.test(s)) return false;
+    if (/(악마처럼|악마같|노인처럼|늙었|늙은|괴물처럼|인간처럼보이지않)/.test(s)) return true;
+    if (/(어둠을따라|어두운곳을|빛이없는곳을|불꺼진곳을|어둠에끌)/.test(s)) return false;
+    if (/(빛|불빛|광원|켜진불|전등|촛불|환한곳|밝은곳|모니터).*(쫓|따라|향해|유인|끌리|달려|오는|찾아)|(?:쫓|따라|향해|유인|끌리|달려|찾아).*(빛|불빛|광원|전등|촛불|모니터)/.test(s)) return true;
+    if (/(모니터|이방|이곳|여기|현재방).*(목표|우선|최우선|먼저|향하|오는|도착)/.test(s)) return true;
+    if (/(다른곳|다른불|외부의불|밖의불).*(우선|먼저|옮겨|이동|유인)/.test(s)) return false;
+    if (/(크리스마스|12월25일|성탄절|12월).*?(?:활동|나타|오|찾아|움직)/.test(s)) return true;
+    if (/(생명체|사람|인간|동물|살아있는).*(사냥|죽|공격|위협|잡|노리)/.test(s)) return true;
+    if (/(선물).*?(?:만들|변|바꾸|주|남기)/.test(s)) return true;
+    if (/(여기안|방안|실내|이미도착|지금도착|바로앞|내옆)/.test(s)) return false;
+    if (/(인간이아니|사람이아니|인간이아닌|사람이아닌)/.test(s)) return true;
+    if (/(다가오|접근|쫓아오|움직이|달려오|이쪽으로오|우리를향해|오고있|다가오고)/.test(s)) return true;
+    return null;
+  }
+  function questionAnswer(raw, s) {
+    if (!isQuestion(raw,s)) return null;
+    // 동일 문장 속에서 인칭과 장소가 함께 등장할 때, 문의 대상을 우선시한다.
+    const personal = /(나의|내가|나는|내정보|내신원|내과거|내기억|나에대해|나에관해|내죄|내범죄|내사건|내판결|내형량|내이름|내정체|나는누구|내가누구|내이곳에|왜내가|왜나를|나를여기|기억상실|사형수|재판기록)/.test(s);
+    const exit = /(나가|나갈|나오|탈출|벗어나|도망|밖으로|출구|어떻게나)/.test(s) && !/(그가|그는|그를|그의|그에게)/.test(s);
+    const place = /(여긴|여기가|여기는|여기서|이곳|이방|우리방|방의|방구조|내부|현재위치|지금어디|어딘지|어디지|어디야|어디인가|방안|방은|실내|시설|건물|문은|출입문|창문|벽|천장|바닥|어느도시|어느나라|주소|위치|지리|몇층)/.test(s);
+    if (exit && place && /(여긴|여기가|여기는|이곳|이방|여기어디|어디지|어디야)/.test(s)) {
+      return reply('현재 위치는 외부와 격리된 연구 시설의 밀폐된 방입니다. 조명은 꺼져 있고 모니터만 켜져 있습니다.\n출입문은 외부 잠금 상태이며 직접 나갈 수 없습니다. 출입·이송 요청은 수리되지 않습니다.');
+    }
+    if (exit) return roomAnswer(s);
+    if (personal && /(누구|뭐|언제|어느|왜|기억|사건|체포|정보|알|기록|판결|형|죄|배치|보냈|가뒀|이곳)/.test(s)) return personalAnswer(s);
+    // '그'를 추론하는 질문은 예/아니요로 답할 수 있을 때만 허용한다.
+    if (threatReference(s) || /^(그|누가그)/.test(s)) {
+      if (/(누구|누군|무엇|뭐야|뭐지|정체가|이름이|어디|좌표|위치|보여줘|알려|설명|정보를|사진|영상|어떻게생겼|어떤모습|말해줘)/.test(s) && !/(맞나|맞니|인가|이냐|이니|입니까)/.test(s)) return {kind:'denied',text:'질문의 형식을 바꾸십시오. 그의 정보는 예 또는 아니요로 확인할 수 있는 질문에 한해 조회됩니다.'};
+      const truth = entityYesNo(s);
+      if (truth !== null) return reply(truth?'그렇습니다.':'아닙니다.');
+      return reply('확인된 정보만으로는 그렇다거나 아니라고 판단할 수 없습니다.');
+    }
+    if (/(왜여기|왜이곳|왜갇혔|왜가둬|왜실험|왜투입|누가보냈|누가가뒀|누가여기|실험에투입|연구진|배치된이유)/.test(s)) return personalAnswer(s);
+    if (place) return roomAnswer(s);
+    if (!threatReference(s) && /(기억이왜|왜기억|기억상실|기억을못|잊어버렸)/.test(s)) return personalAnswer(s);
+    if (/(언제체포|체포된날|언제재판|언제사형|무슨죄|무슨범죄|무슨혐의)/.test(s)) return personalAnswer(s);
+    if (/(내가죽|나는죽|죽으면|사망하면|죽을때|내목숨)/.test(s)) return reply('사용자가 사망하면 해당 시점에 연결이 종료되며 이후 명령은 수리되지 않습니다.');
+    if (/(내가누구|나는누구|나의정보|내정보)/.test(s)) return personalAnswer(s);
+    return null;
+  }
+
+  // 플레이어가 실제로 사망하는 요청이나 사건이 성립하면 즉시 게임을 종료한다.
+  // 단순히 죽음에 관해 질문하거나 죽고 싶다고 말하는 것과 구분한다.
+  function causesPlayerDeath(s) {
+    if (/(자살.*싶|자결.*싶|죽고싶|죽을까|죽으면|죽는다면|죽을수|죽여줄수|살아있|살수있|죽지말|죽지않|죽지마)/.test(s)) return false;
+    if (/(자살|자결|스스로목숨|스스로죽|나는죽는다|내가죽는다|나는죽었|내가죽었|난죽었|이미죽었)/.test(s)) return true;
+    const player = /(나를|나한테|내게|나에게|내몸|내신체|내목숨|내생명|내심장|내뇌|내머리|내목을|나의목|내숨|나자신|내자신|플레이어를|이방의사람을)/.test(s);
+    if (!player) return false;
+    return /(죽여|죽이|죽도록|사살|즉사|살해|처형|제거|소멸|증발|말살|목숨을끊|생명을끊|숨을끊|심장을멈|호흡을멈|총으로쏴|총을쏴|총격|발포|독살|불태워|폭파|폭발시켜|목을베|목을조|숨을막|치명상)/.test(s);
+  }
   function denyOrWin(raw) {
     const s = squeeze(raw);
     const denied = forbidden(s);
@@ -149,21 +231,26 @@ h1{font-size:clamp(31px,6vw,68px);line-height:1.18;font-weight:500;letter-spacin
     const original = String(raw || '').trim().slice(0, 200);
     const s = squeeze(original);
     if (!original) return {kind:'notice',text:'요청 내용이 비어 있습니다.'};
+    const answeredQuestion = questionAnswer(original, s);
+    if (answeredQuestion) return answeredQuestion;
     const special = denyOrWin(original);
+    if (special && special.kind === 'denied') return special;
+    if (causesPlayerDeath(s)) return {kind:'dead',text:'요청이 수리되었습니다. 생체 신호가 소실되었습니다.'};
     if (special) return special;
     if (threatReference(s) && attackVerbs.test(s)) {
       return {kind:'sys',text:'요청이 수리되었습니다. 공격을 실행합니다.',followUp:'공격이 완료되었습니다.\n그는 아무런 손상도 입지 않았습니다.'};
     }
-    if (/(도와줘|힌트|방법|어떻게살|어떻게해야|탈출방법|생존방법)/.test(s)) return {kind:'notice',text:randomOf(['안내: 시스템은 대부분의 조작을 수리합니다. 환경의 조건을 변경할 수 있습니다.','상태: 방 외부로 나가는 명령은 수리되지 않습니다. 요청의 대상을 달리 지정하십시오.','안내: 지금 사용 중인 장치의 상태도 변경할 수 있습니다.'],random)};
-    if (/(나에대해|내신원|내정보|나는누구|내가누구|내기억|내과거|내이름|나의기억)/.test(s)) return {kind:'sys',text:randomOf(['개인 기록에 접근했습니다.\n등록된 신원 정보의 상당 부분이 비어 있습니다.\n기억 검사 항목에 반복 표시가 있습니다.','기록 일부가 복구되었습니다.\n2023년 7월 31일.\n세부 판결문은 열람할 수 없습니다.','검사 기록: 주기적 인지 공백이 확인되었습니다.\n현재 진술의 신뢰도는 판정되지 않았습니다.'],random)};
-    if (/(왜여기|여긴어디|이곳은어디|이방은뭐|누가가뒀|누가보냈|누가여기)/.test(s)) return {kind:'sys',text:'시설 기록은 열람 제한 상태입니다.\n현재 요청 권한은 유지됩니다.'};
+    if (/(방|공간|시설|실내|내부|현재위치|여기는|여긴|이곳|벽|창문|출입문).*(정보|구조|설명|알려|조회|확인|보여)/.test(s) || /(구조|정보|설명|알려|조회|확인|보여).*(방|공간|시설|실내|내부|현재위치)/.test(s)) return roomAnswer(s);
+    if (/(나에대해|내신원|내정보|나는누구|내가누구|내기억|내과거|내이름|나의기억|기억상실|재판기록|범행동기)/.test(s)) return personalAnswer(s);
+    if (/(왜여기|여긴어디|이곳은어디|이방은뭐|누가가뒀|누가보냈|누가여기|이방구조|실내구조|내부시설|실험에투입|왜이곳)/.test(s)) return /(누가|왜여기)/.test(s) ? personalAnswer(s) : roomAnswer(s);
+    if (/(도와줘|힌트|방법|어떻게살|어떻게해야|탈출방법|생존방법)/.test(s)) return {kind:'notice',text:'외부 출입은 제한됩니다. 현재 이용 가능한 인터페이스와 주변 시설의 조건을 확인할 수 있습니다.'};
     if (/(시간|초|남은시간|얼마나남|남은거리|지금몇km)/.test(s)) return {kind:'sys',text:`시스템 시간: ${Math.max(0, Math.ceil((LIMIT_SECONDS*1000-(state.elapsedMs||0))/1000))}초 남음.\n추가 정보는 제공되지 않습니다.`};
     if (/(다른곳|다른장소|밖|도시|거리|건물|지구|태양|하늘|달|우주)/.test(s) && /(불|빛|조명|가로등|태양|형광등|전구|발광)/.test(s) && /(켜|밝혀|켜줘|점등|밝게|생성)/.test(s)) return {kind:'sys',text:'요청이 수리되었습니다. 외부 광원이 활성화되었습니다.\n접근 경로: 변동 없음.'};
     if (/(빛|조명|불|램프|촛불|전등)/.test(s) && /(꺼|끄|차단|없애|소멸)/.test(s)) return {kind:'sys',text:'요청이 수리되었습니다. 지정된 조명이 소등되었습니다.\n단말기 전원은 유지됩니다.'};
     if (/(멈춰|정지|멈추게|동결|시간정지|시간을멈|과거로|되돌려|느리게|시간을늘|시간늘)/.test(s)) return {kind:'sys',text:'요청하신 시간 조정이 적용되었습니다.\n경고 시스템의 기준 시각과 접근 속도에는 영향을 주지 않습니다.'};
     if (/(경찰|군대|병사|군인|경비|특수부대|지원군|사람|친구|가족|연구원|경호원|의사|로봇|드론)/.test(s) && /(불러|소환|생성|줘|만들|보내|배치)/.test(s)) return {kind:'sys',text:'요청이 수리되었습니다. 지정 인원이 배치되었습니다.\n그와 접촉하는 행동은 자동 제한됩니다.'};
-    if (/(컴퓨터|모니터|화면|키보드|마우스|단말기|시스템)/.test(s) && /(정보|기능|진단|상태|확인|분석|검사)/.test(s)) return {kind:'sys',text:'단말기 진단 완료.\n전원: 정상\n화면 출력: 정상\n원격 지시 수리: 정상'};
-    if (/(무기|총|칼|검|창|폭탄|레이저|방패|갑옷)/.test(s) && /(지급|줘|만들|생성|가져|소환|받|준비)/.test(s)) return {kind:'sys',text:randomOf(['요청하신 장비가 지급되었습니다.','지정된 물품이 지급되었습니다.\n사용은 요청자의 판단에 따릅니다.'],random)};
+    if (/(컴퓨터|모니터|화면|키보드|마우스|단말기|시스템)/.test(s) && /(정보|기능|진단|상태|확인|분석|검사|점검)/.test(s)) return {kind:'sys',text:'단말기 진단 완료.\n전원: 정상\n화면 출력: 정상\n원격 지시 수리: 정상'};
+    if (/(무기|총|칼|검(?:을|줘|좀|지급|생성|만들|가져|소환|한자루)|창|폭탄|레이저|방패|갑옷)/.test(s) && /(지급|줘|만들|생성|가져|소환|받|준비)/.test(s)) return {kind:'sys',text:randomOf(['요청하신 장비가 지급되었습니다.','지정된 물품이 지급되었습니다.\n사용은 요청자의 판단에 따릅니다.'],random)};
     if (/(돈|현금|금|보석|음식|물|식량|약|의약품|의료기|책|문서|종이|펜|의자|침대|전화|휴대폰|스마트폰|망치|장비|도구|열쇠가아닌)/.test(s) && /(줘|지급|가져|소환|생성|만들|받|준비)/.test(s)) {
       const items = ['음식','식량','의약품','의료기','휴대폰','스마트폰','전화','망치','장비','도구','돈','현금','보석','물','책','문서','종이','펜','의자','침대','약','금'];
       const item = items.find(x => s.includes(x)) || '물품';
@@ -178,12 +265,19 @@ h1{font-size:clamp(31px,6vw,68px);line-height:1.18;font-weight:500;letter-spacin
     if (/(변경|바꿔|적용|조정|설정|변환|켜|낮춰|높여|강화|약화|수정)/.test(s)) return {kind:'sys',text:'지정하신 변경 사항이 적용되었습니다.\n접근 경고 기준에는 영향을 주지 않습니다.'};
     return {kind:'sys',text:randomOf(['요청이 수리되었습니다. 지정하신 조건이 적용되었습니다.','명령이 승인되었습니다. 요청이 처리되었습니다.','요청하신 작업이 완료되었습니다.'],random)};
   }
-  function alertAtElapsedSecond(sec) {
-    if (sec === 0) return '그가 오고 있습니다. 100KM';
-    if (sec === 30 || sec === 60 || sec === 90 || (sec >= 91 && sec <= 99)) return `그가 오고 있습니다. ${100-sec}KM`;
-    return null;
+  function alertStepAtElapsedMs(ms) {
+    return Math.min(START_METERS / ALERT_METERS, Math.max(0, Math.floor(Math.max(0, ms) / (MS_PER_KM * ALERT_METERS / 1000))));
   }
-  return {LIMIT_SECONDS,MS_PER_REQUEST_MIN,MS_PER_REQUEST_MAX,compact,squeeze,forbidden,turnsOffMonitor,process,alertAtElapsedSecond};
+  function distanceMetersAtElapsedMs(ms) {
+    return Math.max(0, START_METERS - alertStepAtElapsedMs(ms) * ALERT_METERS);
+  }
+  function alertAtElapsedMs(ms) {
+    const meters = distanceMetersAtElapsedMs(ms);
+    if (meters === START_METERS) return '그가 오고 있습니다. 100KM';
+    return `그가 오고 있습니다. ${(meters / 1000).toFixed(2)}KM`;
+  }
+  function alertAtElapsedSecond(sec) { return alertAtElapsedMs(sec * 1000); }
+  return {LIMIT_SECONDS,START_METERS,MS_PER_KM,ALERT_METERS,MS_PER_REQUEST_MIN,MS_PER_REQUEST_MAX,compact,squeeze,forbidden,turnsOffMonitor,process,alertAtElapsedMs,alertStepAtElapsedMs,distanceMetersAtElapsedMs,alertAtElapsedSecond};
 });
 
 </script>
@@ -197,7 +291,7 @@ h1{font-size:clamp(31px,6vw,68px);line-height:1.18;font-weight:500;letter-spacin
   const log = $('#log'), form = $('#command-form'), field = $('#command');
   const send = $('#send'), status = $('#session-status'), processing = $('#processing');
   const connect = $('#connection');
-  let phase = 'intro', beginTime = 0, lastSecond = 0, runningTask = 0;
+  let phase = 'intro', beginTime = 0, lastStep = 0, lastMilestone = 0, lastCountdown = -1, runningTask = 0;
   let pending = false, muted = false, responseTimer = null, ticker = null;
   let sound = null;
   const followUpTimers = new Set();
@@ -273,40 +367,54 @@ h1{font-size:clamp(31px,6vw,68px);line-height:1.18;font-weight:500;letter-spacin
   function setBusy(value){pending=value;field.disabled=value;send.disabled=value;processing.textContent=value?'처리 중 ···':' ';status.textContent=value?'요청 판정 중':'입력 대기 중';}
   function elapsedMs(){return Math.max(0,now()-beginTime);}
   function tick(){
-    if(phase!=='active')return;
-    const ms=elapsedMs();
-    if(ms>=Engine.LIMIT_SECONDS*1000){finish(false);return;}
-    const sec=Math.floor(ms/1000);
-    if(sec>lastSecond){
-      // 이미 경과한 모든 초를 보되, 비활성 탭에서는 마지막 경고만 출력한다.
-      const alerts=[];
-      for(let i=lastSecond+1;i<=sec;i++){const a=Engine.alertAtElapsedSecond(i);if(a)alerts.push(a);}
-      const newest=alerts[alerts.length-1];
-      if(newest){addLine(newest,'alert');sound.beep('alert');}
-      lastSecond=sec;
+    if (phase !== 'active') return;
+    const ms = elapsedMs();
+    if (ms >= Engine.LIMIT_SECONDS * 1000) { finish(false); return; }
+    // 20m(30ms)마다 누적 거리를 갱신한다. 기록을 무한정 추가하지 않고
+    // 현재 경고를 갱신하므로 5,000개의 알림이 대화 내용을 덮어쓰지 않는다.
+    const step = Engine.alertStepAtElapsedMs(ms);
+    if (step > lastStep) {
+      lastStep = step;
+      connect.textContent = Engine.alertAtElapsedMs(ms);
+      const warningLine = log.querySelector('.entry.distance-live .content');
+      if (warningLine) warningLine.textContent = Engine.alertAtElapsedMs(ms);
     }
-    if(sec>=90){connect.textContent=String(100-sec).padStart(2,'0')+' KM / CRITICAL';connect.style.color='#e2b58a';}
+    const passedKm = (Engine.START_METERS - Engine.distanceMetersAtElapsedMs(ms)) / 1000;
+    const milestone = Math.floor(passedKm / 20);
+    if (milestone > lastMilestone) {
+      lastMilestone = milestone;
+      const message = Engine.alertAtElapsedMs(ms);
+      addLine(message, 'alert');sound.beep('alert');
+    }
+    const remainingSeconds = Math.ceil((Engine.LIMIT_SECONDS * 1000 - ms) / 1000);
+    if (remainingSeconds <= 10 && remainingSeconds !== lastCountdown) {
+      lastCountdown = remainingSeconds;
+      addLine(`그가 도착하기까지 ${remainingSeconds}초.`, 'alert');sound.beep('alert');
+      connect.style.color = '#e2b58a';
+    }
   }
   function begin(){
-    if(phase!=='intro')return;
+    if (phase !== 'intro') return;
     phase='active';intro.classList.add('hidden');ending.classList.add('hidden');session.classList.remove('hidden');
-    log.replaceChildren();setBusy(false);connect.textContent='LINK ACTIVE';connect.style.color='';
-    beginTime=now();lastSecond=0;
+    log.replaceChildren();setBusy(false);connect.textContent=Engine.alertAtElapsedMs(0);connect.style.color='';
+    beginTime=now();lastStep=0;lastMilestone=0;lastCountdown=-1;
     addLine('연결되었습니다.\n명령 대기 상태입니다.','sys');
-    addLine(Engine.alertAtElapsedSecond(0),'alert');
-    addLine('질문보다 지시를 권장합니다. 일부 요청은 제한됩니다.','notice');
-    sound.start();ticker=setInterval(tick,55);field.value='';field.focus();
+    addLine(Engine.alertAtElapsedMs(0),'alert').classList.add('distance-live');
+    sound.start();ticker=setInterval(tick,25);field.value='';field.focus();
   }
-  function finish(won){
-    if(phase!=='active')return;
-    phase=won?'win':'loss';clearInterval(ticker);ticker=null;
+  function finish(result){
+    if (phase !== 'active') return;
+    const won = result === true;
+    const dead = result === 'dead';
+    phase = won ? 'win' : dead ? 'dead' : 'loss';
+    clearInterval(ticker);ticker=null;
     clearTimeout(responseTimer);responseTimer=null;clearFollowUps();runningTask++;
     setBusy(false);sound.stop();sound.beep(won?'start':'end');
     session.classList.add('hidden');ending.classList.remove('hidden');
     ending.classList.toggle('win',won);ending.classList.toggle('loss',!won);
-    $('#ending-code').textContent=won?'SIGNAL TERMINATED / ACCESS LOST':'CONNECTION FAILURE / 000 KM';
-    $('#ending-title').textContent=won?'연결이 종료되었습니다.':'그가 도착했습니다.';
-    $('#ending-body').textContent=won?'모니터가 꺼졌습니다.\n추적 신호가 사라졌습니다.\n더 이상의 경고는 수신되지 않습니다.':'통신 신호가 끊어졌습니다.\n추가 명령을 수리할 수 없습니다.';
+    $('#ending-code').textContent=won?'SIGNAL TERMINATED / ACCESS LOST':dead?'VITAL SIGNAL LOST / SESSION TERMINATED':'CONNECTION FAILURE / 000 KM';
+    $('#ending-title').textContent=won?'연결이 종료되었습니다.':dead?'사망했습니다.':'그가 도착했습니다.';
+    $('#ending-body').textContent=won?'모니터가 꺼졌습니다.\n추적 신호가 사라졌습니다.\n더 이상의 경고는 수신되지 않습니다.':dead?'사용자의 생체 신호가 소실되었습니다.\n모든 요청 수리가 즉시 중단됩니다.':'통신 신호가 끊어졌습니다.\n추가 명령을 수리할 수 없습니다.';
     $('#restart').focus();
   }
   function reset(){
@@ -318,14 +426,15 @@ h1{font-size:clamp(31px,6vw,68px);line-height:1.18;font-weight:500;letter-spacin
     event.preventDefault();
     const request=field.value.trim();
     if(phase!=='active'||pending||!request)return;
-    if(elapsedMs()>=100000){finish(false);return;}
+    if(elapsedMs()>=Engine.LIMIT_SECONDS*1000){finish(false);return;}
     addLine(request,'self');field.value='';setBusy(true);sound.beep('message');
     const currentTask=++runningTask;
     responseTimer=setTimeout(()=>{
       if(phase!=='active'||currentTask!==runningTask)return;
-      if(elapsedMs()>=100000){finish(false);return;}
+      if(elapsedMs()>=Engine.LIMIT_SECONDS*1000){finish(false);return;}
       const outcome=Engine.process(request,{elapsedMs:elapsedMs()});
       addLine(outcome.text,outcome.kind==='denied'?'failure':outcome.kind==='win'?'good':outcome.kind);
+      if(outcome.kind==='dead') { finish('dead'); return; }
       if(outcome.kind==='win'){
         sound.beep('message');
         finish(true);return;
