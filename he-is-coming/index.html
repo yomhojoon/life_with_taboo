@@ -62,7 +62,7 @@ h1{font-size:clamp(31px,6vw,68px);line-height:1.18;font-weight:500;letter-spacin
     <section id="intro" class="intro" aria-labelledby="game-title">
       <h1 id="game-title">그가 오고 있습니다<span class="period">.</span></h1>
       <div class="intro-rule">
-        <p>모니터 하단에 요청을 직접 입력하십시오.<br>대부분의 요청은 수리되지만 일부 명령은 거부됩니다. 응답을 관찰하고 방법을 찾으십시오.</p>
+        <p>모니터 하단에 요청을 직접 입력하십시오.<br>대부분의 요청은 수리되지만 일부 명령은 거부됩니다.<br>응답을 관찰하고 방법을 찾으십시오.</p>
       </div>
       <div class="intro-bottom">
         <button id="start" class="key-button" type="button">[ 접속 시작 ]</button>
@@ -470,6 +470,18 @@ h1{font-size:clamp(31px,6vw,68px);line-height:1.18;font-weight:500;letter-spacin
   process=function extendedProcess(raw,state={},random=Math.random){
     const original=String(raw||'').trim().slice(0,200),s=squeeze(original);
     if(!original)return originalProcess(raw,state,random);
+
+    // 물질 분류는 인간/동물 여부와 다른 질문이다. 불명확한 유기물 여부는 추측하지 않는다.
+    if((/(무기물|무생물|무생명체|비생물|유기물|유기체|유기질|생체조직|금속덩어리|돌덩어리|기계생명체|로봇)/.test(s)) &&
+      (/(그는|그가|그놈|그녀석|저놈|저녀석|걔|쟤|추격자|다가오는|쫓아오는)/.test(s)||state.previousTopic==='him') &&
+      /[?？]|(인가|이니|이야|일까|맞나|맞지|아닌가|입니까|맞아|인가요|니$|냐$|지$)/.test(original)){
+      if(/(금속덩어리|돌덩어리|기계생명체|로봇|무기물|무생물|비생물|무생명체)/.test(s)){
+        const neg=/(아니|아닌|아닐)/.test(s);
+        return {kind:'sys',text:neg?'그렇습니다.':'아닙니다.'};
+      }
+      return {kind:'sys',text:'현재 확인할 수 있는 기록으로는 유기물 여부를 확정할 수 없습니다.'};
+    }
+
     const clue=clueQuestion(original,s,state);
     if(clue)return clue;
     const initial=originalProcess(raw,state,random);
@@ -490,9 +502,9 @@ h1{font-size:clamp(31px,6vw,68px);line-height:1.18;font-weight:500;letter-spacin
   // 결말 힌트 질문 처리. 물리적으로 그를 멈추는 일과 추격의 종료를 구분한다.
   const hintTexts=[
     '그 자체를 멈추는 것과 그의 접근을 끝내는 것은 서로 다른 문제입니다.',
-    '그가 무엇을 향해 오는지 예 또는 아니요로 물어보십시오.',
+    '그가 무엇을 향하는지, 예 또는 아니요로 대답할 수 있는 질문을 해 보십시오.',
     '그의 접근에는 조건이 있습니다. 그 조건을 만드는 것이 무엇인지 생각해 보십시오.',
-    '작동 중인 장치가 추격에 영향을 주는지 예 또는 아니요로 확인할 수 있습니다.',
+    '작동 중인 장치가 추격에 영향을 주는지, 예 또는 아니요로 대답할 수 있는 질문을 해 보십시오.',
     '그를 바꾸려 하기보다 이 방에서 작동하는 전자 장치의 상태에 주목하십시오.'
   ];
   const hintRequest=t=>/^(?:혹시|그럼|그러면|제발|나한테|좀)*(?:힌트|단서|추가힌트|다음힌트|조언|생존힌트|결말힌트|공략힌트)/.test(t)||
