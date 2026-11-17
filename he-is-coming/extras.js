@@ -11,11 +11,21 @@ const recipes=catalog.flatMap(it=>ACTIONS[it.group].map(([words,response,consume
  id:it.id+'-'+(index+1),item:it.id,index:index+1,verbs:words,consume:!!consume,
  text:response.replace(/\{desc\}/g,it.description).replace(/\{effect\}/g,it.effect)
 })));
+// 한 글자 물품명은 단어 경계를 확인: '물체', '검사', '창문', '책상'과 혼동하지 않는다.
+const shortItemToken=(raw,word)=>{
+ const normalized=String(raw||'').normalize('NFKC').toLowerCase();
+ const words=normalized.match(/[가-힣a-z0-9]+/g)||[];
+ const particle='(?:을|를|은|는|이|가|와|과|에|의|로|도|만|좀|부터|까지|처럼)?';
+ const suffix='(?:줘|주세요|주십시오|줄래|지급해|달라|내놔|가져와|구해줘|필요해|먹어|마셔|마시|섭취해|사용해|써|써봐|확인해|살펴|조사해|검사해|열어|켜|끄|꺼|들어|보관해|챙겨|작동해|받아|찾아|보여줘|조작해|쥐어|지급|지급해줘|해줘)?';
+ const pattern=new RegExp('^'+word+particle+suffix+'$');
+ return words.some(token=>pattern.test(token));
+};
 const locate=raw=>{
  const s=E.squeeze(raw);
  const names=catalog.flatMap(it=>it.aliases.map(x=>({it,x:E.squeeze(x)}))).sort((a,b)=>b.x.length-a.x.length);
  for(const {it,x} of names){
   if(!s.includes(x))continue;
+  if(x.length===1&&!shortItemToken(raw,x))continue;
   if(x==='물'&&/(식물|무기물|유기물|생물|물품|물건|물리|물질|물어)/.test(s))continue;
   if(x==='금'&&/(금지|금속|금고|지금|방금|금방)/.test(s))continue;
   if(x==='약'&&/(약점|약속|약한|취약|약해)/.test(s))continue;
