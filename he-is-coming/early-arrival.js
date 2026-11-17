@@ -27,7 +27,7 @@ function multiplier(t,raw=t){
  return 2;
 }
 function earlyArrivalIntent(raw,state={}){
- const t=norm(raw);if(!t||state.room?.terminalOff)return null;
+ const t=norm(raw).replace(/^(?:제발|부탁인데|부탁이야|부탁합니다|부탁해|혹시|저기|이봐|지금|당장|어서)+/,'');if(!t||state.room?.terminalOff)return null;
  if((/[?？]/.test(raw)||hypothetic.test(t)&&!imperative.test(t))&&!/(?:해줄래|줄래|줘|주세요|해줘|보내줘|소환해줘|달라)$/.test(t))return null;
  if(away.test(t)||/^(?:그만|그냥|그동안|그런데)/.test(t)||/(?:공격|타격|죽이|살해|제거|대화|통화|목소리).*(?:속도|빠르게|빨리)/.test(t))return null;
  if(toOther.test(t)&&!targetNear.test(t))return null;
@@ -39,7 +39,13 @@ function earlyArrivalIntent(raw,state={}){
   return {mode:'instant',reason:'강제 이동·소환'};
  if(targetNear.test(t)&&transport.test(t))return {mode:'instant',reason:'이 방으로의 이동 요청'};
  if(speed.test(t)||/(?:그가|그를|그놈이|추격자가).*(?:\d+초안에|\d+초이내|예정보다빨리).*(?:도착|오게|와|오도록|다가와|나타나|해줘|시켜)/.test(t)||/(?:접근|추격|그를|그놈을|추격자를).*(?:서둘러|재촉해|재촉하라|서두르게해|가속해)$/.test(t)){
-  const factor=multiplier(t,raw);
+  let factor=multiplier(t,raw);
+  const deadline=String(raw||'').normalize('NFKC').replace(/\s+/g,'').match(/(\d+(?:\.\d+)?)초(?:안에|이내|로|후에|뒤에)/);
+  if(deadline){
+   const seconds=Number(deadline[1]);
+   if(seconds<=0)return {mode:'instant',reason:'도착 시간 강제 변경'};
+   factor=Math.min(1000,Math.max(1,(E.LIMIT_SECONDS*1000-(Number(state.elapsedMs)||0))/(seconds*1000)));
+  }
   return factor>1?{mode:'accelerate',factor,reason:'접근 속도 증가'}:null;
  }
  return null;
