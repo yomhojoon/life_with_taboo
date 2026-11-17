@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,interactive-widget=resizes-content">
   <meta name="theme-color" content="#050606">
   <meta name="description" content="그가 오고 있습니다. 150초의 제한 시간. 모니터에 명령을 입력하라.">
+  <meta name="build-revision" content="hidden-room-buttons-20261117-v2">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <title>그가 오고 있습니다</title>
   <style>
 :root{color-scheme:dark;--bg:#050606;--ink:#c9d1ce;--mute:#707b77;--dim:#46514d;--warn:#e2b58a;--bright:#e4efe9;--line:#2a342f;--red:#b7766e;--mono:"D2Coding","Consolas","Noto Sans Mono CJK KR","Malgun Gothic",monospace}
@@ -67,6 +69,8 @@ h1{font-size:clamp(31px,6vw,68px);line-height:1.18;font-weight:500;letter-spacin
 .end.chaos h2{color:#e7b6af;text-shadow:2px 0 #5e383b,-2px 0 #394d43;animation:chaos-title 1.3s steps(3,end) 3}
 .end.chaos #ending-code{color:#e9a8a4}
 @keyframes chaos-title{20%{transform:translateX(2px)}45%{transform:translateX(-3px)}75%{opacity:.6}}
+/* 이전 버전의 탐색 바가 브라우저 캐시나 이전 DOM에 남더라도 노출하지 않습니다. */
+#room-strip,.room-strip{display:none!important}
 /* 실제 획득한 물건만 표시합니다. 버튼을 누르면 사용할 명령이 입력됩니다. */
 .inventory-strip{display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid #27352d;color:#91a99a;font-size:11px;min-height:39px;flex-shrink:0}
 .inventory-strip>span{white-space:nowrap;color:#789180}
@@ -737,6 +741,8 @@ h1{font-size:clamp(31px,6vw,68px);line-height:1.18;font-weight:500;letter-spacin
 <script src="./room.js"></script>
 <script>
 /* UI / 실시간 시계 / Web Audio (서버 호출 없음) */
+  // 이전 버전의 탐색 버튼이 남아 있으면 DOM에서 즉시 제거한다.
+  document.querySelector('#room-strip')?.remove();
 (() => {
   'use strict';
   const Engine = window.TerminalEngine;
