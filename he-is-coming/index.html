@@ -53,6 +53,11 @@ h1{font-size:clamp(31px,6vw,68px);line-height:1.18;font-weight:500;letter-spacin
 .intro-rule p br{display:block;content:"";margin-top:8px}
 
 
+/* 혼돈 엔딩에서는 단말기의 화면만 불안정하게 남습니다. */
+.end.chaos{background:repeating-linear-gradient(178deg,#170809,#050605 13px,#0d1510 24px)}
+.end.chaos h2{color:#e7b6af;text-shadow:2px 0 #5e383b,-2px 0 #394d43;animation:chaos-title 1.3s steps(3,end) 3}
+.end.chaos #ending-code{color:#e9a8a4}
+@keyframes chaos-title{20%{transform:translateX(2px)}45%{transform:translateX(-3px)}75%{opacity:.6}}
 /* 실제 획득한 물건만 표시합니다. 버튼을 누르면 사용할 명령이 입력됩니다. */
 .inventory-strip{display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid #27352d;color:#91a99a;font-size:11px;min-height:39px;flex-shrink:0}
 .inventory-strip>span{white-space:nowrap;color:#789180}
@@ -959,21 +964,79 @@ h1{font-size:clamp(31px,6vw,68px);line-height:1.18;font-weight:500;letter-spacin
     addLine(Engine.alertAtElapsedMs(0),'alert');
     sound.start();ticker=setInterval(tick,55);field.value='';field.focus();
   }
+  // 외부의 모든 불이 켜지는 순간, 기존의 시간·거리 경고는 복구되지 않는다.
+  function beginChaos(){
+    if(chaosSequence||phase!=='active')return;
+    chaosSequence=true;
+    setBusy(true);clearFollowUps();
+    const warnings=Engine.corruptWarnings(Math.random);
+    warnings.forEach((message,index)=>{
+      const delay=520+(index+1)*720;
+      const timer=setTimeout(()=>{
+        chaosTimers.delete(timer);
+        if(phase!=='active'||!chaosSequence)return;
+        statistics.chaosWarnings++;
+        connect.textContent=message;
+        addLine(message,'alert');sound.beep('alert');
+        connect.style.color=index%2?'#db8587':'#e2b58a';
+      },delay);
+      chaosTimers.add(timer);
+    });
+    const timer=setTimeout(()=>{
+      chaosTimers.delete(timer);
+      if(phase==='active'&&chaosSequence)finish('chaos');
+    },520+(warnings.length+1)*720);
+    chaosTimers.add(timer);
+  }
   function finish(result){
-    if (phase !== 'active') return;
-    const won = result === true;
-    const dead = result === 'dead';
-    phase = won ? 'win' : dead ? 'dead' : 'loss';
+    if(phase!=='active')return;
+    const survived=result===true||result==='armed_escape';
+    const dead=result==='dead',captured=result==='captured',chaos=result==='chaos';
+    const second=Math.max(0,Math.floor(elapsedMs()/1000));
+    const endStats=[
+      '— 세션 기록 —',
+      '경과 시간 '+second+'초 / 입력 '+statistics.requests+'회 / 질문 '+statistics.questions+'회',
+      '수리 '+statistics.accepted+'회 / 반려 '+statistics.denied+'회 / 미해석 '+statistics.unrecognized+'회',
+      '물품 획득 '+statistics.itemsGained+'개 / 사용 '+statistics.itemsUsed+'회',
+      '돌발 상황 '+statistics.encounters+'회 / 처리 '+statistics.resolved+'회 / 미처리 '+statistics.missed+'회',
+      '해킹 시도 '+statistics.hacks+'회 / 힌트 확인 '+hintCount+'회'
+    ].join('\n');
+    phase=result===true?'win':result===false?'loss':String(result);
     clearInterval(ticker);ticker=null;
-    clearTimeout(responseTimer);responseTimer=null;clearFollowUps();runningTask++;
-    setBusy(false);sound.stop();sound.beep(won?'start':'end');
+    clearTimeout(responseTimer);responseTimer=null;clearFollowUps();clearChaosTimers();runningTask++;
+    chaosSequence=false;setBusy(false);sound.stop();sound.beep(survived?'start':'end');
     session.classList.add('hidden');ending.classList.remove('hidden');
-    ending.classList.toggle('win',won);ending.classList.toggle('loss',!won);
-    $('#ending-code').textContent=won?'ENDING 01 / SURVIVAL CONFIRMED':dead?'VITAL SIGNAL LOST / SESSION TERMINATED':'CONNECTION FAILURE / 000 KM';
-    $('#ending-title').textContent=won?'당신은 살아남았습니다.':dead?'사망했습니다.':'그가 도착했습니다.';
-    $('#ending-body').textContent=won?'모니터의 전원이 꺼졌습니다.\n접근 신호가 소실되었습니다.\n\n더 이상의 추격은 없습니다.\n\n— 탈출 성공 —':dead?'사용자의 생체 신호가 소실되었습니다.\n모든 요청 수리가 즉시 중단됩니다.':'통신 신호가 끊어졌습니다.\n추가 명령을 수리할 수 없습니다.';
-    transcript.push({kind:won?'good':'alert',second:Math.max(0,Math.floor(elapsedMs()/1000)),
-      text:$('#ending-code').textContent+'\n'+$('#ending-title').textContent+'\n'+$('#ending-body').textContent});
+    ending.classList.toggle('win',survived);ending.classList.toggle('loss',!survived);
+    ending.classList.toggle('chaos',chaos);
+    const codes={
+      win:'ENDING 01 / SURVIVAL CONFIRMED',
+      armed_escape:'ENDING 02 / ARMED BREAKOUT',
+      captured:'ENDING 03 / SECURITY CONTAINMENT',
+      chaos:'ENDING 04 / IRREVERSIBLE CHAOS',
+      dead:'VITAL SIGNAL LOST / SESSION TERMINATED',
+      loss:'CONNECTION FAILURE / 000 KM'
+    };
+    const titles={
+      win:'당신은 살아남았습니다.',
+      armed_escape:'당신은 탈출했습니다.',
+      captured:'경비에게 제압당했습니다.',
+      chaos:'세계가 돌이킬 수 없는 혼돈에 빠졌습니다.',
+      dead:'사망했습니다.',
+      loss:'그가 도착했습니다.'
+    };
+    const carried=Engine.equippedWeapons(inventory);
+    const stories={
+      win:'모니터의 전원이 꺼졌습니다.\n접근 신호가 소실되었습니다.\n\n더 이상의 추격은 없습니다.\n\n— 탈출 성공 —',
+      armed_escape:'보안 잠금이 해제되며 출입문이 열렸습니다.\n문 밖의 경비는 무장한 사용자를 저지하지 못했습니다.\n지참 무기: '+carried.join(', ')+'.\n\n당신은 복도를 돌파해 시설 밖으로 빠져나왔습니다.\n\n— 무장 탈출 —',
+      captured:'보안 잠금을 해제해 문을 열었습니다.\n그러나 아무런 무기 없이 복도로 나선 순간, 대기하던 경비가 사용자를 제압했습니다.\n출입 기록이 봉쇄되고 통신이 종료됩니다.\n\n— 제압 엔딩 —',
+      chaos:'이 방 바깥의 모든 장소에 일제히 불이 켜졌습니다.\n그가 오고 있다는 경고의 거리와 시간이 '+statistics.chaosWarnings+'회 서로 모순된 수치로 출력됐습니다.\n\n누구도 추격의 범위를 더는 계산할 수 없습니다.\n세상은 되돌릴 수 없는 혼돈에 빠졌습니다.\n\n— 혼돈 엔딩 —',
+      dead:Engine.deathDescription(deathCause)+'\n모든 요청 수리가 즉시 중단됩니다.',
+      loss:'통신 신호가 끊어졌습니다.\n접근 경고가 000 KM에 도달했습니다.\n추가 명령을 수리할 수 없습니다.'
+    };
+    const code=codes[phase]||codes.loss, title=titles[phase]||titles.loss;
+    const body=(stories[phase]||stories.loss)+'\n\n'+endStats;
+    $('#ending-code').textContent=code;$('#ending-title').textContent=title;$('#ending-body').textContent=body;
+    transcript.push({kind:survived?'good':'alert',second,text:code+'\n'+title+'\n'+body});
     $('#view-record').focus();
   }
   function reset(){
@@ -1092,12 +1155,12 @@ h1{font-size:clamp(31px,6vw,68px);line-height:1.18;font-weight:500;letter-spacin
     return transcriptUrl;
   }
   function showRecord(){
-    if(!['win','loss','dead'].includes(phase))return;
+    if(!['win','loss','dead','armed_escape','captured','chaos'].includes(phase))return;
     try{$('#record-image').src=ensureRecord();$('#record-overlay').classList.remove('hidden');$('#record-close').focus();}
     catch(err){console.error(err);alert('대화 기록 이미지를 생성하지 못했습니다.');}
   }
   function saveRecord(){
-    if(!['win','loss','dead'].includes(phase))return;
+    if(!['win','loss','dead','armed_escape','captured','chaos'].includes(phase))return;
     try{
       const link=document.createElement('a');
       link.href=ensureRecord();link.download='그가_오고_있습니다_대화기록_'+phase+'.png';
