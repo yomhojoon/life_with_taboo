@@ -10,7 +10,7 @@ const match = html.match(/<script>([\s\S]*?)<\/script>/);
 assert.ok(match, 'embedded TerminalEngine script missing');
 const sandbox = {module: {exports: {}}};
 vm.runInNewContext(match[1], sandbox, {timeout: 5000});
-for(const addon of ['extras.js','question-catalog.js','encounters.js']){
+for(const addon of ['extras.js','question-catalog.js','encounters.js','routes.js']){
   vm.runInNewContext(fs.readFileSync(path.join(__dirname,'..',addon),'utf8'),sandbox,{timeout:5000});
 }
 const game = sandbox.module.exports;
