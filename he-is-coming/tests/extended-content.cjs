@@ -73,7 +73,7 @@ for(const name of ['id="room-strip"','id="room-items"','function showRoom()']){
  assert.equal(html.includes(name),false,'Room discovery interface must stay hidden: '+name);
 }
 for(const script of ['extras.js','question-catalog.js','routes.js','room.js']){
- assert.ok(html.includes('<script src="./'+script+'"></script>'),script);
+ assert.ok(html.includes('<script src="./'+script+'?v=20261118-13011"></script>'),script);
 }
 assert.ok(html.includes('거부됩니다.<br>응답을 관찰하고 방법을 찾으십시오.'),'intro line break');
 console.log('PASS: '+count+' extended question, inventory and permanent-room inputs');
