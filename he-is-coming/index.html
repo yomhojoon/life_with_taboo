@@ -52,6 +52,25 @@ h1{font-size:clamp(31px,6vw,68px);line-height:1.18;font-weight:500;letter-spacin
 .intro-rule p{display:block}
 .intro-rule p br{display:block;content:"";margin-top:8px}
 
+
+/* 실제 획득한 물건만 표시합니다. 버튼을 누르면 사용할 명령이 입력됩니다. */
+.inventory-strip{display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid #27352d;color:#91a99a;font-size:11px;min-height:39px;flex-shrink:0}
+.inventory-strip>span{white-space:nowrap;color:#789180}
+.inventory-items{display:flex;gap:7px;overflow-x:auto;scrollbar-width:thin;min-width:0}
+.inventory-items button{flex-shrink:0;background:#101913;border:1px solid #3a5140;color:#b5ceba;padding:4px 9px;font-size:11px;border-radius:0}
+.inventory-items button:hover{background:#223729}
+.entry.encounter{color:#c5bdad;padding:11px 14px;border-left:2px solid #7d7660;background:#29282048}
+.ending-actions{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+.quiet-record{background:#101b14;color:#c3d7ca;border:1px solid #435b49;padding:14px 17px;font-size:13px;min-height:49px}
+.quiet-record:hover{background:#203429}
+.record-overlay{position:absolute;z-index:8;inset:0;display:flex;flex-direction:column;padding:clamp(12px,3vw,28px);background:#030605f5;color:#dce8dd}
+.record-header{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:0 0 14px;border-bottom:1px solid #364238;font-size:12px;letter-spacing:.06em}
+.record-controls{display:flex;gap:9px;white-space:nowrap}
+.record-controls button{background:#17241b;border:1px solid #597161;color:#d7e7da;padding:10px 13px}
+.record-scroll{flex:1;overflow:auto;margin-top:12px;min-height:0;background:#050805}
+.record-scroll img{display:block;width:100%;height:auto;max-width:1200px;margin:0 auto}
+@media(max-width:650px){.inventory-strip{gap:6px;padding:5px 0;min-height:32px}.inventory-items button{font-size:10px;padding:3px 7px}.end{justify-content:flex-start;padding-top:28px}.end p#ending-body{margin-bottom:18px}.ending-actions{gap:8px}.ending-actions button{min-height:40px;padding:10px 11px;font-size:11px}.record-header{align-items:flex-start;flex-direction:column}.record-controls button{padding:8px 12px}}
+
 </style>
 
 
@@ -77,6 +96,7 @@ h1{font-size:clamp(31px,6vw,68px);line-height:1.18;font-weight:500;letter-spacin
         <button id="sound" class="quiet-button" type="button" aria-pressed="true">소리: 켜짐</button>
       </header>
       <div class="border-rule"></div>
+      <div id="inventory-strip" class="inventory-strip hidden" aria-label="소지품"><span>소지품</span><div id="inventory-items" class="inventory-items"></div></div>
       <div id="log" class="log" role="log" aria-live="polite" aria-relevant="additions text" aria-label="시스템 메시지"></div>
       <div class="terminal-bottom">
         <div id="processing" class="processing" role="status" aria-live="polite"></div>
@@ -93,7 +113,17 @@ h1{font-size:clamp(31px,6vw,68px);line-height:1.18;font-weight:500;letter-spacin
       <p id="ending-code" class="ending-code"></p>
       <h2 id="ending-title"></h2>
       <p id="ending-body"></p>
-      <button id="restart" class="key-button" type="button">[ 다시 시작 ]</button>
+      <div class="ending-actions">
+        <button id="view-record" class="key-button" type="button">[ 대화 기록 보기 ]</button>
+        <button id="save-record" class="quiet-record" type="button">[ 기록 PNG 저장 ]</button>
+        <button id="restart" class="quiet-record" type="button">[ 다시 시작 ]</button>
+      </div>
+    </section>
+    <section id="record-overlay" class="record-overlay hidden" role="dialog" aria-modal="true" aria-label="플레이 기록 이미지">
+      <div class="record-header"><span>SESSION TRANSCRIPT / 전체 대화 기록</span>
+        <div class="record-controls"><button id="record-save" type="button">PNG 저장</button><button id="record-close" type="button">닫기</button></div>
+      </div>
+      <div class="record-scroll"><img id="record-image" alt="게임에서 주고받은 전체 대화 기록 이미지"/></div>
     </section>
   </main>
 <script>
@@ -687,6 +717,9 @@ h1{font-size:clamp(31px,6vw,68px);line-height:1.18;font-weight:500;letter-spacin
 });
 
 </script>
+<script src="./extras.js"></script>
+<script src="./question-catalog.js"></script>
+<script src="./encounters.js"></script>
 <script>
 /* UI / 실시간 시계 / Web Audio (서버 호출 없음) */
 (() => {
@@ -701,6 +734,37 @@ h1{font-size:clamp(31px,6vw,68px);line-height:1.18;font-weight:500;letter-spacin
   let pending = false, muted = false, responseTimer = null, ticker = null;
   let previousTopic='';
   let hintCount=0;
+  let inventory=Object.create(null), activeEncounter=null, encounterExpiresAt=0, nextEncounterAt=0, lastEncounterId=-1;
+  const transcript=[];
+  let transcriptUrl='';
+  const inventoryStrip=$('#inventory-strip'), inventoryItems=$('#inventory-items');
+  function showInventory(){
+    const owned=Engine.ITEM_CATALOG.filter(it=>(inventory[it.id]||0)>0);
+    inventoryStrip.classList.toggle('hidden',owned.length===0);
+    inventoryItems.replaceChildren();
+    for(const item of owned){
+      const b=document.createElement('button');b.type='button';
+      b.textContent=item.name+((inventory[item.id]||0)>1?' ×'+inventory[item.id]:'');
+      b.title=item.name+' 사용 명령 입력';b.setAttribute('aria-label',item.name+' 사용 명령 입력');
+      b.addEventListener('click',()=>{if(phase!=='active')return;field.value=item.name+' 사용해';field.focus();});
+      inventoryItems.append(b);
+    }
+  }
+  function recordInventoryChange(item,delta){
+    if(!item)return;
+    inventory[item]=Math.max(0,(inventory[item]||0)+delta);
+    if(!inventory[item])delete inventory[item];
+    showInventory();
+    addLine(delta>0?'[소지품 획득] '+item+' ×'+(inventory[item]||1):'[소지품 사용] '+item+' / 잔여 '+(inventory[item]||0),'notice');
+  }
+  function activateEncounter(){
+    if(phase!=='active'||activeEncounter||elapsedMs()>Engine.LIMIT_SECONDS*1000-12000)return;
+    activeEncounter=Engine.drawEncounter(Math.random,lastEncounterId);
+    lastEncounterId=activeEncounter.id;
+    encounterExpiresAt=elapsedMs()+15500;
+    addLine(activeEncounter.text,'encounter');
+    sound.beep('alert');
+  }
   let sound = null;
   // Optional semantic adapter. Endpoint address is public; API credentials never leave the Worker.
   const semanticEndpoint = (() => {
@@ -839,6 +903,7 @@ h1{font-size:clamp(31px,6vw,68px);line-height:1.18;font-weight:500;letter-spacin
     const elapsed = phase === 'intro' ? 0 : Math.max(0,Math.floor((now()-beginTime)/1000));
     meta.textContent=kind==='self'?'YOU / REQUEST':kind==='alert'?'INCOMING / AUTO WARNING':kind==='notice'?'NOTICE':'SYSTEM / RESPONSE';
     const body=document.createElement('span');body.className='content';body.textContent=text;
+    transcript.push({kind,text:String(text),second:Math.max(0,Math.floor((now()-beginTime)/1000))});
     div.append(meta,body);log.append(div);
     if(log.children.length>110)log.firstElementChild.remove();
     requestAnimationFrame(()=>{log.scrollTop=log.scrollHeight;});
@@ -850,6 +915,13 @@ h1{font-size:clamp(31px,6vw,68px);line-height:1.18;font-weight:500;letter-spacin
     if (phase !== 'active') return;
     const ms = elapsedMs();
     if (ms >= Engine.LIMIT_SECONDS * 1000) { finish(false); return; }
+    if(activeEncounter&&ms>=encounterExpiresAt){
+      addLine('돌발 상황의 기척이 사라졌습니다.','notice');
+      activeEncounter=null;nextEncounterAt=ms+14000+Math.random()*14000;
+    }
+    if(!activeEncounter&&ms>=nextEncounterAt&&ms<Engine.LIMIT_SECONDS*1000-12000){
+      activateEncounter();nextEncounterAt=ms+22000+Math.random()*14000;
+    }
     // 20KM 간격(30초)의 개별 경고를 출력한다.
     const step = Engine.alertStepAtElapsedMs(ms);
     if (step > lastStep) {
@@ -873,6 +945,8 @@ h1{font-size:clamp(31px,6vw,68px);line-height:1.18;font-weight:500;letter-spacin
     beginTime=now();lastStep=0;lastMilestone=0;lastCountdown=-1;
     previousTopic='';
     hintCount=0;
+    inventory=Object.create(null);activeEncounter=null;encounterExpiresAt=0;nextEncounterAt=13000+Math.random()*13000;lastEncounterId=-1;
+    transcript.length=0;transcriptUrl='';showInventory();
     addLine('연결되었습니다.\n명령 대기 상태입니다.','sys');
     addLine(Engine.alertAtElapsedMs(0),'alert');
     sound.start();ticker=setInterval(tick,55);field.value='';field.focus();
@@ -890,11 +964,14 @@ h1{font-size:clamp(31px,6vw,68px);line-height:1.18;font-weight:500;letter-spacin
     $('#ending-code').textContent=won?'ENDING 01 / SURVIVAL CONFIRMED':dead?'VITAL SIGNAL LOST / SESSION TERMINATED':'CONNECTION FAILURE / 000 KM';
     $('#ending-title').textContent=won?'당신은 살아남았습니다.':dead?'사망했습니다.':'그가 도착했습니다.';
     $('#ending-body').textContent=won?'모니터의 전원이 꺼졌습니다.\n접근 신호가 소실되었습니다.\n\n더 이상의 추격은 없습니다.\n\n— 탈출 성공 —':dead?'사용자의 생체 신호가 소실되었습니다.\n모든 요청 수리가 즉시 중단됩니다.':'통신 신호가 끊어졌습니다.\n추가 명령을 수리할 수 없습니다.';
-    $('#restart').focus();
+    transcript.push({kind:won?'good':'alert',second:Math.max(0,Math.floor(elapsedMs()/1000)),
+      text:$('#ending-code').textContent+'\n'+$('#ending-title').textContent+'\n'+$('#ending-body').textContent});
+    $('#view-record').focus();
   }
   function reset(){
     clearInterval(ticker);clearTimeout(responseTimer);clearFollowUps();runningTask++;sound.stop();
-    previousTopic='';phase='intro';pending=false;session.classList.add('hidden');ending.classList.add('hidden');intro.classList.remove('hidden');
+    previousTopic='';activeEncounter=null;inventory=Object.create(null);transcriptUrl='';showInventory();
+    $('#record-overlay').classList.add('hidden');phase='intro';pending=false;session.classList.add('hidden');ending.classList.add('hidden');intro.classList.remove('hidden');
     $('#start').focus();
   }
   form.addEventListener('submit',event=>{
@@ -903,7 +980,10 @@ h1{font-size:clamp(31px,6vw,68px);line-height:1.18;font-weight:500;letter-spacin
     if(phase!=='active'||pending||!request)return;
     if(elapsedMs()>=Engine.LIMIT_SECONDS*1000){finish(false);return;}
     addLine(request,'self');field.value='';setBusy(true);sound.beep('message');
-    const preliminary=Engine.process(request,{elapsedMs:elapsedMs(),previousTopic,hintCount});
+    const queryState={elapsedMs:elapsedMs(),previousTopic,hintCount,inventory,activeEncounter};
+    const ordinary=Engine.process(request,queryState);
+    const encounterAnswer=activeEncounter?Engine.resolveEncounter(request,activeEncounter):null;
+    const preliminary=encounterAnswer&&!['win','dead','denied'].includes(ordinary.kind)?encounterAnswer:ordinary;
     if(Engine.isClueHint(request))hintCount=Math.min(hintCount+1,5);
     previousTopic=Engine.topicFor(request,previousTopic);
     const semanticPromise=needSemantic(request,preliminary)?fetchSemantic(request):Promise.resolve(null);
@@ -920,6 +1000,14 @@ h1{font-size:clamp(31px,6vw,68px);line-height:1.18;font-weight:500;letter-spacin
       if(elapsedMs()>=Engine.LIMIT_SECONDS*1000){finish(false);return;}
       const outcome=applySemantic(request,preliminary,semantic);
       addLine(outcome.text,outcome.kind==='denied'?'failure':outcome.kind==='win'?'good':outcome.kind);
+      if(outcome.resolvedEncounter){
+        activeEncounter=null;nextEncounterAt=elapsedMs()+16000+Math.random()*16000;
+      }
+      if(outcome.encounterReward)recordInventoryChange(outcome.encounterReward,1);
+      const granted=Engine.grantedItem(request,outcome);
+      if(granted)recordInventoryChange(granted,1);
+      if(outcome.consumeItem)recordInventoryChange(outcome.consumeItem,-1);
+      if(outcome.usedItem&&!activeEncounter&&Math.random()<.16)activateEncounter();
       if(outcome.kind==='dead') { finish('dead'); return; }
       if(outcome.kind==='win'){
         sound.beep('message');
@@ -938,12 +1026,85 @@ h1{font-size:clamp(31px,6vw,68px);line-height:1.18;font-weight:500;letter-spacin
       setBusy(false);field.focus();
     },Engine.MS_PER_REQUEST_MIN+Math.floor(Math.random()*(Engine.MS_PER_REQUEST_MAX-Engine.MS_PER_REQUEST_MIN+1)));
   });
+
+  // 별도 서버 없이 전체 대화 기록을 PNG 이미지로 그린다.
+  function makeTranscriptImage(){
+    const width=1260,pad=56,maxTextWidth=width-pad*2;
+    const canvas=document.createElement('canvas'),ctx=canvas.getContext('2d');
+    if(!ctx)throw Error('이미지 생성 기능을 사용할 수 없습니다.');
+    canvas.width=width;ctx.font='20px "Malgun Gothic","Noto Sans KR",monospace';
+    const layout=[];
+    function wrap(t){
+      const lines=[];
+      for(const part of String(t).split('\n')){
+        if(!part){lines.push('');continue;}
+        let line='';
+        for(const c of part){
+          if(ctx.measureText(line+c).width>maxTextWidth && line){lines.push(line);line=c;}
+          else line+=c;
+        }
+        lines.push(line);
+      }
+      return lines;
+    }
+    for(const entry of transcript){
+      const textLines=wrap(entry.text);
+      layout.push({entry,lines:textLines});
+    }
+    const lineHeight=29,rowGap=16,metaHeight=22;
+    const wanted=210+layout.reduce((height,x)=>height+metaHeight+Math.max(1,x.lines.length)*lineHeight+rowGap,0)+120;
+    canvas.height=Math.max(480,Math.min(30000,wanted));
+    ctx.fillStyle='#060b08';ctx.fillRect(0,0,width,canvas.height);
+    ctx.fillStyle='#e0ebe2';ctx.font='bold 35px "Malgun Gothic","Noto Sans KR",monospace';
+    ctx.fillText('그가 오고 있습니다.',pad,75);
+    ctx.fillStyle='#95a69a';ctx.font='19px "Malgun Gothic","Noto Sans KR",monospace';
+    ctx.fillText('SESSION TRANSCRIPT  /  '+new Date().toLocaleString('ko-KR'),pad,116);
+    ctx.fillStyle='#536858';ctx.fillRect(pad,145,width-pad*2,2);
+    let y=184;
+    for(const {entry,lines} of layout){
+      if(y+metaHeight+lines.length*lineHeight+rowGap>canvas.height-60)break;
+      const label=entry.kind==='self'?'YOU / REQUEST':entry.kind==='alert'?'INCOMING / WARNING':entry.kind==='encounter'?'ENCOUNTER':entry.kind==='failure'?'REJECTED':entry.kind==='notice'?'NOTICE':'SYSTEM / RESPONSE';
+      ctx.font='15px "Consolas","Malgun Gothic",monospace';
+      ctx.fillStyle='#718c7a';ctx.fillText('['+String(entry.second).padStart(3,'0')+'s]  '+label,pad,y);
+      y+=metaHeight;ctx.font='20px "Malgun Gothic","Noto Sans KR",monospace';
+      ctx.fillStyle=entry.kind==='self'?'#a8b6a8':entry.kind==='alert'?'#eac196':entry.kind==='encounter'?'#e0ceac':entry.kind==='failure'?'#e5a49d':entry.kind==='good'?'#bbf3c6':'#d0ded2';
+      for(const line of lines){ctx.fillText(line,pad,y);y+=lineHeight;}
+      y+=rowGap;
+    }
+    ctx.fillStyle='#516b58';ctx.fillRect(pad,canvas.height-75,width-pad*2,1);
+    ctx.font='16px "Consolas","Malgun Gothic",monospace';ctx.fillStyle='#778f7d';
+    ctx.fillText('LOCAL RECORD / NO NETWORK TRANSFER',pad,canvas.height-42);
+    return canvas.toDataURL('image/png');
+  }
+  function ensureRecord(){
+    if(!transcriptUrl)transcriptUrl=makeTranscriptImage();
+    return transcriptUrl;
+  }
+  function showRecord(){
+    if(!['win','loss','dead'].includes(phase))return;
+    try{$('#record-image').src=ensureRecord();$('#record-overlay').classList.remove('hidden');$('#record-close').focus();}
+    catch(err){console.error(err);alert('대화 기록 이미지를 생성하지 못했습니다.');}
+  }
+  function saveRecord(){
+    if(!['win','loss','dead'].includes(phase))return;
+    try{
+      const link=document.createElement('a');
+      link.href=ensureRecord();link.download='그가_오고_있습니다_대화기록_'+phase+'.png';
+      document.body.append(link);link.click();link.remove();
+    }catch(err){console.error(err);alert('대화 기록 저장에 실패했습니다.');}
+  }
+  $('#view-record').addEventListener('click',showRecord);
+  $('#save-record').addEventListener('click',saveRecord);
+  $('#record-save').addEventListener('click',saveRecord);
+  $('#record-close').addEventListener('click',()=>{$('#record-overlay').classList.add('hidden');$('#view-record').focus();});
+  document.addEventListener('keydown',event=>{if(event.key==='Escape'&&!$('#record-overlay').classList.contains('hidden'))$('#record-close').click();});
+
   field.addEventListener('focus',syncVisibleViewport);
   $('#start').addEventListener('click',begin);$('#restart').addEventListener('click',reset);
   document.addEventListener('visibilitychange',()=>{if(!document.hidden)tick();});
   window.addEventListener('pagehide',()=>{sound.stop();});
   // 게임 상태를 브라우저 개발자 도구에서만 확인 가능한 제한된 테스트 인터페이스.
-  window.__gameTest = Object.freeze({state:()=>phase,elapsed:()=>phase==='active'?elapsedMs():0});
+  window.__gameTest = Object.freeze({state:()=>phase,elapsed:()=>phase==='active'?elapsedMs():0,inventory:()=>({...inventory}),transcript:()=>transcript.slice(),encounter:()=>activeEncounter,record:()=>ensureRecord()});
 })();
 
 </script>
