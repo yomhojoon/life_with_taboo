@@ -1,5 +1,5 @@
 // Run: node he-is-coming/tests/extended-content.cjs
-// 320 structured prompts x 3, 41 items x 8 interactions x 2, and encounter choice paths.
+// 320 structured prompts x 3, 59 items x 8 interactions x 2, and encounter choice paths.
 'use strict';
 const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm'),assert=require('node:assert/strict');
 const base=path.resolve(__dirname,'..');
@@ -8,7 +8,7 @@ const core=html.match(/<script>([\s\S]*?)<\/script>/);
 assert.ok(core);
 const sandbox={module:{exports:{}}};
 vm.runInNewContext(core[1],sandbox,{timeout:5000});
-for(const addon of ['extras.js','question-catalog.js','encounters.js']){
+for(const addon of ['extras.js','question-catalog.js','encounters.js','routes.js']){
  vm.runInNewContext(fs.readFileSync(path.join(base,addon),'utf8'),sandbox,{timeout:5000});
 }
 const game=sandbox.module.exports;
@@ -24,8 +24,8 @@ for(const row of game.QUESTION_CATALOG){
   count++;
  }
 }
-assert.equal(game.ITEM_CATALOG.length,41);
-assert.equal(game.ITEM_INTERACTIONS.length,328);
+assert.equal(game.ITEM_CATALOG.length,59);
+assert.equal(game.ITEM_INTERACTIONS.length,472);
 for(const recipe of game.ITEM_INTERACTIONS){
  const verb=recipe.verbs.split('|')[0];
  for(const input of [recipe.item+' '+verb,recipe.item+' 좀 '+verb]){
@@ -34,7 +34,7 @@ for(const recipe of game.ITEM_INTERACTIONS){
   count++;
  }
 }
-assert.equal(game.ENCOUNTERS.length,18);
+assert.equal(game.ENCOUNTERS.length,12);
 for(const ev of game.ENCOUNTERS){
  const drawn=game.drawEncounter(()=>(ev.id+0.001)/game.ENCOUNTERS.length,-1);
  assert.equal(drawn.id,ev.id);
@@ -73,7 +73,7 @@ assert.equal(game.process('손전등 켜',{inventory:{}},()=>0.2).kind,'notice')
 for(const marker of ['id="record-overlay"','id="record-image"','id="view-record"','id="save-record"','function makeTranscriptImage','id="inventory-items"','function activateEncounter']){
  assert.ok(html.includes(marker),'UI missing '+marker);
 }
-for(const script of ['extras.js','question-catalog.js','encounters.js']){
+for(const script of ['extras.js','question-catalog.js','encounters.js','routes.js']){
  assert.ok(html.includes('<script src="./'+script+'"></script>'),script);
 }
 assert.ok(html.includes('거부됩니다.<br>응답을 관찰하고 방법을 찾으십시오.'),'intro line break');
