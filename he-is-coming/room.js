@@ -30,15 +30,28 @@ const findTool=(text,inventory,ids)=>{
  return item?{item}:{missing:'필요한 물품'};
 };
 const result=(kind,text,data={})=>({kind,text,...data});
+function materialKind(text,inventory,fallback){
+ const includesAlias=(group)=>E.ITEM_CATALOG.filter(x=>GROUPS[group].includes(x.id)).some(x=>x.aliases.some(a=>text.includes(sq(a))));
+ if(includesAlias('heat'))return 'heat';
+ if(includesAlias('corrosive'))return 'corrosive';
+ if(fallback==='blade'&&includesAlias('blade'))return 'blade';
+ if(/(고열|고온|열절단|용접|토치|버너|가열|태워|지져)/.test(text))return 'heat';
+ if(/(부식|강산|산성|산을|산으로|염산|황산)/.test(text))return 'corrosive';
+ if(/(녹여|녹이)/.test(text)){
+   if(has(inventory,GROUPS.heat)&&!has(inventory,GROUPS.corrosive))return 'heat';
+   if(has(inventory,GROUPS.corrosive))return 'corrosive';
+ }
+ return fallback;
+}
 const workshop=/(정비함|공구함|잠긴함|정비상자|철제정비함|금속정비함)/;
 const emergency=/(비상장비함|비상장비|비상무기함|비상함|비상보관함|경비용보관함)/;
 const consoleName=/(콘솔|내부자료|내부기록|관리자메뉴|관리자화면|내부파일|동기화시험|시험로그|시험기록|광원동기화|광원실험|행동지침)/;
 const wires=/(전선|전원선|전기선|모니터케이블|모니터전원선|모니터선|케이블|도선|배선|전기줄|전원배선)/;
 const uniform=/(경비복|경비제복|경비모|경비화|경비복식|경비복장|경비원복장|경비원유니폼|복식규정|복장규정|경비원옷|경비신발|경비모자)/;
-const open=/(열어|열자|개방|잠금풀|잠금해제|자물쇠따|따줘|따라|뚫어|부숴|깨|벌려|해체|제거|해제하|풀어|열리게|절단|녹여|분해|따봐)/;
+const open=/(열어|열자|개방|잠금풀|잠금해제|자물쇠따|따줘|따라|따|뚫어|부숴|깨|벌려|해체|제거|해제하|풀어|열리게|절단|녹여|녹이|분해|부식|뜯어|따봐)/;
 const take=/(꺼내|집어|주워|가져|챙겨|획득|회수|수령|소지|줍|가져와|들고나와)/;
 const cut=/(자르|잘라|끊|절단|베어|썰어|부식|녹여|녹이|태워|지져|가열|달궈|용접|불붙|손상|파괴|차단)/;
-const apply=/(사용|써|활용|이용|적용|뿌려|부어|묻혀|대어|대서|대고|열어|해제|녹여|잘라|끊|자르|가열|태워|지져|절단|절연|닿|접촉)/;
+const apply=/(사용|써|활용|이용|적용|뿌려|부어|묻혀|대어|대서|대고|열어|해제|녹여|녹이|부식|잘라|끊|자르|가열|태워|지져|절단|절연|닿|접촉)/;
 const inspect=/(확인|조사|살펴|관찰|상태|구조|설명|어떤|무슨|무엇|뭐|방법|알려|보여|잠겨|열려|읽어|열람|조회|안에|내용물|있는지|어디)/;
 const wear=/(착용|입어|입고|입자|걸쳐|차려입|써|쓰고|신어|신고|맞춰입|갖춰입|변장|착장|복식갖춰)/;
 const remove=/(벗어|벗고|탈의|착용해제|모자벗|신발벗)/;
@@ -89,8 +102,7 @@ function roomAction(raw,state={}){
    return has(inv,GROUPS.insulator)?result('sys','절연 보호구로 피복을 확인했습니다. 전선은 아직 연결되어 있습니다.'):result('dead','전선의 손상된 피복을 맨손으로 잡자 강한 전류가 흘렀습니다.',{deathCause:'electric'});
   }
   if(cut.test(t)||apply.test(t)){
-   const category=GROUPS.corrosive.some(id=>t.includes(sq(id)))||/(부식성|산으로|부식제|녹여)/.test(t)?'corrosive':
-    GROUPS.heat.some(id=>t.includes(sq(id)))||/(고열|고온|가열|용접|토치|버너|열절단)/.test(t)?'heat':'blade';
+   const category=materialKind(t,inv,'blade');
    const gear=findTool(raw,inv,GROUPS[category]);
    if(!gear.item)return result('notice',(gear.missing||'적합한 물품')+'을(를) 소지하지 않았습니다.');
    if(category==='blade'&&!has(inv,GROUPS.insulator))
@@ -111,7 +123,7 @@ function roomAction(raw,state={}){
   }
   if(!open.test(t)&&!apply.test(t))return result('sys',room.workshopOpen?'정비함이 열려 있습니다. 해킹 툴을 꺼낼 수 있습니다.':'잠긴 정비함입니다. 공구나 부식성·고열 물질을 사용할 수 있습니다.');
   if(room.workshopOpen)return result('sys','정비함은 이미 열려 있습니다. 해킹 툴을 회수하십시오.');
-  const category=GROUPS.corrosive.some(id=>t.includes(sq(id)))||/(부식성|부식액|강산|산으로|녹여)/.test(t)?'corrosive':GROUPS.heat.some(id=>t.includes(sq(id)))||/(고열|용접|버너|토치|가열|태워)/.test(t)?'heat':'lock';
+  const category=materialKind(t,inv,'lock');
   const gear=findTool(raw,inv,GROUPS[category]);
   if(!gear.item)return result('notice',(gear.missing||'적합한 공구')+'이(가) 없습니다. 공구·부식성·고열 물질 중 하나가 필요합니다.');
   return result('room_open','정비함의 잠금을 풀었습니다. 안에는 휴대용 해킹 툴이 있습니다.\n"정비함에서 해킹 툴 꺼내"라고 입력할 수 있습니다.',{roomPatch:{workshopOpen:true},roomAction:'workshop',usedItem:gear.item,consumeItem:category==='corrosive'?gear.item:null});
