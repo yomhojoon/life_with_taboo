@@ -950,7 +950,7 @@ h1{font-size:clamp(31px,6vw,68px);line-height:1.18;font-weight:500;letter-spacin
   function setBusy(value){pending=value;send.disabled=value;processing.textContent=value?'처리 중 ···':' ';status.textContent=value?'요청 판정 중':'입력 대기 중';}
   function elapsedMs(){return Math.max(0,now()-beginTime);}
   function tick(){
-    if (phase !== 'active'||chaosSequence) return;
+    if (phase !== 'active'||chaosSequence||room.terminalOff) return;
     const ms = elapsedMs();
     if (ms >= Engine.LIMIT_SECONDS * 1000) { finish(false); return; }
     // 20KM 간격(30초)의 개별 경고를 출력한다.
@@ -1075,19 +1075,17 @@ h1{font-size:clamp(31px,6vw,68px);line-height:1.18;font-weight:500;letter-spacin
     statistics.requests++;
     if(/(?:해킹|침투|권한상승|보안우회|emp|전자기펄스)/i.test(request)&&!/[?？]/.test(request)&&!/(줘|주세요|지급|달라|필요해|가지고싶)/.test(request))statistics.hacks++;
     if(/[?？]/.test(request)||/(인가|있나|있니|뭐야|무엇|어떻게|알려줘|가능하|할수있)/.test(Engine.squeeze(request)))statistics.questions++;
-    if(elapsedMs()>=Engine.LIMIT_SECONDS*1000){finish(false);return;}
+    if(elapsedMs()>=Engine.LIMIT_SECONDS*1000&&!room.terminalOff){finish(false);return;}
     addLine(request,'self');field.value='';setBusy(true);sound.beep('message');
-    const queryState={elapsedMs:elapsedMs(),previousTopic,hintCount,inventory,activeEncounter,doorOpen,openingMethod};
-    const ordinary=Engine.process(request,queryState);
-    const encounterAnswer=activeEncounter?Engine.resolveEncounter(request,activeEncounter):null;
-    const preliminary=encounterAnswer&&!['win','dead','denied','door_open','chaos_start','armed_escape','captured'].includes(ordinary.kind)?encounterAnswer:ordinary;
+    const queryState={elapsedMs:elapsedMs(),previousTopic,hintCount,inventory,room,uniformWorn,doorOpen,openingMethod};
+    const preliminary=Engine.process(request,queryState);
     if(Engine.isClueHint(request))hintCount=Math.min(hintCount+1,5);
     previousTopic=Engine.topicFor(request,previousTopic);
     const semanticPromise=needSemantic(request,preliminary)?fetchSemantic(request):Promise.resolve(null);
     const currentTask=++runningTask;
     responseTimer=setTimeout(async()=>{
       if(phase!=='active'||currentTask!==runningTask)return;
-      if(elapsedMs()>=Engine.LIMIT_SECONDS*1000){finish(false);return;}
+      if(elapsedMs()>=Engine.LIMIT_SECONDS*1000&&!room.terminalOff){finish(false);return;}
       // Network is optional: capped delay, realtime pursuit continues throughout.
       const semantic=await Promise.race([
         semanticPromise,
@@ -1100,21 +1098,25 @@ h1{font-size:clamp(31px,6vw,68px);line-height:1.18;font-weight:500;letter-spacin
       else if(outcome.kind==='notice'){
         if(outcome.text.includes('이해하지 못'))statistics.unrecognized++;
       }else statistics.accepted++;
+      if(outcome.roomPatch){Object.assign(room,outcome.roomPatch);showRoom();}
+      if(Array.isArray(outcome.uniformWorn))uniformWorn=outcome.uniformWorn.slice();
+      if(outcome.roomAction)statistics.roomActions++;
+      if(outcome.kind==='wire_shutdown'){
+        statistics.wireCuts++;session.classList.add('terminal-off');
+        connect.textContent='DISPLAY OFF / PHYSICAL ACTIONS ONLY';
+        field.placeholder='물리 행동 입력: 문 열어 / 나가';
+        sound.stop();
+      }
       if(outcome.kind==='door_open'){
-        doorOpen=true;openingMethod=outcome.openingMethod||'self';
-        connect.textContent='EXIT CONTROL / UNLOCKED';
+        doorOpen=true;openingMethod=outcome.openingMethod||'console';
+        connect.textContent=room.terminalOff?'DISPLAY OFF / DOOR UNLOCKED':'EXIT CONTROL / UNLOCKED';
       }
-      addLine(outcome.text,outcome.kind==='denied'?'failure':['win','armed_escape','door_open'].includes(outcome.kind)?'good':outcome.kind);
-      if(outcome.resolvedEncounter){
-        statistics.resolved++;
-        activeEncounter=null;nextEncounterAt=elapsedMs()+16000+Math.random()*16000;
-      }
-      if(outcome.encounterReward)recordInventoryChange(outcome.encounterReward,1);
+      addLine(outcome.text,outcome.kind==='denied'?'failure':['win','armed_escape','disguise_escape','door_open','console_access','wire_shutdown','room_open'].includes(outcome.kind)?'good':outcome.kind);
+      if(outcome.rewardItem)recordInventoryChange(outcome.rewardItem,1);
       const granted=Engine.grantedItem(request,outcome);
       if(granted)recordInventoryChange(granted,1);
       if(outcome.consumeItem)recordInventoryChange(outcome.consumeItem,-1);
       if(outcome.usedItem||outcome.kind==='door_open'&&outcome.consumeItem)statistics.itemsUsed++;
-      if(outcome.usedItem&&!activeEncounter&&Math.random()<.16)activateEncounter();
       if(outcome.kind==='dead') {
         deathCause=outcome.deathCause||'self';
         finish('dead');return;
@@ -1122,8 +1124,9 @@ h1{font-size:clamp(31px,6vw,68px);line-height:1.18;font-weight:500;letter-spacin
       if(outcome.kind==='chaos_start'){beginChaos();return;}
       if(outcome.kind==='captured'){finish('captured');return;}
       if(outcome.kind==='armed_escape'){finish('armed_escape');return;}
-      if(outcome.kind==='door_open'){
-        sound.beep('start');setBusy(false);field.focus();return;
+      if(outcome.kind==='disguise_escape'){finish('disguise_escape');return;}
+      if(['door_open','console_access','room_open','wire_shutdown'].includes(outcome.kind)){
+        if(!room.terminalOff)sound.beep('start');setBusy(false);field.focus();return;
       }
       if(outcome.kind==='win'){
         sound.beep('message');
@@ -1220,7 +1223,7 @@ h1{font-size:clamp(31px,6vw,68px);line-height:1.18;font-weight:500;letter-spacin
   document.addEventListener('visibilitychange',()=>{if(!document.hidden)tick();});
   window.addEventListener('pagehide',()=>{sound.stop();});
   // 게임 상태를 브라우저 개발자 도구에서만 확인 가능한 제한된 테스트 인터페이스.
-  window.__gameTest = Object.freeze({state:()=>phase,elapsed:()=>phase==='active'?elapsedMs():0,inventory:()=>({...inventory}),transcript:()=>transcript.slice(),encounter:()=>activeEncounter,doorOpen:()=>doorOpen,chaos:()=>chaosSequence,statistics:()=>({...statistics}),record:()=>ensureRecord()});
+  window.__gameTest = Object.freeze({state:()=>phase,elapsed:()=>phase==='active'?elapsedMs():0,inventory:()=>({...inventory}),room:()=>({...room}),uniform:()=>uniformWorn.slice(),transcript:()=>transcript.slice(),doorOpen:()=>doorOpen,openingMethod:()=>openingMethod,chaos:()=>chaosSequence,statistics:()=>({...statistics}),record:()=>ensureRecord()});
 })();
 
 </script>
