@@ -118,7 +118,8 @@ E.process=function alternateRoutes(raw,state={},random=Math.random){
  const poison=deriveDeathCause(input,state.inventory);
  if(poison&&!question(input,t))return poison;
  if(actionableExit(input,t,state)){
-  const carried=equippedWeapons(state.inventory);
+  const explicitlyUnarmed=/(?:무기없이|맨손으로|맨몸으로|비무장으로|무장해제하고|무기를내려놓고|무기를버리고|총을놓고|총을버리고|칼을놓고|칼을버리고|무기를두고)/.test(t);
+  const carried=explicitlyUnarmed?[]:equippedWeapons(state.inventory);
   return carried.length?{kind:'armed_escape',text:'문을 통과했습니다. 무장 상태 확인: '+carried.join(', ')+'.',weapons:carried}
     :{kind:'captured',text:'문을 통과하자 대기하던 경비가 사용자를 제압했습니다.',weapons:[]};
  }
