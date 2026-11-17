@@ -720,6 +720,7 @@ h1{font-size:clamp(31px,6vw,68px);line-height:1.18;font-weight:500;letter-spacin
 <script src="./extras.js"></script>
 <script src="./question-catalog.js"></script>
 <script src="./encounters.js"></script>
+<script src="./routes.js"></script>
 <script>
 /* UI / 실시간 시계 / Web Audio (서버 호출 없음) */
 (() => {
@@ -733,7 +734,11 @@ h1{font-size:clamp(31px,6vw,68px);line-height:1.18;font-weight:500;letter-spacin
   let phase = 'intro', beginTime = 0, lastStep = 0, lastMilestone = 0, lastCountdown = -1, runningTask = 0;
   let pending = false, muted = false, responseTimer = null, ticker = null;
   let previousTopic='';
-  let hintCount=0;
+  let hintCount=0,doorOpen=false,openingMethod='',chaosSequence=false,deathCause='';
+  let chaosTimers=new Set();
+  const emptyStats=()=>({requests:0,questions:0,accepted:0,denied:0,unrecognized:0,itemsGained:0,itemsUsed:0,encounters:0,resolved:0,missed:0,hacks:0,chaosWarnings:0});
+  let statistics=emptyStats();
+  function clearChaosTimers(){for(const t of chaosTimers)clearTimeout(t);chaosTimers.clear();}
   let inventory=Object.create(null), activeEncounter=null, encounterExpiresAt=0, nextEncounterAt=0, lastEncounterId=-1;
   const transcript=[];
   let transcriptUrl='';
@@ -760,6 +765,7 @@ h1{font-size:clamp(31px,6vw,68px);line-height:1.18;font-weight:500;letter-spacin
   function activateEncounter(){
     if(phase!=='active'||activeEncounter||elapsedMs()>Engine.LIMIT_SECONDS*1000-12000)return;
     activeEncounter=Engine.drawEncounter(Math.random,lastEncounterId);
+    statistics.encounters++;
     lastEncounterId=activeEncounter.id;
     encounterExpiresAt=elapsedMs()+15500;
     addLine(activeEncounter.text,'encounter');
@@ -912,11 +918,12 @@ h1{font-size:clamp(31px,6vw,68px);line-height:1.18;font-weight:500;letter-spacin
   function setBusy(value){pending=value;send.disabled=value;processing.textContent=value?'처리 중 ···':' ';status.textContent=value?'요청 판정 중':'입력 대기 중';}
   function elapsedMs(){return Math.max(0,now()-beginTime);}
   function tick(){
-    if (phase !== 'active') return;
+    if (phase !== 'active'||chaosSequence) return;
     const ms = elapsedMs();
     if (ms >= Engine.LIMIT_SECONDS * 1000) { finish(false); return; }
     if(activeEncounter&&ms>=encounterExpiresAt){
-      addLine('돌발 상황의 기척이 사라졌습니다.','notice');
+      statistics.missed++;
+      addLine('돌발 상황 선택 시간이 지났습니다. 획득 가능한 단서와 물품은 사라졌습니다.','notice');
       activeEncounter=null;nextEncounterAt=ms+14000+Math.random()*14000;
     }
     if(!activeEncounter&&ms>=nextEncounterAt&&ms<Engine.LIMIT_SECONDS*1000-12000){
@@ -946,6 +953,7 @@ h1{font-size:clamp(31px,6vw,68px);line-height:1.18;font-weight:500;letter-spacin
     previousTopic='';
     hintCount=0;
     inventory=Object.create(null);activeEncounter=null;encounterExpiresAt=0;nextEncounterAt=13000+Math.random()*13000;lastEncounterId=-1;
+    doorOpen=false;openingMethod='';chaosSequence=false;deathCause='';statistics=emptyStats();clearChaosTimers();
     transcript.length=0;transcriptUrl='';showInventory();
     addLine('연결되었습니다.\n명령 대기 상태입니다.','sys');
     addLine(Engine.alertAtElapsedMs(0),'alert');
@@ -971,19 +979,22 @@ h1{font-size:clamp(31px,6vw,68px);line-height:1.18;font-weight:500;letter-spacin
   function reset(){
     clearInterval(ticker);clearTimeout(responseTimer);clearFollowUps();runningTask++;sound.stop();
     previousTopic='';activeEncounter=null;inventory=Object.create(null);transcriptUrl='';showInventory();
+    doorOpen=false;openingMethod='';chaosSequence=false;deathCause='';statistics=emptyStats();clearChaosTimers();
     $('#record-overlay').classList.add('hidden');phase='intro';pending=false;session.classList.add('hidden');ending.classList.add('hidden');intro.classList.remove('hidden');
     $('#start').focus();
   }
   form.addEventListener('submit',event=>{
     event.preventDefault();
     const request=field.value.trim();
-    if(phase!=='active'||pending||!request)return;
+    if(phase!=='active'||pending||chaosSequence||!request)return;
+    statistics.requests++;
+    if(/[?？]/.test(request)||/(인가|있나|있니|뭐야|무엇|어떻게|알려줘|가능하|할수있)/.test(Engine.squeeze(request)))statistics.questions++;
     if(elapsedMs()>=Engine.LIMIT_SECONDS*1000){finish(false);return;}
     addLine(request,'self');field.value='';setBusy(true);sound.beep('message');
-    const queryState={elapsedMs:elapsedMs(),previousTopic,hintCount,inventory,activeEncounter};
+    const queryState={elapsedMs:elapsedMs(),previousTopic,hintCount,inventory,activeEncounter,doorOpen,openingMethod};
     const ordinary=Engine.process(request,queryState);
     const encounterAnswer=activeEncounter?Engine.resolveEncounter(request,activeEncounter):null;
-    const preliminary=encounterAnswer&&!['win','dead','denied'].includes(ordinary.kind)?encounterAnswer:ordinary;
+    const preliminary=encounterAnswer&&!['win','dead','denied','door_open','chaos_start','armed_escape','captured'].includes(ordinary.kind)?encounterAnswer:ordinary;
     if(Engine.isClueHint(request))hintCount=Math.min(hintCount+1,5);
     previousTopic=Engine.topicFor(request,previousTopic);
     const semanticPromise=needSemantic(request,preliminary)?fetchSemantic(request):Promise.resolve(null);
