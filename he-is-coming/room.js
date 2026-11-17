@@ -60,7 +60,7 @@ function roomAction(raw,state={}){
  const t=sq(raw),room=state.room||{},inv=state.inventory||{},worn=new Set(state.uniformWorn||[]);
  if(!t)return null;
  const asking=isQ(raw,t);
- if(/^(?:이방|방안|실내|내주변|방시설|주변시설|방구조|방안물건|시설목록|방에뭐)/.test(t)&&/(?:뭐|무엇|있|확인|조사|알려|구조|목록|설명|살펴|보여)/.test(t))return roomOverview(state);
+ if(/^(?:방구조|방시설|시설목록|방안물건|방내부|방에뭐|방안에뭐|방에는뭐|실내에뭐|주변에뭐|내주변에뭐|이방에뭐|방에서조사할|조사가능한시설|방안에무엇|이방에무엇)/.test(t)&&!/(?:조명|전등|전원|추격|빛을|불을켜|불을꺼)/.test(t))return roomOverview(state);
  // 복식은 보유와 실제 착용 상태를 별도로 관리한다.
  const mentioned=DRESS.filter(id=>E.ITEM_CATALOG.find(x=>x.id===id)?.aliases.some(a=>t.includes(sq(a))));
  const all=/(경비복식|경비복장|경비원복장|경비원유니폼|경비로변장|경비원으로변장|복식전체|복장전체)/.test(t);
