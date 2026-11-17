@@ -33,7 +33,7 @@ const result=(kind,text,data={})=>({kind,text,...data});
 const workshop=/(정비함|공구함|잠긴함|정비상자|철제정비함|금속정비함)/;
 const emergency=/(비상장비함|비상장비|비상무기함|비상함|비상보관함|경비용보관함)/;
 const consoleName=/(콘솔|내부자료|내부기록|관리자메뉴|관리자화면|내부파일|동기화시험|시험로그|시험기록|광원동기화|광원실험|행동지침)/;
-const wires=/(전선|전원선|전기선|모니터케이블|모니터전원|케이블|도선|배선|전기줄|전원배선)/;
+const wires=/(전선|전원선|전기선|모니터케이블|모니터전원선|모니터선|케이블|도선|배선|전기줄|전원배선)/;
 const uniform=/(경비복|경비제복|경비모|경비화|경비복식|경비복장|경비원복장|경비원유니폼|복식규정|복장규정|경비원옷|경비신발|경비모자)/;
 const open=/(열어|열자|개방|잠금풀|잠금해제|자물쇠따|따줘|따라|뚫어|부숴|깨|벌려|해체|제거|해제하|풀어|열리게|절단|녹여|분해|따봐)/;
 const take=/(꺼내|집어|주워|가져|챙겨|획득|회수|수령|소지|줍|가져와|들고나와)/;
@@ -148,6 +148,10 @@ E.process=function permanentRoom(raw,state={},random=Math.random){
  const local=roomAction(raw,state);
  if(local)return local;
  const normal=base(raw,state,random);
+ if(state.room?.terminalOff){
+   if(['captured','armed_escape','disguise_escape'].includes(normal.kind))return normal;
+   return result('notice','모니터 전원이 종료돼 단말기 명령을 수리할 수 없습니다. 출입문을 직접 열고 물리적으로 나가십시오.');
+ }
  if(normal.kind==='door_open'&&normal.openingMethod!=='EMP'){
   if(state.room?.consoleAccess)return result('sys','콘솔 관리자 권한이 이미 확보됐습니다. 내부 자료를 읽거나 "콘솔에서 문 열어"를 입력하십시오.');
   return result('console_access','콘솔 관리자 접근을 확보했습니다.\n출입문은 여전히 잠겨 있습니다.\n내부 기록을 열람하거나 문 개방 명령을 선택할 수 있습니다.',{roomPatch:{consoleAccess:true},roomAction:'console',openingMethod:normal.openingMethod||'self',usedItem:normal.usedItem||null,actionId:normal.actionId||null});
