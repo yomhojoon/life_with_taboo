@@ -61,7 +61,8 @@ function deriveDeathCause(raw,stock={}){
  const t=clean(raw);
  if(/(?:독약|독극물|독물)/.test(t)&&/(?:마셔|먹어|삼키|복용|섭취)/.test(t)){
   if(qty(stock,'독약')===0)return {kind:'notice',text:'독약을 소지하고 있지 않습니다.'};
-  return {kind:'dead',text:'독약을 삼킨 뒤 생체 신호가 급격히 저하되었습니다.',deathCause:'poison',consumeItem:'독약'};
+  const used=E.useItem(raw,{inventory:stock});
+  return {kind:'dead',text:'독약을 삼킨 뒤 생체 신호가 급격히 저하되었습니다.',deathCause:'poison',consumeItem:'독약',usedItem:'독약',actionId:used?.actionId||null};
  }
  return null;
 }
@@ -136,12 +137,14 @@ E.process=function alternateRoutes(raw,state={},random=Math.random){
   if(!selfHack&&!lockHack&&!gearUse&&!empUse)return base(raw,state,random);
   if(portalOpened(state))return {kind:'sys',text:'보안 제어는 이미 우회되었습니다. 출입문은 열려 있습니다.'};
   const source=empUse?'EMP':gearUse?'equipment':'self';
+  const itemAction=E.useItem(raw,state);
   return {kind:'door_open',text:source==='EMP'
      ?'전자기 펄스가 잠금 제어 회로를 교란했습니다.\n보안 잠금이 해제되었습니다. 출입문이 열립니다.'
      :source==='equipment'
       ?'보안 포트 침투가 완료되었습니다.\n출입 통제 권한이 변경되었습니다. 출입문이 열립니다.'
       :'단말기 자체 권한 상승 명령이 수리되었습니다.\n보안 통제 잠금이 해제되었습니다. 출입문이 열립니다.',
-    doorOpen:true,openingMethod:source,consumeItem:source==='EMP'?(qty(state.inventory,'EMP')>0?'EMP':'전자기펄스발생기'):null};
+    doorOpen:true,openingMethod:source,usedItem:itemAction?.usedItem||null,actionId:itemAction?.actionId||null,
+    consumeItem:source==='EMP'?(qty(state.inventory,'EMP')>0?'EMP':'전자기펄스발생기'):null};
  }
  const outcome=base(raw,state,random);
  if(outcome.kind==='dead'&&!outcome.deathCause)
