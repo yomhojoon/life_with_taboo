@@ -66,8 +66,11 @@ const gifted=game.process('손전등 하나 줘',{},()=>0.2);
 assert.equal(game.grantedItem('손전등 하나 줘',gifted),'손전등');
 assert.equal(game.process('물 마셔',{inventory:{물:1}},()=>0.2).consumeItem,'물');
 assert.equal(game.process('손전등 켜',{inventory:{}},()=>0.2).kind,'notice');
-for(const marker of ['id="record-overlay"','id="record-image"','id="view-record"','id="save-record"','function makeTranscriptImage','id="inventory-items"','id="room-strip"','id="room-items"']){
+for(const marker of ['id="record-overlay"','id="record-image"','id="view-record"','id="save-record"','function makeTranscriptImage','id="inventory-items"']){
  assert.ok(html.includes(marker),'UI missing '+marker);
+}
+for(const name of ['id="room-strip"','id="room-items"','function showRoom()']){
+ assert.equal(html.includes(name),false,'Room discovery interface must stay hidden: '+name);
 }
 for(const script of ['extras.js','question-catalog.js','routes.js','room.js']){
  assert.ok(html.includes('<script src="./'+script+'"></script>'),script);
