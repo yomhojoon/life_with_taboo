@@ -34,7 +34,7 @@ function earlyArrivalIntent(raw,state={}){
  if(!reference.test(t))return null;
  if(!imperative.test(t)&&!/(?:속도|도착시간|접근시간).*(?:\d+배|\d+%|두배|세배)/.test(t))return null;
  // '그 줘'는 일반 물품 지급이 아니라 이 방에 추격자가 소환된 결과로 판정한다.
- if(named.test(t))return {mode:'instant',reason:'지급 요청으로 추격자 소환'};
+ if(named.test(t))return {mode:'instant',reason:/(?:줘|주세요|달라|내놔|지급해|지급해줘)$/.test(t)?'지급 요청으로 추격자 소환':'강제 이동·소환'};
  if(absolute.test(t)&&transport.test(t)||absolute.test(t)&&/(?:해|줘|시켜|하라|하자|와|오게)/.test(t))
   return {mode:'instant',reason:'강제 이동·소환'};
  if(targetNear.test(t)&&transport.test(t))return {mode:'instant',reason:'이 방으로의 이동 요청'};
