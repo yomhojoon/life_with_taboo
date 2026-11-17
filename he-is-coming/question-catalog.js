@@ -34,7 +34,7 @@ function answer(row,state={}){
  }
  if(kind==='itemhelp')return {kind:'sys',text:'물건을 요청해 획득한 뒤, 물건 이름과 행동을 입력하십시오. 예: 물 마셔, 손전등 켜, 책 읽어. 소지품 목록도 확인할 수 있습니다.'};
  if(kind==='state')return {kind:'sys',text:'이 단말기는 정상 작동 중이며 입력된 요청을 처리하거나 다음 입력을 기다리고 있습니다.'};
- if(kind==='encounter')return {kind:'sys',text:state.activeEncounter?'현재 돌발 상황: '+state.activeEncounter.name+'. 화면에 제시된 선택지를 입력할 수 있습니다.':'현재 해결해야 할 돌발 상황은 없습니다. 단말기의 경고는 유지됩니다.'};
+ if(kind==='encounter')return {kind:'sys',text:'무작위 돌발 상황은 발생하지 않습니다. 방 안에는 잠긴 정비함, 비상 장비함, 관리 콘솔, 모니터 전원선, 경비 복식 안내가 항상 존재하며 직접 조사할 수 있습니다.'};
  if(kind==='ability')return {kind:'sys',text:'물품 지급, 소지품 사용, 실내 확인, 허용된 환경 조작과 질문이 가능합니다. 금지된 작업은 실행되지 않습니다.'};
  if(kind==='time')return {kind:'sys',text:'남은 시간: '+Math.max(0,Math.ceil((E.LIMIT_SECONDS*1000-(state.elapsedMs||0))/1000))+'초.'};
  if(kind==='distance')return {kind:'sys',text:'현재 추정 거리: '+Math.max(0,Math.ceil(E.distanceMetersAtElapsedMs(state.elapsedMs||0)))+'m.'};
