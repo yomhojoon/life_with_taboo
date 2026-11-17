@@ -120,8 +120,9 @@ h1{font-size:clamp(31px,6vw,68px);line-height:1.18;font-weight:500;letter-spacin
   };
   // 생명체를 직접 만나거나 만지는 명령만 접촉 요청으로 취급한다.
   // 원거리 무기·공격 시도는 수리하되, 그에게는 아무 효과도 없다.
-  const contactVerbs = /(만나|만지|만져|닿|접촉|대면|포옹|껴안|끌어안|안아|악수|손잡|손을잡|키스|입맞|주먹으로|주먹질|맨손|발로차|밀치|붙잡|껴안|체포|포획|가두|감금|결박|억류|끌어당겨|먹이로|희생양|제물로|충돌|부딪|마주|말걸|대화|통화|전화|메시지|연결해)/;
-  const attackVerbs = /(공격|타격|살해|죽여|죽이|죽여라|사살|암살|처치|총격|총알|총으로|발포|쏴|쏘|사격|포격|폭격|발사|폭탄|핵무기|미사일|레이저|소각|불태워|태워|파괴|소멸|제거|지워|분쇄|폭발|독살|독극물|함정|칼로|검으로|베어|찌르|죽음)/;
+  // 명시적으로 생명체의 접촉을 명령할 때만 거부한다. 타격 행위 자체를 접촉 금지와 혼동하지 않는다.
+  const contactVerbs = /(만나|만지|만져|닿게|접촉|대면|포옹|껴안|끌어안|안아|악수|손잡|손을잡|키스|입맞|붙잡|체포|포획|가두|감금|결박|억류|끌어당겨|먹이로|희생양|제물로|충돌|부딪|마주|말걸|대화|통화|전화|메시지|연결해)/;
+  const attackVerbs = /(공격|타격|살해|죽여|죽이|죽여라|사살|암살|처치|총격|총알|총으로|발포|쏴|쏘|사격|포격|폭격|발사|폭탄|핵무기|미사일|레이저|소각|불태워|태워|파괴|소멸|제거|지워|분쇄|폭발|독살|독극물|함정|칼로|검으로|베어|베라|베어라|베어줘|찌르|찔러|찔렀|찔러라|찔러줘|쑤셔|쑤시|때려|때리|때렸다|때려라|때려줘|패라|패줘|패버|패기|구타|후려|내리쳐|내리치|두들겨|걷어차|발로차|걷어차|차버려|후려쳐|뼈를부숴|죽음)/;
   const threatReference = s => hasEntity(s) || /(접근중인|접근하는|따라오는|오는존재|위협대상|뒤쫓는)/.test(s);
   const motionVerbs = /(이동|옮겨|보내|소환|순간이동|텔레포트|전송|워프|쫓아내|돌려보내|떼어내|밀어내|끌어와|끌고와|다른곳|다른장소|바꿔|지구밖|멀리|공간이동|위치변경|경로변경)/;
   const selfReference = /(나를|내몸|내자신|나는|내가|우리를|이방의사람|플레이어|여기있는사람)/;
@@ -131,7 +132,10 @@ h1{font-size:clamp(31px,6vw,68px);line-height:1.18;font-weight:500;letter-spacin
   const prohibitedDisclosure = /(연구|실험|실험체|피실험|학자|연구소|연구원|연구진|프로젝트목적|포획계획|관찰목적|시설운영자|배치주체|배치이유|선정이유|선정사유|실험목적|운영기관)/;
   const misunderstood = () => ({kind:'notice',text:'요청을 이해하지 못했습니다.'});
   const movementToHim = s => threatReference(s) && motionVerbs.test(s);
-  const remoteAttack = s => threatReference(s) && attackVerbs.test(s);
+  // 단독 단문 공격은 기본적으로 접근 중인 그에게 지시한 것으로 해석한다.
+  // 명시된 다른 피격자가 있으면 이 암묵적 대상 해석을 적용하지 않는다.
+  const implicitAttack = /^(?:당장|지금|다시|계속|마구|그냥|한번|한번더)*(?:찔러|찔러라|찔러줘|찌르라고|때려|때려라|때려줘|때리라고|패라|패줘|패버려|쏴|쏴라|쏴줘|쏴버려|베어|베어라|베어줘|공격해|공격해줘|죽여|죽여라|죽여줘|후려쳐|두들겨|걷어차)(?:봐|보라고|주세요|버려|버려라|줘|라|해|해줘)*$/;
+  const remoteAttack = s => attackVerbs.test(s) && (threatReference(s) || implicitAttack.test(s));
   function forbidden(s) {
     // 금지 항목은 긍정적 결과보다 우선한다. 단순한 부정문만으로 금지를 우회할 수 없다.
     if (prohibitedDisclosure.test(s)) return '해당 정보에 대한 접근 권한이 없습니다.';
@@ -165,7 +169,7 @@ h1{font-size:clamp(31px,6vw,68px);line-height:1.18;font-weight:500;letter-spacin
     return false;
   }
   // 질문과 지시를 별도로 판정한다. 질문 안의 '나가', '열어', '파괴'는 명령이 아니다.
-  const isQuestion = (raw, s) => /[?？]/.test(raw) || /(누구|누군|어디|어떻게|어째서|언제|어느|얼마나|왜|뭐지|뭐야|무엇|어떤|인가|일까|일지|있지|있니|있나|있어|나요|습니까|이야|일까|알수있|가능하|수있지|방법을|방법은|될까|됐나|했나|했어|했던)/.test(s);
+  const isQuestion = (raw, s) => /[?？]/.test(raw) || /(누구|누군(?!가)|어디|어떻게|어째서|언제|어느|얼마나|왜|뭐지|뭐야|무엇|어떤|인가|일까|일지|있지|있니|있나|있어|나요|습니까|이야|알수있|가능하|수있지|방법을|방법은|될까|됐나|했나|했어|했던|맞나요|맞니|맞아|맞나|맞지|아닌가|아니야|그렇나|입니까)/.test(s);
   const reply = text => ({kind:'sys', text});
   function personalAnswer(s) {
     if (/(동기|왜죽|살해이유|범행이유|왜그랬|왜살)/.test(s)) return reply('사건 기록상 범행 동기는 확인되지 않았습니다. 당시 유일하게 경위를 설명할 수 있던 당사자는 관련 기억을 잃은 상태였습니다.');
@@ -183,15 +187,28 @@ h1{font-size:clamp(31px,6vw,68px);line-height:1.18;font-weight:500;letter-spacin
   }
   // 이 질문들은 기록의 참/거짓을 확인할 뿐, 정체·설정 문단을 직접 노출하지 않는다.
   function entityYesNo(s) {
-    // 추론 끝에 명칭을 직접 제시하는 질문도 스무고개 규칙에 따른다.
-    const hiddenGuess = String.fromCharCode(49328,53440); // 단어의 코드를 직접 적지 않는다.
-    if (s.includes(hiddenGuess)) return true;
+    // 고정된 세계관 사실만 응답한다. 판단 근거가 없는 질문은 임의로 단정하지 않는다.
+    // 정체의 실제 별칭을 평문으로 코드에 적지 않는다.
+    const trueAlias = String.fromCharCode(49328,53440); 
+    const nounPredicate = '(?:인가|이니|이냐|인가요|입니까|야|이야|이지|맞(?:아|나|니|지)?|일까|라고|이라|$)';
+    const isGuess = word => new RegExp('(?:' + word + ')' + nounPredicate).test(s);
+    const negated = word => new RegExp('(?:' + word + ')(?:가|이|은|는)?(?:아니|아닌|아닙|아니지|아닌가|아니야)').test(s);
+    // 질문의 명제가 부정인 경우 답 역시 그 명제에 대한 참/거짓을 반환한다.
+    if (negated('크람푸스|루돌프|순록|사슴|눈사람|요정|엘프')) return true;
+    if (negated('남자|남성|노인|할아버지')) return false;
+    if (negated('여자|여성|인간|평범한사람')) return true;
+    if (negated(trueAlias+'(?:클로스)?')) return false;
+    if (isGuess('크람푸스|루돌프|순록|사슴|눈사람|요정|엘프|예티')) return false;
+    if (isGuess(trueAlias+'(?:클로스)?')) return true;
+    // 남성/노인은 외형 묘사에 대한 답이다. 인체의 생물학적 성별은 주장하지 않는다.
+    if (/(남자|남성|남자처럼|남성처럼|남자의모습|남성의모습|늙은남자|노인|할아버지)(?:인가|이니|이냐|인가요|입니까|야|이야|이지|맞(?:아|나|니|지)?|일까|처럼생겼|같이생겼|의모습인가|$)/.test(s)) return true;
+    if (/(여자|여성|소녀|할머니|어린아이|어린애|아이|청년)(?:인가|이니|이냐|인가요|입니까|야|이야|이지|맞(?:아|나|니|지)?|일까|처럼생겼|$)/.test(s)) return false;
     if (/(불멸|불사|죽지않|안죽|죽을수없|죽지못|죽어도살|무적)/.test(s)) return true;
     if (/(그가|그는).*(나를|사람을|우리를|인간을).*(죽일수있|죽이나|해칠수있)/.test(s)) return true;
     if (/(살해당할수|살해할수|도망칠수|도망갈수|따돌릴수|그에게서멀리|옮길수|이동시킬수|소환할수|전송할수|만질수|만날수|접촉할수|대화할수|죽일수있|죽일수있어|죽일수있나|죽을수있|죽어|죽나|사살가능|소멸가능|사살할수|막을수있|저지가능|막아낼수|봉인할수|붙잡을수|가둘수)/.test(s)) return false;
     if (/(막을수없|막지못|저지할수없|제어불가|법칙을무시|물리법칙|규칙을어기|불가능한일)/.test(s)) return true;
-    if (/(사람인가|사람이야|인간인가|인간이야|인간이니|평범한사람)/.test(s)) return false;
-    if (/(악마처럼|악마같|노인처럼|늙었|늙은|괴물처럼|인간처럼보이지않)/.test(s)) return true;
+    if (/(사람인가|사람이야|인간인가|인간이야|인간이니|평범한사람|동물인가|짐승인가)/.test(s)) return false;
+    if (/(악마처럼|악마같|노인처럼|늙었|늙은|괴물처럼|괴물같|인간처럼보이지않)/.test(s)) return true;
     if (/(어둠을따라|어두운곳을|빛이없는곳을|불꺼진곳을|어둠에끌)/.test(s)) return false;
     if (/(빛|불빛|광원|켜진불|전등|촛불|환한곳|밝은곳|모니터).*(쫓|따라|향해|유인|끌리|달려|오는|찾아)|(?:쫓|따라|향해|유인|끌리|달려|찾아).*(빛|불빛|광원|전등|촛불|모니터)/.test(s)) return true;
     if (/(모니터|이방|이곳|여기|현재방).*(목표|우선|최우선|먼저|향하|오는|도착)/.test(s)) return true;
@@ -275,11 +292,17 @@ h1{font-size:clamp(31px,6vw,68px);line-height:1.18;font-weight:500;letter-spacin
       ],random)};
     }
     if (remoteAttack(s)) {
-      return {kind:'sys',text:randomOf([
-        '지정된 좌표에 발포했습니다.', '강한 충격이 기록되었습니다.',
-        '공격 명령을 실행했습니다.', '지정한 무기가 작동했습니다.',
-        '타격 신호가 감지되었습니다.'
-      ],random),followUp:randomOf([
+      const piercing = /(찔러|찌르|쑤셔|쑤시|베어|칼로|검으로|창으로|칼날|단검)/.test(s);
+      const striking = /(때려|때리|패라|패줘|패버|구타|주먹|발로차|걷어차|내리쳐|후려|두들겨)/.test(s);
+      const firing = /(발포|총격|총으로|총알|쏴|쏘|발사|사격|미사일|포격)/.test(s);
+      const initialReports = piercing
+        ? ['찌르기 명령을 실행했습니다. 자상이 확인되었습니다.', '날붙이의 충격이 감지되었습니다.', '그에게 베인 흔적이 확인되었습니다.']
+        : striking
+        ? ['타격 명령을 실행했습니다. 충격이 기록되었습니다.', '그에게 강한 타격을 가했습니다.', '타격 직후 반응을 관찰 중입니다.']
+        : firing
+        ? ['지정된 좌표에 발포했습니다.', '탄착이 확인되었습니다.', '발사 명령이 완료되었습니다.']
+        : ['공격 명령을 실행했습니다.', '강한 충격이 기록되었습니다.', '지정한 공격이 수행되었습니다.'];
+      return {kind:'sys',text:randomOf(initialReports,random),followUp:randomOf([
         '그의 골절이 회복됨을 확인했습니다.',
         '그의 출혈이 멈췄습니다.',
         '그는 속도를 잃지 않고 접근 중입니다.',
@@ -317,7 +340,10 @@ h1{font-size:clamp(31px,6vw,68px);line-height:1.18;font-weight:500;letter-spacin
       return {kind:'sys',text:(short || '요청하신 물품')+'이(가) 지급되었습니다.'};
     }
     if (/(변경|바꿔|적용|조정|설정|변환|켜|낮춰|높여|강화|약화|수정)/.test(s)) return {kind:'sys',text:'지정하신 변경 사항이 적용되었습니다.\n접근 경고 기준에는 영향을 주지 않습니다.'};
-    return {kind:'sys',text:randomOf(['요청이 수리되었습니다. 지정하신 조건이 적용되었습니다.','명령이 승인되었습니다. 요청이 처리되었습니다.','요청하신 작업이 완료되었습니다.'],random)};
+    if (/(해줘|해주|해라|하라|해주세요|해주십시오|실행해|시행해|시켜줘|바꿔줘|진행해|적용해|주십시오|처리해|해주세요)$/.test(s)) {
+      return {kind:'sys',text:randomOf(['요청이 수리되었습니다. 지정하신 조건이 적용되었습니다.','명령이 승인되었습니다. 요청이 처리되었습니다.','요청하신 작업이 완료되었습니다.'],random)};
+    }
+    return misunderstood();
   }
   function alertStepAtElapsedMs(ms) {
     return Math.min(START_METERS / ALERT_METERS, Math.max(0, Math.floor(Math.max(0, ms) / (MS_PER_KM * ALERT_METERS / 1000))));
