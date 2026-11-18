@@ -1004,14 +1004,6 @@ h1{font-size:clamp(31px,6vw,68px);line-height:1.18;font-weight:500;letter-spacin
     const survived=result===true||result==='armed_escape'||result==='disguise_escape';
     const dead=result==='dead',captured=result==='captured',chaos=result==='chaos';
     const second=Math.max(0,Math.floor(elapsedMs()/1000));
-    const endStats=[
-      '— 세션 기록 —',
-      '경과 시간 '+second+'초 / 입력 '+statistics.requests+'회 / 질문 '+statistics.questions+'회',
-      '수리 '+statistics.accepted+'회 / 반려 '+statistics.denied+'회 / 미해석 '+statistics.unrecognized+'회',
-      '물품 획득 '+statistics.itemsGained+'개 / 사용 '+statistics.itemsUsed+'회',
-      '방 내부 상호작용 '+statistics.roomActions+'회 / 전선 차단 '+statistics.wireCuts+'회 / 추격 가속 '+statistics.accelerations+'회',
-      '해킹 시도 '+statistics.hacks+'회 / 힌트 확인 '+hintCount+'회'
-    ].join('\n');
     phase=result===true?'win':result===false?'loss':String(result);
     clearInterval(ticker);ticker=null;
     clearTimeout(responseTimer);responseTimer=null;clearFollowUps();clearChaosTimers();runningTask++;
@@ -1027,7 +1019,7 @@ h1{font-size:clamp(31px,6vw,68px);line-height:1.18;font-weight:500;letter-spacin
       chaos:'ENDING 04 / IRREVERSIBLE CHAOS',
       dead:'VITAL SIGNAL LOST / SESSION TERMINATED',
       loss:'CONNECTION FAILURE / 000 KM',
-      early_arrival:'ENDING 06 / PREMATURE ARRIVAL'
+      early_arrival:'CONNECTION FAILURE'
     };
     const titles={
       win:'당신은 살아남았습니다.',
@@ -1037,7 +1029,7 @@ h1{font-size:clamp(31px,6vw,68px);line-height:1.18;font-weight:500;letter-spacin
       chaos:'세계가 돌이킬 수 없는 혼돈에 빠졌습니다.',
       dead:'사망했습니다.',
       loss:'그가 도착했습니다.',
-      early_arrival:'그가 예정된 시간보다 일찍 도착했습니다.'
+      early_arrival:'그가 도착했습니다.'
     };
     const carried=Engine.equippedWeapons(inventory);
     const stories={
@@ -1048,10 +1040,10 @@ h1{font-size:clamp(31px,6vw,68px);line-height:1.18;font-weight:500;letter-spacin
       chaos:'이 방 바깥의 모든 장소에 일제히 불이 켜졌습니다.\n그가 오고 있다는 경고의 거리와 시간이 '+statistics.chaosWarnings+'회 서로 모순된 수치로 출력됐습니다.\n\n누구도 추격의 범위를 더는 계산할 수 없습니다.\n세상은 되돌릴 수 없는 혼돈에 빠졌습니다.\n\n— 혼돈 엔딩 —',
       dead:Engine.deathDescription(deathCause)+'\n모든 요청 수리가 즉시 중단됩니다.',
       loss:'통신 신호가 끊어졌습니다.\n접근 경고가 000 KM에 도달했습니다.\n추가 명령을 수리할 수 없습니다.',
-      early_arrival:'추격 신호가 예정된 경로를 벗어났습니다.\n원인: '+(earlyArrivalReason||'비정상적인 접근 촉진')+'.\n접근 거리: 000 KM.\n원래 도착 예정 시간보다 이른 시점에 그가 방 안에 도착했습니다.\n추가 명령은 수리되지 않습니다.\n\n— 조기 도착 엔딩 —'
+      early_arrival:'통신이 끊어졌습니다.\n\n방 안에서 발소리가 들립니다.\n\n응답이 없습니다.'
     };
     const code=codes[phase]||codes.loss, title=titles[phase]||titles.loss;
-    const body=(stories[phase]||stories.loss)+'\n\n'+endStats;
+    const body=stories[phase]||stories.loss;
     $('#ending-code').textContent=code;$('#ending-title').textContent=title;$('#ending-body').textContent=body;
     transcript.push({kind:survived?'good':'alert',second,text:code+'\n'+title+'\n'+body});
     $('#view-record').focus();
